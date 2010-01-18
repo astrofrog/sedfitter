@@ -1,105 +1,136 @@
-import io
 import numpy as np
+import atpy
 
-import pyfits
 
-def order_fits(av,sc,chi,form=None,number=None,nwav=None):
-    
-    order = np.argsort(chi)
-    av = av[order]
-    sc = sc[order]
-    chi = chi[order]
-    
-    if not form:
-        pass
-    elif form=='A':
-        n_fits = len(chi)
-    elif form=='N':
-        n_fits = int(number)
-    elif form=='C':
-        n_fits = len(chi <= number)
-    elif form=='D':
-        n_fits = len(chi-chi[0] <= number)
-    elif form=='E':
-        n_fits = len(chi/float(nwav) <= number)
-    elif form=='F':
-        n_fits = len((chi-chi[0])/float(nwav) <= number)
-        
-    return av[:n_fits],sc[:n_fits],chi[:n_fits],order[:n_fits]
+class FitInfo(object):
 
-def write(par,filters,sources,model_id,model_name,av,sc,chi):
+    def __init__(self, source):
 
-    fit_id = []
-    source_id = []
-    
-    for i in range(len(chi)):
-        size = len(chi[i])
-        source_id.append(np.ones(size)*(i+1))
-        fit_id.append(range(1,size+1))
-        
-    first = [1]
-    for i in range(len(chi)-1):
-        first.append(first[i] + len(chi[i+1]))
-    first = np.array(first)
-    
-    number = np.array([len(x) for x in chi])
-    
-    av = np.hstack(av)
-    sc = np.hstack(sc)
-    chi = np.hstack(chi)
-    model_id = np.hstack(model_id)
-    fit_id = np.hstack(fit_id)
-    source_id = np.hstack(source_id)
+        self.source = source
+        self.av = None
+        self.sc = None
+        self.chi2 = None
+        self.order = None
 
-    model_name = model_name[model_id-1]
-    
-    io.delete_file(par['ofile'])
+        return
 
-    hdu0 = pyfits.PrimaryHDU()
-    hdu0.header.update('MODELDIR',par['modir'])
-    hdu0.header.update('EXLAW',par['exlaw'])
-    hdu0.header.update('OUT_FORM',par['oform'])
-    hdu0.header.update('OUT_NUMB',par['onumb'])    
-    
-    nwav = len(sources[0].flux)
-    
-    cols = [ pyfits.Column(name='SOURCE_NAME',format='30A',array=np.array([sources[i].name for i in range(len(sources))])),
-             pyfits.Column(name='X',format='1D',unit='deg',array=np.array([sources[i].x for i in range(len(sources))])),
-             pyfits.Column(name='Y',format='1D',unit='deg',array=np.array([sources[i].y for i in range(len(sources))])),
-             pyfits.Column(name='SOURCE_ID',format='1J',array=np.array(range(1,len(sources)+1))),
-             pyfits.Column(name='FIRST_ROW',format='1J',array=first),
-             pyfits.Column(name='NUMBER_FITS',format='1J',array=number),
-             pyfits.Column(name='VALID',format=str(nwav)+"J",array=np.vstack([sources[i].valid for i in range(len(sources))])),
-             pyfits.Column(name='FLUX',format=str(nwav)+"E",unit='mJy',array=np.vstack([sources[i].flux for i in range(len(sources))])),
-             pyfits.Column(name='FLUX_ERROR',format=str(nwav)+"E",unit='mJy',array=np.vstack([sources[i].error for i in range(len(sources))])),
-             pyfits.Column(name='LOG10FLUX',format=str(nwav)+"E",unit='mJy',array=np.vstack([sources[i].logflux for i in range(len(sources))])),
-             pyfits.Column(name='LOG10FLUX_ERROR',format=str(nwav)+"E",unit='mJy',array=np.vstack([sources[i].logerror for i in range(len(sources))]))
-             ]
+    def sort(self):
 
-    hdu1 = pyfits.new_table(cols)
-    hdu1.name = "SOURCES"
-    hdu1.header.update('NWAV',nwav)
-    
-    for j in range(nwav):
-       hdu1.header.update("FILT"+str(j+1),filters[j]['name'],comment="Filter code")
-       hdu1.header.update("WAV"+str(j+1),filters[j]['wav'],comment="Wavelength (microns)")
-       hdu1.header.update("AP"+str(j+1),filters[j]['ap'],comment="Aperture (arcsec)")
-    
-    print chi.shape
-    
-    cols = [ pyfits.Column(name='SOURCE_ID',format='1J',array=source_id),
-             pyfits.Column(name='FIT_ID',format='1J',array=fit_id),
-             pyfits.Column(name='MODEL_ID',format='1J',array=model_id),
-             pyfits.Column(name='MODEL_NAME',format='30A',array=model_name),
-             pyfits.Column(name='CHI2',format='1E',array=chi),
-             pyfits.Column(name='AV',format='1E',array=av,unit='mag'),
-             pyfits.Column(name='SCALE',format='1E',array=sc) ]
+        self.order = np.argsort(self.chi2)
+        self.av = self.av[self.order]
+        self.sc = self.sc[self.order]
+        self.chi2 = self.chi2[self.order]
 
-    hdu2 = pyfits.new_table(cols)
-    hdu2.name = "FITS"
-    oconv = par['oconv'] in ['Y','y']
-    hdu2.header.update('MODELFLX',oconv)    
-    
-    
-    hdulist = pyfits.HDUList([hdu0,hdu1,hdu2])
-    hdulist.writeto(par['ofile'])
+        return
+
+    def keep(self, form, number):
+
+        if form=='A':
+            n_fits = len(self.chi2)
+        elif form=='N':
+            n_fits = int(number)
+        elif form=='C':
+            n_fits = len(self.chi2 <= number)
+        elif form=='D':
+            n_fits = len(self.chi2 - self.chi2[0] <= number)
+        elif form=='E':
+            n_fits = len((self.chi2 / self.source.n_wav) <= number)
+        elif form=='F':
+            n_fits = len((self.chi2 - self.chi2[0]) / self.source.n_wav <= number)
+
+        self.av = self.av[:n_fits]
+        self.sc = self.sc[:n_fits]
+        self.chi2 = self.chi2[:n_fits]
+        self.order = self.order[:n_fits]
+
+        return
+
+    def __getattr__(self, attribute):
+        if attribute == 'n_fits':
+            return len(self.order)
+        else:
+            raise AttributeError(attribute)
+
+
+class OutputFile(object):
+
+    def __init__(self):
+        self.fitinfo = []
+
+    def append(self, fitinfo):
+        self.fitinfo.append(fitinfo)
+
+    def write(self, par, filters, model_name):
+
+        # Compute useful quantities
+        n_wav = self.fitinfo[0].source.n_wav
+
+        ts = atpy.TableSet()
+
+        # Overall header
+
+        ts.add_keyword('MODELDIR', par['modir'])
+        ts.add_keyword('EXLAW', par['exlaw'])
+        ts.add_keyword('OUT_FORM', par['oform'])
+        ts.add_keyword('OUT_NUMB', par['onumb'])
+
+        # Source table
+
+        first = [1]
+        for i in range(len(self.fitinfo)-1):
+            first.append(first[i] + self.fitinfo[i+1].n_fits)
+
+        number = [f.n_fits for f in self.fitinfo]
+
+        ts.append(atpy.Table(name='SOURCES'))
+
+        ts[0].add_keyword('NWAV', n_wav)
+
+        for j in range(n_wav):
+            ts[0].add_keyword("FILT%i" % (j+1), filters[j]['name'])
+            ts[0].add_keyword("WAV%i" % (j+1), filters[j]['wav'])
+            ts[0].add_keyword("AP%i" % (j+1), filters[j]['ap'])
+
+        ts[0].add_column('SOURCE_NAME', [f.source.name for f in self.fitinfo])
+        ts[0].add_column('X', [f.source.x for f in self.fitinfo], unit='deg')
+        ts[0].add_column('Y', [f.source.y for f in self.fitinfo], unit='deg')
+        ts[0].add_column('SOURCE_ID', range(1, len(self.fitinfo)+1))
+        ts[0].add_column('FIRST_ROW', first)
+        ts[0].add_column('NUMBER_FITS', number)
+        ts[0].add_column('VALID', np.vstack([f.source.valid for f in self.fitinfo]))
+        ts[0].add_column('FLUX', np.vstack([f.source.flux for f in self.fitinfo]), unit='mJy')
+        ts[0].add_column('FLUX_ERROR', np.vstack([f.source.error for f in self.fitinfo]), unit='mJy')
+        ts[0].add_column('LOG10FLUX', np.vstack([f.source.logflux for f in self.fitinfo]), unit='mJy')
+        ts[0].add_column('LOG10FLUX_ERROR', np.vstack([f.source.logerror for f in self.fitinfo]), unit='mJy')
+
+        # Fits table
+
+        fit_id = []
+        source_id = []
+
+        for i, f in enumerate(self.fitinfo):
+            source_id.append(np.ones(f.n_fits)*(i+1))
+            fit_id.append(range(1, f.n_fits+1))
+        source_id = np.hstack(source_id)
+        fit_id = np.hstack(fit_id)
+
+        model_id = np.hstack([f.order for f in self.fitinfo])
+
+        model_name = model_name[model_id-1]
+
+        ts.append(atpy.Table(name='FITS'))
+
+        ts[1].add_column('SOURCE_ID', source_id)
+        ts[1].add_column('FIT_ID', fit_id)
+        ts[1].add_column('MODEL_ID', model_id)
+        ts[1].add_column('MODEL_NAME', model_name)
+        ts[1].add_column('CHI2', np.hstack([f.chi2 for f in self.fitinfo]))
+        ts[1].add_column('AV', np.hstack([f.av for f in self.fitinfo]), unit='mag')
+        ts[1].add_column('SCALE', np.hstack([f.sc for f in self.fitinfo]))
+
+        output_convolved = par['oconv'] in ['Y', 'y']
+        if output_convolved:
+            raise Exception("Not implemented")
+            ts[1].add_keyword('MODELFLX', output_convolved)
+
+        ts.write(par['ofile'])

@@ -1,131 +1,108 @@
-import convolved_fluxes as c
+import os
+
 import numpy as np
-import os,sys
-from scipy import weave
-from scipy.weave import converters
 
-def fit(model_flux,valid,flux,flux_error,weight,av_law,sc_law):
-        
-    flux = np.tile(flux,model_flux.shape[0]).reshape(model_flux.shape)
-    flux_error = np.tile(flux_error,model_flux.shape[0]).reshape(model_flux.shape)
-    valid = np.tile(valid,model_flux.shape[0]).reshape(model_flux.shape)
-    weight = np.tile(weight,model_flux.shape[0]).reshape(model_flux.shape)
-                
-    residual = flux - model_flux
-    
-    av_best,sc_best = linear_regression(residual,weight,av_law,sc_law)
-    
-    model = av_best[:,np.newaxis] * av_law[np.newaxis,:] + sc_best[:,np.newaxis] * sc_law[np.newaxis,:]
-    
-    ch_best = chi_squared(valid,residual,flux_error,weight,model)
-    
-    return av_best,sc_best,ch_best
-    
-def linear_regression(data,weights,pattern1,pattern2):
-    
-    nx = weights.shape[0]
-    ny = weights.shape[1]
+from convolved_fluxes import ConvolvedFluxes
 
-    c1 = np.zeros(nx)
-    c2 = np.zeros(nx)
-    m11 = np.zeros(nx)
-    m12 = np.zeros(nx)
-    m22 = np.zeros(nx)
-    
-#    print nx
-    
-    code = """
-    for (int i=0; i < nx; i++)
-    {
-        for (int j=0; j < ny; j++)
-        {
-            c1(i) = c1(i) + data(i,j) * pattern1(j) * weights(i,j);
-            c2(i) = c2(i) + data(i,j) * pattern2(j) * weights(i,j);
-            m11(i) = m11(i) + pattern1(j) * pattern1(j) * weights(i,j);
-            m12(i) = m12(i) + pattern1(j) * pattern2(j) * weights(i,j);
-            m22(i) = m22(i) + pattern2(j) * pattern2(j) * weights(i,j);
-        }
-    }
-    """
-    
-    weave.inline(code, ['data','weights','pattern1','pattern2','nx','ny','c1','c2','m11','m12','m22'], type_converters=converters.blitz)
-    
-#    c1 = np.sum(data*pattern1*weights,axis=1)
-#    c2 = np.sum(data*pattern2*weights,axis=1)
-#    m11 = np.sum(pattern1*pattern1*weights,axis=1)
-#    m12 = np.sum(pattern1*pattern2*weights,axis=1)
-#    m22 = np.sum(pattern2*pattern2*weights,axis=1)
-    
 
- 
-    
+def linear_regression(data, weights, pattern1, pattern2):
+
+    c1 = np.sum(data*pattern1*weights, axis=1)
+    c2 = np.sum(data*pattern2*weights, axis=1)
+    m11 = np.sum(pattern1*pattern1*weights, axis=1)
+    m12 = np.sum(pattern1*pattern2*weights, axis=1)
+    m22 = np.sum(pattern2*pattern2*weights, axis=1)
+
     inv_det = 1./(m11*m22-m12*m12)
-    
+
     p1 = (m22*c1-m12*c2)*inv_det
     p2 = (m11*c2-m12*c1)*inv_det
-    
-    return p1,p2
-    
-def optimal_scaling(data,weights,pattern1):
-    
+
+    return p1, p2
+
+
+def optimal_scaling(data, weights, pattern1):
+
     return np.sum(data*pattern1*weights) / np.sum(pattern1*pattern1*weights)
-    
-def chi_squared(valid,data,error,weight,model):
 
-    nx = valid.shape[0]
-    ny = valid.shape[1]
 
-    chi2_array = np.zeros(data.shape,dtype=np.float32)
+def chi_squared(valid, data, error, weight, model):
 
-    code = """
-    for (int i=0; i < nx; i++)
-    {
-        for (int j=0; j < ny; j++)
-        {
-            if (valid(i,j)==1 | valid(i,j)==4) {
-                chi2_array(i,j) = ( data(i,j) - model(i,j) ) * ( data(i,j) - model(i,j) )* weight(i,j) ;
-            } else if ((valid(i,j)==2 & data(i,j) > model(i,j)) | (valid(i,j)==3 & data(i,j) < model(i,j))) {
-                if (error(i,j)==1.) {
-                    chi2_array(i,j) = 1.e30;
-                } else {
-                    chi2_array(i,j) = -2. * log10(1-error(i,j));
-                }
-            }
-        }
-    }
-    """
+    chi2_array = np.zeros(data.shape, dtype=np.float32)
 
-    weave.inline(code, ['valid','data','error','weight','model','nx','ny','chi2_array'], type_converters=converters.blitz)
+    elem = (valid==1) | (valid==4)
+    chi2_array[elem] = (data[elem] - model[elem])**2 * weight[elem]
 
-    return np.sum(chi2_array,axis=1)
-    
-def read(directory,filters):
-        
-    model_fluxes = []
-    wavelengths = []
-    
-    for filter in filters:
-                
-        filename = directory + '/convolved/' + filter + '.fits'
-        if not os.path.exists(filename):
-            if os.path.exists(filename+'.gz'):
-                filename += '.gz'
-            else:
-                raise Exception("File not found: "+filename)
-        
-        print "Reading "+filename
-        
-        results = c.read_convolved_fluxes(filename)
-        
-        wavelengths.append(results[0])
-        model_fluxes.append(results[3])
-        
-    model_fluxes = np.column_stack(model_fluxes)
-    model_names = results[2]
-    
-    valid = model_fluxes<>0
-    
-    model_fluxes[~valid] = -np.inf
-    model_fluxes[valid] = np.log10(model_fluxes[valid])
-        
-    return wavelengths,model_fluxes,model_names
+    elem = ((valid==2) & (data > model)) | ((valid==3) & (data > model))
+    hard = error==1.
+    chi2_array[elem & hard] = 1.e30
+    chi2_array[elem & ~hard] = -2. * np.log10(1.-error[elem & ~hard])
+
+    return np.sum(chi2_array, axis=1)
+
+
+class Models(object):
+
+    def __init__(self, *args):
+
+        self.names = None
+        self.fluxes = None
+        self.wavelengths = None
+
+        if args:
+            self.read(*args)
+
+        return
+
+    def read(self, directory, filters):
+
+        self.model_fluxes = []
+        self.wavelengths = []
+
+        for filt in filters:
+
+            filename = '%s/convolved/%s.fits' % (directory, filt)
+
+            if not os.path.exists(filename):
+                if os.path.exists(filename+'.gz'):
+                    filename += '.gz'
+                else:
+                    raise Exception("File not found: "+filename)
+
+            print "Reading "+filename
+
+            conv = ConvolvedFluxes(filename)
+
+            self.wavelengths.append(conv.wavelength)
+            self.model_fluxes.append(conv.fluxes)
+
+        self.fluxes = np.column_stack(self.model_fluxes)
+        self.names = conv.model_names
+        self.n_models = conv.n_models
+
+        self.valid = self.fluxes <> 0
+
+        self.fluxes[~self.valid] = -np.inf
+        self.fluxes[self.valid] = np.log10(self.fluxes[self.valid])
+
+        return
+
+    def fit(self, source, av_law, sc_law):
+
+        # Tile source info to match model shape
+        valid = np.tile(source.valid, self.n_models).reshape(self.fluxes.shape)
+        flux = np.tile(source.logflux, self.n_models).reshape(self.fluxes.shape)
+        flux_error = np.tile(source.logerror, self.n_models).reshape(self.fluxes.shape)
+        weight = np.tile(source.weight, self.n_models).reshape(self.fluxes.shape)
+
+        # Use 2-parameter linear regression to find the best-fit av and scale for each model
+        residual = flux - self.fluxes
+        av_best, sc_best = linear_regression(residual, weight, av_law, sc_law)
+
+        # Compute best-fit model in each case
+        model = av_best[:, np.newaxis] * av_law[np.newaxis, :] + sc_best[:, np.newaxis] * sc_law[np.newaxis, :]
+
+        # Calculate the chi-squared value
+        ch_best = chi_squared(valid, residual, flux_error, weight, model)
+
+        return av_best, sc_best, ch_best

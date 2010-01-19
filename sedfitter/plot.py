@@ -79,27 +79,6 @@ def get_axes(fig):
     rect = [vxmin/width, vymin/width, (vxmax-vxmin)/width, (vymax-vymin)/height]
     return fig.add_axes(rect)
 
-# call pgsci(1)
-#
-# do j=1, s%n_wav
-#    select case(s%valid(j))
-#    case(1, 4)
-#       call pgslw(15)
-#       call pgpt1(plot_wav(j), plot_flux(j), -1)
-#       call pgslw(1)
-#       call pgerr1(6, plot_wav(j), plot_flux(j), plot_error(j), 0.)
-#    case(2)
-#       call pgsch(1.20) ; call pgslw(3)
-#       call pgpt1(plot_wav(j), plot_flux(j), 852)
-#       call pgsch(0.75) ; call pgslw(1)
-#    case(3)
-#       call pgsch(1.20) ; call pgslw(3)
-#       call pgpt1(plot_wav(j), plot_flux(j), 854)
-#       call pgsch(0.75) ; call pgslw(1)
-#    case(9)
-#       call pgpt1(plot_wav(j), plot_flux(j), 4)
-#    end select
-# end do
 
 def plot(parameter_file, input_file, output_dir):
 

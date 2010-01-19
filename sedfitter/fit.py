@@ -7,11 +7,14 @@
 import numpy as np
 
 import parfile
-from models import Models
 import source
-from extinction import Extinction
-from output import FitInfo, OutputFile
 import timer
+
+from models import Models
+from extinction import Extinction
+from fit_info import FitInfo
+
+import cPickle as pickle
 
 
 def fit(parameter_file):
@@ -48,7 +51,11 @@ def fit(parameter_file):
 
     t = timer.Timer()
 
-    o = OutputFile()
+    fout = file(par['ofile'], 'wb')
+    pickle.dump(par['modir'], fout, 2)
+    pickle.dump(filters, fout, 2)
+    pickle.dump(models.names, fout, 2)
+    pickle.dump(par['exlaw'], fout, 2)
 
     for s in sources:
 
@@ -59,10 +66,10 @@ def fit(parameter_file):
             info.sort()
             info.keep(par['oform'], par['onumb'])
 
-            o.append(info)
+            pickle.dump(info, fout, 2)
 
             t.display()
 
     t.display(force=True)
 
-    o.write(par, filters, models.names)
+    fout.close()

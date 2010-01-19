@@ -11,6 +11,13 @@ def read(filename):
         if '=' in line:
             cols = line.split('=')
             value, key = cols[0].strip(), cols[1].strip()
+            try:
+                value = int(value)
+            except:
+                try:
+                    value = float(value)
+                except:
+                    pass
             parameters[key] = value
 
     f.close()

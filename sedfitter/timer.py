@@ -18,6 +18,6 @@ class Timer(object):
             if self.time2-self.time1 < 1.:
                 self.step *= 10
             else:
-                print "    %7i       %10.1f        %7.2f\n" % (self.n, self.time2-self.time1, self.n/(self.time2-self.time1))
+                print "    %7i       %10.1f        %7.2f" % (self.n, self.time2-self.time1, self.n/(self.time2-self.time1))
         elif force:
-            print "    %7i       %10.1f        %7.2f\n" % (self.n, self.time2-self.time1, self.n/(self.time2-self.time1))
+            print "    %7i       %10.1f        %7.2f" % (self.n, self.time2-self.time1, self.n/(self.time2-self.time1))

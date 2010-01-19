@@ -34,9 +34,23 @@ def fit(parameter_file):
 
     # Read in model parameters
     modpar = parfile.read("%s/models.conf" % par['modir'], 'conf')
+    
+    if modpar['aperture_dependent']:
+        if 'mind' in par and 'maxd' in par:
+            n_distances = 1 + (np.log10(par['maxd']) - np.log10(par['mind'])) / modpar['logd_step']
+            distances = np.logspace(np.log10(par['mind']), np.log10(par['maxd']), n_distances)
+        else:
+            raise Exception("For aperture-dependent models, mind/maxd are required")
+    else:
+        distances = None
+
+    # Construct filters dictionary
+    filters = []
+    for i in range(nwav):
+        filters.append({'aperture_arcsec': apertures[i], 'name': filter_names[i]})
 
     # Read in models
-    models = Models(par['modir'], filter_names)
+    models = Models(par['modir'], filters, distances=distances)
 
     # Construct filters dictionary
     filters = []
@@ -66,6 +80,8 @@ def fit(parameter_file):
 
             info = FitInfo(s)
             info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law)
+            sys.exit()
+            
             info.sort()
             info.keep(par['oform'], par['onumb'])
 

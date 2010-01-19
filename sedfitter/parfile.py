@@ -12,7 +12,7 @@ def read(filename, format):
             cols = line.split('=')
             if format == 'par':
                 value, key = cols[0].strip(), cols[1].strip()
-            elif format == 'conf'
+            elif format == 'conf':
                 key, value = cols[0].strip(), cols[1].strip()
             else:
                 raise Exception("Format should be par or conf")
@@ -22,7 +22,10 @@ def read(filename, format):
                 try:
                     value = float(value)
                 except:
-                    pass
+                    if value.lower() in ['y','yes']:
+                        value = True
+                    elif value.lower() in ['n','no']:
+                        value = False
             parameters[key] = value
 
     f.close()

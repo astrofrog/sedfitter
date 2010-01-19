@@ -4,9 +4,9 @@ def linear_regression(data, weights, pattern1, pattern2):
 
     c1 = np.sum(data*pattern1*weights, axis=1)
     c2 = np.sum(data*pattern2*weights, axis=1)
-    m11 = np.sum(pattern1*pattern1*weights, axis=1)
-    m12 = np.sum(pattern1*pattern2*weights, axis=1)
-    m22 = np.sum(pattern2*pattern2*weights, axis=1)
+    m11 = np.sum(pattern1*pattern1*weights)
+    m12 = np.sum(pattern1*pattern2*weights)
+    m22 = np.sum(pattern2*pattern2*weights)
 
     inv_det = 1./(m11*m22-m12*m12)
 
@@ -22,15 +22,31 @@ def optimal_scaling(data, weights, pattern1):
 
 
 def chi_squared(valid, data, error, weight, model):
+    '''
+    valid has dimension (n_wav,)
+    data has dimension (n_wav, n_models)
+    error has dimension(n_wav)
+    weight has dimension(n_wav)
+    model has dimension (n_wav, n_models)
+    '''
+    
+    # Calculate the 'default' chi^2 and handle special cases after
+    chi2_array = (data - model)**2 * weight
+    
+    # Force chi^2 to zero for valid==0
+    chi2_array[:, valid==0] = 0.
+        
+    # Reset lower limits where model < data
+    reset = model < data
+    reset[:, valid<>2] = False
+    chi2_array[reset] = -2. * np.log10(1.-error[valid==2])
 
-    chi2_array = np.zeros(data.shape, dtype=np.float32)
+    # Reset upper limits where model > data
+    reset = model > data
+    reset[:, valid<>3] = False
+    chi2_array[reset] = -2. * np.log10(1.-error[valid==3])
 
-    elem = (valid==1) | (valid==4)
-    chi2_array[elem] = (data[elem] - model[elem])**2 * weight[elem]
-
-    elem = ((valid==2) & (data > model)) | ((valid==3) & (data > model))
-    hard = error==1.
-    chi2_array[elem & hard] = 1.e30
-    chi2_array[elem & ~hard] = -2. * np.log10(1.-error[elem & ~hard])
+    # Check that there are no infinities
+    chi2_array[np.isinf(chi2_array)] = 1.e30
 
     return np.sum(chi2_array, axis=1)

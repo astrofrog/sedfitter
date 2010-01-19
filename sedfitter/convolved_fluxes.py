@@ -4,9 +4,9 @@ import atpy
 
 class ConvolvedFluxes(object):
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         if args:
-            self.read(*args)
+            self.read(*args, **kwargs)
 
     def read(self, filename):
         '''
@@ -24,12 +24,15 @@ class ConvolvedFluxes(object):
         self.n_ap = t.keywords['NAP']
 
         self.model_names = t[0].MODEL_NAME
-        self.fluxes = t[0].TOTAL_FLUX
+        self._fluxes = t[0].TOTAL_FLUX
         self.flux_errors = t[0].TOTAL_FLUX_ERR
         self.radius_sigma_50 = t[0].RADIUS_SIGMA_50
         self.radius_cumul_99 = t[0].RADIUS_CUMUL_99
 
-        self.apertures = t[1].APERTURE
+        self._apertures = t[1].APERTURE
+
+        self.fluxes = self._fluxes
+        self.apertures = self._apertures
 
         return
 
@@ -60,5 +63,7 @@ class ConvolvedFluxes(object):
         '''
         Interpolate the fluxes to the apertures specified
         '''
-        f = interp1d(self.apertures, self.fluxes)
-        self.interp_fluxes = f(apertures)
+        f = interp1d(self._apertures, self._fluxes)
+        self.fluxes = f(apertures)
+        self.apertures = apertures
+

@@ -1,4 +1,4 @@
-def read(filename):
+def read(filename, format):
     '''
     Read a parameter file and return a dictionary
     '''
@@ -8,9 +8,14 @@ def read(filename):
     f = file(filename, 'rb')
 
     for line in f.readlines():
-        if '=' in line:
+        if '=' in line and line[0] <> "#" and line.strip() <> "":
             cols = line.split('=')
-            value, key = cols[0].strip(), cols[1].strip()
+            if format == 'par':
+                value, key = cols[0].strip(), cols[1].strip()
+            elif format == 'conf'
+                key, value = cols[0].strip(), cols[1].strip()
+            else:
+                raise Exception("Format should be par or conf")
             try:
                 value = int(value)
             except:

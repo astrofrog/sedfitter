@@ -20,8 +20,8 @@ import cPickle as pickle
 def fit(parameter_file):
 
     # Read in fitting parameters
-    par = parfile.read(parameter_file)
-
+    par = parfile.read(parameter_file, 'par')
+    
     # Read in data
     sources = source.read_sources(par['dfile'])
 
@@ -31,6 +31,9 @@ def fit(parameter_file):
     nwav = int(f.readline().split('=')[0])
     filter_names = f.readline().split('=')[0].strip().split()
     apertures = np.array(f.readline().split('=')[0].strip().split(), float)
+
+    # Read in model parameters
+    modpar = parfile.read("%s/models.conf" % par['modir'], 'conf')
 
     # Read in models
     models = Models(par['modir'], filter_names)

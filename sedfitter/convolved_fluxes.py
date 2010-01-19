@@ -1,3 +1,4 @@
+from scipy.interpolate import interp1d
 import atpy
 
 
@@ -54,3 +55,10 @@ class ConvolvedFluxes(object):
         ts[1].add_column("APERTURE", self.apertures)
 
         ts.write(filename, verbose=False)
+        
+    def interpolate(self, apertures):
+        '''
+        Interpolate the fluxes to the apertures specified
+        '''
+        f = interp1d(self.apertures, self.fluxes)
+        self.interp_fluxes = f(apertures)

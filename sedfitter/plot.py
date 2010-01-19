@@ -27,6 +27,32 @@ mpl.rc('patch', linewidth=0.5)
 fp = FontProperties(size='x-small')
 
 
+def plot_source_info(ax, i, par, info, model_name):
+
+    labels = []
+
+    if par['pname'].lower() == 'y':
+        labels.append(info.source.name)
+
+    if par['pinfo'].lower() == 'y':
+        labels.append("Model: %s" % model_name)
+        if i==0:
+            labels.append("Best fit")
+        else:
+            labels.append("Fit: %i" % (i+1))
+        labels.append("$\chi^2$ = %10.3f    Av = %5.1f   Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
+
+    pos = 0.95
+    for label in labels:
+        ax.text(0.5, pos, label, horizontalalignment='center',
+                                  verticalalignment='center',
+                                  transform = ax.transAxes,
+                                  fontproperties=fp)
+        pos -= 0.06
+
+    return ax
+
+
 def plot_source_data(ax, source, filters):
 
     wav = np.array([f['wav'] for f in filters])
@@ -101,6 +127,10 @@ def plot(parameter_file, input_file, output_dir):
 
         for i in range(info.n_fits):
 
+            if (par['pmode'] == 'A' and i == 0) or par['pmode'] == 'I':
+                fig = mpl.figure()
+                ax = get_axes(fig)
+
             model_name = model_names[info.model_id[i]].strip()
 
             s = SED()
@@ -109,34 +139,25 @@ def plot(parameter_file, input_file, output_dir):
             s.scale_to_av(info.av[i], extinction.av)
             wav = np.array([f['wav'] for f in filters])
 
-            fig = mpl.figure()
+            if i==0:
+                zorder = 90
+                color = 'black'
+            else:
+                zorder = 50
+                color = '0.75'
 
-            ax = get_axes(fig)
+            ax.plot(np.log10(s.wav), np.log10(s.flux[0,:]), color=color, zorder=zorder)
 
-            ax.plot(np.log10(s.wav), np.log10(s.flux[0,:]))
+            if (par['pmode'] == 'A' and i == info.n_fits-1) or par['pmode'] == 'I':
 
-            ax = plot_source_data(ax, info.source, filters)
-            ax = set_view_limits(ax, par, wav, info.source)
+                ax = plot_source_data(ax, info.source, filters)
+                ax = set_view_limits(ax, par, wav, info.source)
+                ax = plot_source_info(ax, i, par, info, model_name)
 
-            labels = []
+                ax.set_xlabel('$\lambda$ ($\mu$m)')
+                ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
 
-            if par['pname'].lower() == 'y':
-                labels.append(info.source.name)
-
-            if par['pinfo'].lower() == 'y':
-                labels.append("Model: %s" % model_name)
-                if i==0:
-                    labels.append("Best fit")
+                if par['pmode'] == 'A':
+                    fig.savefig("%s/%s.png" % (output_dir, info.source.name))
                 else:
-                    labels.append("Fit: %i" % fit_id)
-                labels.append("$\chi^2$ = %10.3f    Av = %5.1f   Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
-
-            pos = 0.95
-            for label in labels:
-                ax.text(0.5, pos, label, horizontalalignment='center',
-                                          verticalalignment='center',
-                                          transform = ax.transAxes,
-                                          fontproperties=fp)
-                pos -= 0.06
-
-            fig.savefig(output_dir + '/' + info.source.name)
+                    fig.savefig("%s/%s_%05i.png" % (output_dir, info.source.name, i+1))

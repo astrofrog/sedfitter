@@ -11,6 +11,10 @@
 # - Ignore device (or translate to matplotlib)
 # - Esthetic parameters (warn that they are being ignored for now)
 
+# Optimization:
+# - Compute interpolating functions as little as possible
+# - Create LineCollection and PatchCollection and do the plotting at the very end
+
 import parfile
 import cPickle as pickle
 from sed import SED

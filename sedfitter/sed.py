@@ -35,6 +35,8 @@ class SED(object):
         self._wav = ts[0].WAVELENGTH
         self.ap = ts[1].APERTURE
         self._flux = ts[2].TOTAL_FLUX
+        
+        print self._flux.shape
 
         curr_unit_wav = ts[0].columns['WAVELENGTH'].unit
         curr_unit_flux = ts[2].columns['TOTAL_FLUX'].unit
@@ -73,3 +75,22 @@ class SED(object):
         self.av = 0.
         self.wav = self._wav
         self.flux = self._flux
+        
+    def interpolate_wavdep(wavelengths, apertures):
+        
+        # Order by wavelength
+        order = np.argsort(wavelengthts)
+        wavelengths = wavelengths[order]
+        apertures = apertures[order]
+        
+        # Interpolate apertures vs wavelength
+        f = interp1d(wavelengths, apertures, bounds_error=False, fill_value=np.nan)
+        ap_wanted = f[self.wav]
+        
+        # Extrapolate on either side
+        ap_wanted[self.wav < wavelengths[0]] = apertures[0]
+        ap_wanted[self.wav > wavelengths[-1]] = apertures[-1]
+        
+        print self.flux.shape()
+        self.wav
+        

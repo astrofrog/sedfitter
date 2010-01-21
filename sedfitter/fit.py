@@ -1,8 +1,11 @@
 # Still to implement:
 # - Min/max A_v
+# - Min/max scale
 # - Minimum number of datapoints
 # - Performance monitoring
 # - YSO version
+# - Output convolved fluxes
+# - Option to removed resolved models
 
 import numpy as np
 

@@ -1,7 +1,15 @@
-# Axis numbers
-# Interpolation of SEDs
-# Color of lines
-# Grayscale SEDs
+# Still to implement:
+# - Axis numbers
+# - Interpolation of SEDs (stype)
+# - Color of lines
+# - Grayscale SEDs
+# - Use number/format to know how many to plot (can use info.keep)
+# - Option to plot/not plot SEDs (pseds)
+# - Plot convolved fluxes (pconv)
+# - Overplot stellar photosphere (patmo)
+# - Color caption for multi-aperture plot
+# - Ignore device (or translate to matplotlib)
+# - Esthetic parameters (warn that they are being ignored for now)
 
 import parfile
 import cPickle as pickle
@@ -127,6 +135,8 @@ def plot(parameter_file, input_file, output_dir):
             info = pickle.load(fin)
         except:
             break
+            
+        # Create aperture interpolating function here
 
         for i in range(info.n_fits):
 
@@ -145,6 +155,8 @@ def plot(parameter_file, input_file, output_dir):
             s.scale_to_distance(10.**info.sc[i])
             s.scale_to_av(info.av[i], extinction.av)
             wav = np.array([f['wav'] for f in filters])
+            ap = np.array([f['ap'] for f in filters])
+            
 
             if i==0:
                 zorder = 90

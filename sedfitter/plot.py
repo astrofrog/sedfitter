@@ -31,10 +31,10 @@ def plot_source_info(ax, i, par, info, model_name):
 
     labels = []
 
-    if par['pname'].lower() == 'y':
+    if par['pname']:
         labels.append(info.source.name)
 
-    if par['pinfo'].lower() == 'y':
+    if par['pinfo']:
         labels.append("Model: %s" % model_name)
         if i==0:
             labels.append("Best fit")
@@ -108,15 +108,18 @@ def get_axes(fig):
 
 def plot(parameter_file, input_file, output_dir):
 
-    # Read in plotting parameters
-    par = parfile.read(parameter_file)
-
     fin = file(input_file, 'rb')
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
     model_names = pickle.load(fin)
     extinction_file = pickle.load(fin)
     extinction = Extinction(extinction_file)
+
+    # Read in plotting parameters
+    par = parfile.read(parameter_file, 'par')
+
+    # Read in model parameters
+    modpar = parfile.read("%s/models.conf" % model_dir, 'conf')
 
     while True:
 
@@ -134,7 +137,11 @@ def plot(parameter_file, input_file, output_dir):
             model_name = model_names[info.model_id[i]].strip()
 
             s = SED()
-            s.read(model_dir + '/seds/' + model_name + '_sed.fits.gz')
+            if modpar['length_subdir'] == 0:
+                s.read(model_dir + '/seds/' + model_name + '_sed.fits.gz')
+            else:
+                s.read(model_dir + '/seds/%s/%s_sed.fits.gz' % (model_name[:modpar['length_subdir']], model_name))
+
             s.scale_to_distance(10.**info.sc[i])
             s.scale_to_av(info.av[i], extinction.av)
             wav = np.array([f['wav'] for f in filters])

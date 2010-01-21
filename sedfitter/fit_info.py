@@ -27,7 +27,7 @@ class FitInfo(object):
 
         if form=='A':
             n_fits = len(self.chi2)
-        elif form=='N':
+        elif form=='N' or not form: # Form N is parsed as boolean
             n_fits = int(number)
         elif form=='C':
             n_fits = len(self.chi2 <= number)
@@ -37,6 +37,8 @@ class FitInfo(object):
             n_fits = len((self.chi2 / self.source.n_wav) <= number)
         elif form=='F':
             n_fits = len((self.chi2 - self.chi2[0]) / self.source.n_wav <= number)
+        else:
+            raise Exception("Unknown format: %s" % form)
 
         self.av = self.av[:n_fits]
         self.sc = self.sc[:n_fits]

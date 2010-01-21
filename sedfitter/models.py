@@ -13,6 +13,7 @@ class Models(object):
         self.fluxes = None
         self.wavelengths = None
         self.apertures = None
+        self.logd = None
 
         if args:
             self.read(*args, **kwargs)
@@ -25,7 +26,7 @@ class Models(object):
             self.n_distances = len(distances)
         else:
             self.n_distances = None
-            
+
         model_fluxes = []
         self.wavelengths = []
 
@@ -48,14 +49,20 @@ class Models(object):
             if self.n_distances:
                 apertures_au = filt['aperture_arcsec'] * distances * 1.e3
                 conv.interpolate(apertures_au)
+                conv.fluxes = conv.fluxes / distances**2
+                self.logd = np.log10(distances)
 
             model_fluxes.append(conv.fluxes)
 
         if self.n_distances:
-            self.fluxes = np.vstack(model_fluxes).reshape(len(filters), len(distances), conv.n_models)
+            self.fluxes = np.column_stack(model_fluxes).reshape(len(filters), len(distances), conv.n_models)
+            self.fluxes = self.fluxes.swapaxes(0,2)
+            print self.fluxes.shape
+
         else:
             self.fluxes = np.column_stack(model_fluxes)
-            
+            print self.fluxes.shape
+
         self.names = conv.model_names
         self.n_models = conv.n_models
 
@@ -70,12 +77,6 @@ class Models(object):
 
         if self.fluxes.ndim == 2: # Aperture-independent fitting
 
-            # Tile source info to match model shape
-            # valid = np.tile(source.valid, self.n_models).reshape(self.fluxes.shape)
-            # flux = np.tile(source.logflux, self.n_models).reshape(self.fluxes.shape)
-            # flux_error = np.tile(source.logerror, self.n_models).reshape(self.fluxes.shape)
-            # weight = np.tile(source.weight, self.n_models).reshape(self.fluxes.shape)
-
             # Use 2-parameter linear regression to find the best-fit av and scale for each model
             residual = source.logflux - self.fluxes
             av_best, sc_best = f.linear_regression(residual, source.weight, av_law, sc_law)
@@ -88,18 +89,26 @@ class Models(object):
 
         elif self.fluxes.ndim == 3: # Aperture dependent fitting
 
-            # Tile source info to match model shape (n_wav, n_distances, n_models)
-            valid = np.tile(source.valid, self.n_models*self.n_distances).reshape(self.fluxes.shape)
-            flux = np.tile(source.logflux, self.n_models*self.n_distances).reshape(self.fluxes.shape)
-            flux_error = np.tile(source.logerror, self.n_models*self.n_distances).reshape(self.fluxes.shape)
-            weight = np.tile(source.weight, self.n_models*self.n_distances).reshape(self.fluxes.shape)
+            # Use optimal scaling to fit the Av
+            residual = source.logflux - self.fluxes
+            av_best = f.optimal_scaling(residual, source.weight, av_law)
 
-            print valid[:,3,3]
-        
+            # Compute best-fit model in each case
+            model = av_best[:, :, np.newaxis] * av_law[np.newaxis, np.newaxis, :]
+
+            # Calculate the chi-squared value
+            ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
+
+            # Find best-fit distance in each case
+            best = np.argmin(ch_best, axis=1)
+
+            sc_best = self.logd[best]
+
+            ch_best = ch_best[np.arange(self.n_models),best]
+            av_best = av_best[np.arange(self.n_models),best]
+
         else:
-        
+
             raise Exception("Unexpected number of dimensions in flux array")
-
-
 
         return av_best, sc_best, ch_best

@@ -17,9 +17,7 @@ def linear_regression(data, weights, pattern1, pattern2):
 
 
 def optimal_scaling(data, weights, pattern1):
-
-    return np.sum(data*pattern1*weights) / np.sum(pattern1*pattern1*weights)
-
+    return np.sum(data*pattern1*weights, axis=2) / np.sum(pattern1*pattern1*weights)
 
 def chi_squared(valid, data, error, weight, model):
     '''
@@ -29,24 +27,35 @@ def chi_squared(valid, data, error, weight, model):
     weight has dimension(n_wav)
     model has dimension (n_wav, n_models)
     '''
-    
+
     # Calculate the 'default' chi^2 and handle special cases after
     chi2_array = (data - model)**2 * weight
-    
+
     # Force chi^2 to zero for valid==0
-    chi2_array[:, valid==0] = 0.
-        
+    if chi2_array.ndim == 2:
+        chi2_array[:, valid==0] = 0.
+    elif chi2_array.ndim == 3:
+        chi2_array[:, :, valid==0] = 0.
+    else:
+        raise Exception("Chi^2 array has unexpected number of dimensions: %i" % chi2_array.ndim)
+
     # Reset lower limits where model < data
     reset = model < data
-    reset[:, valid<>2] = False
+    if chi2_array.ndim == 2:
+        reset[:, valid<>2] = False
+    else:
+        reset[:, :, valid<>2] = False
     chi2_array[reset] = -2. * np.log10(1.-error[valid==2])
 
     # Reset upper limits where model > data
     reset = model > data
-    reset[:, valid<>3] = False
+    if chi2_array.ndim == 2:
+        reset[:, valid<>3] = False
+    else:
+        reset[:, :, valid<>3] = False
     chi2_array[reset] = -2. * np.log10(1.-error[valid==3])
 
     # Check that there are no infinities
     chi2_array[np.isinf(chi2_array)] = 1.e30
 
-    return np.sum(chi2_array, axis=1)
+    return np.sum(chi2_array, axis=chi2_array.ndim - 1)

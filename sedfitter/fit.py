@@ -21,7 +21,7 @@ def fit(parameter_file):
 
     # Read in fitting parameters
     par = parfile.read(parameter_file, 'par')
-    
+
     # Read in data
     sources = source.read_sources(par['dfile'])
 
@@ -34,7 +34,7 @@ def fit(parameter_file):
 
     # Read in model parameters
     modpar = parfile.read("%s/models.conf" % par['modir'], 'conf')
-    
+
     if modpar['aperture_dependent']:
         if 'mind' in par and 'maxd' in par:
             n_distances = 1 + (np.log10(par['maxd']) - np.log10(par['mind'])) / modpar['logd_step']
@@ -80,8 +80,7 @@ def fit(parameter_file):
 
             info = FitInfo(s)
             info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law)
-            sys.exit()
-            
+
             info.sort()
             info.keep(par['oform'], par['onumb'])
 

@@ -58,7 +58,7 @@ class ConvolvedFluxes(object):
         ts[1].add_column("APERTURE", self.apertures)
 
         ts.write(filename, verbose=False)
-        
+
     def interpolate(self, apertures):
         '''
         Interpolate the fluxes to the apertures specified
@@ -66,4 +66,3 @@ class ConvolvedFluxes(object):
         f = interp1d(self._apertures, self._fluxes)
         self.fluxes = f(apertures)
         self.apertures = apertures
-

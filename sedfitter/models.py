@@ -55,8 +55,8 @@ class Models(object):
             model_fluxes.append(conv.fluxes)
 
         if self.n_distances:
-            self.fluxes = np.column_stack(model_fluxes).reshape(len(filters), len(distances), conv.n_models)
-            self.fluxes = self.fluxes.swapaxes(0,2)
+            self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), len(distances))
+            self.fluxes = self.fluxes.swapaxes(1,2)
             print self.fluxes.shape
 
         else:
@@ -89,15 +89,27 @@ class Models(object):
 
         elif self.fluxes.ndim == 3: # Aperture dependent fitting
 
+            # print "Log10(flux) = ", source.logflux
+            # print "Model fluxes = ", self.fluxes[0,0,:]
+
             # Use optimal scaling to fit the Av
             residual = source.logflux - self.fluxes
+            
+            # print "Residual = ", residual[0,0,:]
+            # print "Av law = ", av_law
+            # print "Weights = ",source.weight
+            
             av_best = f.optimal_scaling(residual, source.weight, av_law)
+
+            # print "Av = ", av_best[0,0]
 
             # Compute best-fit model in each case
             model = av_best[:, :, np.newaxis] * av_law[np.newaxis, np.newaxis, :]
 
             # Calculate the chi-squared value
             ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
+
+            # print "Chi^2 = ", ch_best[0,0]
 
             # Find best-fit distance in each case
             best = np.argmin(ch_best, axis=1)

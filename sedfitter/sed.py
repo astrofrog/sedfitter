@@ -1,6 +1,8 @@
+from scipy.interpolate import interp1d
+
 import atpy
 from copy import copy
-
+import numpy as np
 
 class SED(object):
 
@@ -35,8 +37,6 @@ class SED(object):
         self._wav = ts[0].WAVELENGTH
         self.ap = ts[1].APERTURE
         self._flux = ts[2].TOTAL_FLUX
-        
-        print self._flux.shape
 
         curr_unit_wav = ts[0].columns['WAVELENGTH'].unit
         curr_unit_flux = ts[2].columns['TOTAL_FLUX'].unit
@@ -75,22 +75,39 @@ class SED(object):
         self.av = 0.
         self.wav = self._wav
         self.flux = self._flux
-        
-    def interpolate_wavdep(wavelengths, apertures):
-        
-        # Order by wavelength
-        order = np.argsort(wavelengthts)
-        wavelengths = wavelengths[order]
-        apertures = apertures[order]
-        
+
+    def interpolate(self, apertures):
+        '''
+        Interpolate the SED to different apertures
+        '''
+
+        # Create interpolating function
+        flux_interp = interp1d(self.ap, self.flux.swapaxes(0,1))
+
+        return flux_interp(apertures)
+
+    def interpolate_variable(self, wavelengths, apertures):
+        '''
+        Interpolate the SED to a variable aperture as a function of
+        wavelength. This method should be called with an interpolating
+        function for aperture as a function of wavelength, in log10 space.
+        '''
+
+        # Find wavelength order
+        order = np.argsort(wavelengths)
+
         # Interpolate apertures vs wavelength
-        f = interp1d(wavelengths, apertures, bounds_error=False, fill_value=np.nan)
-        ap_wanted = f[self.wav]
-        
+        log10_ap_interp = interp1d(np.log10(wavelengths[order]), np.log10(apertures[order]), bounds_error=False, fill_value=np.nan)
+
+        # Create interpolating function
+        flux_interp = interp1d(self.ap, self.flux.swapaxes(0,1))
+
+        # Interpolate the apertures
+        apertures = 10.**log10_ap_interp(np.log10(self.wav))
+
         # Extrapolate on either side
-        ap_wanted[self.wav < wavelengths[0]] = apertures[0]
-        ap_wanted[self.wav > wavelengths[-1]] = apertures[-1]
-        
-        print self.flux.shape()
-        self.wav
-        
+        apertures[np.log10(self.wav) < log10_ap_interp.x[0]] = self.ap[0]
+        apertures[np.log10(self.wav) > log10_ap_interp.x[-1]] = self.ap[-1]
+
+        # Interpolate and return only diagonal elements
+        return flux_interp(apertures).diagonal()

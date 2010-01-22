@@ -57,7 +57,7 @@ class Source(object):
         return string
 
 
-def read_sources(filename):
+def read_sources(filename, n_min_valid=0):
 
     result = []
 
@@ -81,7 +81,8 @@ def read_sources(filename):
 
     sources = []
     for i in range(n_sources):
-        sources.append(Source(name[i], x[i], y[i], valid[i,:], flux[i,:], error[i,:]))
+        if np.sum((valid[i,:]==1) | (valid[i,:]==4)) > n_min_valid:
+            sources.append(Source(name[i], x[i], y[i], valid[i,:], flux[i,:], error[i,:]))
 
     return sources
 

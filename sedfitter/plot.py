@@ -139,8 +139,6 @@ def plot(parameter_file, input_file, output_dir):
             info = pickle.load(fin)
         except:
             break
-            
-        # Create aperture interpolating function here
 
         for i in range(info.n_fits):
 
@@ -160,7 +158,7 @@ def plot(parameter_file, input_file, output_dir):
             s.scale_to_av(info.av[i], extinction.av)
             wav = np.array([f['wav'] for f in filters])
             ap = np.array([f['ap'] for f in filters])
-            
+
 
             if i==0:
                 zorder = 90
@@ -169,7 +167,9 @@ def plot(parameter_file, input_file, output_dir):
                 zorder = 50
                 color = '0.75'
 
-            ax.plot(np.log10(s.wav), np.log10(s.flux[0,:]), color=color, zorder=zorder)
+            flux = s.interpolate_variable(wav, ap * 10.**info.sc[i] * 1000.)
+
+            ax.plot(np.log10(s.wav), np.log10(flux), color=color, zorder=zorder)
 
             if (par['pmode'] == 'A' and i == info.n_fits-1) or par['pmode'] == 'I':
 

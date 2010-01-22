@@ -73,13 +73,21 @@ class Models(object):
 
         return
 
-    def fit(self, source, av_law, sc_law):
+    def fit(self, source, av_law, sc_law, av_min, av_max):
 
         if self.fluxes.ndim == 2: # Aperture-independent fitting
 
             # Use 2-parameter linear regression to find the best-fit av and scale for each model
             residual = source.logflux - self.fluxes
             av_best, sc_best = f.linear_regression(residual, source.weight, av_law, sc_law)
+
+            # Use optimal scaling for Avs that are outside range
+            reset1 = (av_best < av_min)
+            reset2 = (av_best > av_max)
+            av_best[reset1] = av_min
+            av_best[reset2] = av_max
+            reset = reset1 | reset2
+            sc_best[reset] = f.optimal_scaling(residual[reset] - av_best[reset][:, np.newaxis] * av_law[np.newaxis, :], source.weight, sc_law)
 
             # Compute best-fit model in each case
             model = av_best[:, np.newaxis] * av_law[np.newaxis, :] + sc_best[:, np.newaxis] * sc_law[np.newaxis, :]
@@ -89,27 +97,19 @@ class Models(object):
 
         elif self.fluxes.ndim == 3: # Aperture dependent fitting
 
-            # print "Log10(flux) = ", source.logflux
-            # print "Model fluxes = ", self.fluxes[0,0,:]
-
             # Use optimal scaling to fit the Av
             residual = source.logflux - self.fluxes
-            
-            # print "Residual = ", residual[0,0,:]
-            # print "Av law = ", av_law
-            # print "Weights = ",source.weight
-            
             av_best = f.optimal_scaling(residual, source.weight, av_law)
 
-            # print "Av = ", av_best[0,0]
+            # Reset to valid range
+            av_best[av_best < av_min] = av_min
+            av_best[av_best > av_max] = av_max
 
             # Compute best-fit model in each case
             model = av_best[:, :, np.newaxis] * av_law[np.newaxis, np.newaxis, :]
 
             # Calculate the chi-squared value
             ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
-
-            # print "Chi^2 = ", ch_best[0,0]
 
             # Find best-fit distance in each case
             best = np.argmin(ch_best, axis=1)

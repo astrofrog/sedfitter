@@ -1,11 +1,12 @@
 # Still to implement:
-# - Min/max A_v
-# - Min/max scale
-# - Minimum number of datapoints
+# - Min/max A_v - yes
+# - Min/max scale - won't implement?
+# - Minimum number of datapoints - done
 # - Performance monitoring
-# - YSO version
+# - YSO version - done
 # - Output convolved fluxes
 # - Option to removed resolved models
+# - Optimize output -> go back to using FITS file, at least guarantee perfect backwards compatibility (even if it means performance decreases)
 
 import numpy as np
 
@@ -26,7 +27,7 @@ def fit(parameter_file):
     par = parfile.read(parameter_file, 'par')
 
     # Read in data
-    sources = source.read_sources(par['dfile'])
+    sources = source.read_sources(par['dfile'], n_min_valid=par['drequ'])
 
     # Read in data format
     f = file(par['dform'], 'rb')
@@ -82,7 +83,7 @@ def fit(parameter_file):
         if s.n_data > int(par['drequ']):
 
             info = FitInfo(s)
-            info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law)
+            info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law, par['minav'], par['maxav'])
 
             info.sort()
             info.keep(par['oform'], par['onumb'])

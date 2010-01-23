@@ -10,35 +10,50 @@ class ConvolvedFluxes(object):
 
     def read(self, filename):
         '''
-        Read convolved fluxes from a FITS file
+        Read convolved flux from a FITS file
         '''
 
+        # Open the convolved flux FITS file
         t = atpy.TableSet(filename, verbose=False)
 
+        # Try and read in the wavelength of the filter
         if 'FILTWAV' in t.keywords:
             self.wavelength = t.keywords['FILTWAV']
         else:
             self.wavelength = None
 
+        # Read in number of models and apertures
         self.n_models = t.keywords['NMODELS']
         self.n_ap = t.keywords['NAP']
 
+        # Read in model names
         self.model_names = t[0].MODEL_NAME
-        self._fluxes = t[0].TOTAL_FLUX
-        self.flux_errors = t[0].TOTAL_FLUX_ERR
+
+        # Read in flux and flux errors
+        self._flux = t[0].TOTAL_FLUX
+        self._flux_errors = t[0].TOTAL_FLUX_ERR
+
+        # Read in 99% cumulative and 50% surface brightness radii
         self.radius_sigma_50 = t[0].RADIUS_SIGMA_50
         self.radius_cumul_99 = t[0].RADIUS_CUMUL_99
 
+        # Read in apertures
         self._apertures = t[1].APERTURE
 
-        self.fluxes = self._fluxes
+        # Create an interpolating function for the flux vs aperture
+        if self._flux.ndim > 1:
+            self._flux_interp = interp1d(self._apertures, self._flux[:])
+
+        # Make the default fluxes and apertures public - this is then
+        # overwritten when the user interpolates to custom apertures.
+        self.flux = self._flux
         self.apertures = self._apertures
 
         return
 
     def write(self, filename):
         '''
-        Write convolved fluxes to a FITS file
+        Write convolved flux to a FITS file
         '''
 
         ts = atpy.TableSet()
@@ -47,10 +62,10 @@ class ConvolvedFluxes(object):
         ts.add_keyword('NMODELS', self.n_models)
         ts.add_keyword('NAP', self.n_ap)
 
-        ts.append(atpy.Table(name='CONVOLVED FLUXES'))
+        ts.append(atpy.Table(name='CONVOLVED flux'))
         ts[0].add_column('MODEL_NAME', self.model_names)
-        ts[0].add_column('TOTAL_FLUX', self.fluxes)
-        ts[0].add_column('TOTAL_FLUX_ERR', self.fluxes_err)
+        ts[0].add_column('TOTAL_FLUX', self.flux)
+        ts[0].add_column('TOTAL_FLUX_ERR', self.flux_err)
         ts[0].add_column('RADIUS_SIGMA_50', self.radius_sigma_50)
         ts[0].add_column('RADIUS_CUMUL_99', self.radius_cumul_50)
 
@@ -61,8 +76,21 @@ class ConvolvedFluxes(object):
 
     def interpolate(self, apertures):
         '''
-        Interpolate the fluxes to the apertures specified
+        Interpolate the flux to the apertures specified
         '''
-        f = interp1d(self._apertures, self._fluxes)
-        self.fluxes = f(apertures)
+
+        # If any apertures are larger than the defined max, reset to max
+        apertures[apertures > self._apertures.max()] == self._apertures.max()
+
+        # If any apertures are smaller than the defined min, raise Exception
+        if np.any(apertures < self._apertures.min()):
+            raise Exception("Aperture(s) requested too small")
+
+        # Interpolate to requested apertures
+        if self._flux.ndim > 1:
+            self.flux = self._flux_interp(apertures)
+        else:
+            self.flux = np.repeat(self._flux, len(apertures)).reshape(len(self._flux), len(apertures))
+
+        # Save the apertures
         self.apertures = apertures

@@ -1,9 +1,11 @@
 # Still to implement:
 # - Axis numbers
-# - Interpolation of SEDs (stype)
-# - Color of lines
-# - Grayscale SEDs
+# - Interpolation of SEDs (stype) - needs testing
 # - Use number/format to know how many to plot (can use info.keep)
+
+# Low priority
+# - Grayscale SEDs
+# - Color of lines
 # - Option to plot/not plot SEDs (pseds)
 # - Plot convolved fluxes (pconv)
 # - Overplot stellar photosphere (patmo)
@@ -22,11 +24,12 @@ from sed import SED
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
+from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
 from extinction import Extinction
+from fit_info import FitInfo
 
 import numpy as np
-
 
 mpl.rc('axes', titlesize='small')
 mpl.rc('axes', labelsize='small')
@@ -133,12 +136,16 @@ def plot(parameter_file, input_file, output_dir):
     # Read in model parameters
     modpar = parfile.read("%s/models.conf" % model_dir, 'conf')
 
+    info = FitInfo()
+
     while True:
 
         try:
-            info = pickle.load(fin)
+            info.read(fin)
         except:
             break
+
+        lines = []
 
         for i in range(info.n_fits):
 
@@ -159,19 +166,27 @@ def plot(parameter_file, input_file, output_dir):
             wav = np.array([f['wav'] for f in filters])
             ap = np.array([f['ap'] for f in filters])
 
+            if par['stype'] == 'interp':
+                apertures = ap * 10.**info.sc[i] * 1000.
+                flux = s.interpolate_variable(wav, apertures)
+            elif par['stype'] == 'largest':
+                apertures = np.array([ap.max()]) * 10.**info.sc[i] * 1000.
+                flux = s.interpolate(apertures)
+            elif par['stype'] == 'largest+smallest':
+                apertures = np.array([ap.min(), ap.max()]) * 10.**info.sc[i] * 1000.
+                flux = s.interpolate(apertures)
+            elif par['stype'] == 'all':
+                raise Exception("stype=all not implemented")
 
-            if i==0:
-                zorder = 90
-                color = 'black'
+            if flux.ndim > 1:
+                for j in range(flux.shape[1]):
+                    lines.append(np.column_stack([np.log10(s.wav),np.log10(flux[:,j])]))
             else:
-                zorder = 50
-                color = '0.75'
-
-            flux = s.interpolate_variable(wav, ap * 10.**info.sc[i] * 1000.)
-
-            ax.plot(np.log10(s.wav), np.log10(flux), color=color, zorder=zorder)
+                lines.append(np.column_stack([np.log10(s.wav),np.log10(flux)]))
 
             if (par['pmode'] == 'A' and i == info.n_fits-1) or par['pmode'] == 'I':
+
+                ax.add_collection(LineCollection(lines, colors='0.75'))
 
                 ax = plot_source_data(ax, info.source, filters)
                 ax = set_view_limits(ax, par, wav, info.source)

@@ -1,4 +1,5 @@
 import numpy as np
+import cPickle as pickle
 
 
 def log_fluxes(valid, flux, error):
@@ -29,21 +30,25 @@ def log_fluxes(valid, flux, error):
 
 class Source(object):
 
-    def __init__(self, name, x, y, valid, flux, error):
+    def __init__(self):
 
-        self.name = name
-        self.x = x
-        self.y = y
-        self.valid = valid
-        self.flux = flux
-        self.error = error
-
-        self.weight, self.logflux, self.logerror = log_fluxes(valid, flux, error)
-
-        self.n_wav = len(self.valid)
-        self.n_data = len(np.where((self.valid==1) | (self.valid==4))[0])
+        # self.name = name
+        # self.x = x
+        # self.y = y
+        # self.valid = valid
+        # self.flux = flux
+        # self.error = error
+        #
+        # self._update_log_fluxes()
+        #
+        # self.n_wav = len(self.valid)
+        # self.n_data = len(np.where((self.valid==1) | (self.valid==4))[0])
 
         return
+
+    def _update_log_fluxes(self):
+        self.weight, self.logflux, self.logerror = log_fluxes(self.valid, self.flux, self.error)
+        self.n_data = len(np.where((self.valid==1) | (self.valid==4))[0])
 
     def __str__(self):
 
@@ -56,6 +61,43 @@ class Source(object):
 
         return string
 
+    def write_binary(self, file_handle):
+        pickle.dump(self.name, file_handle)
+        file_handle.write(self.x.tostring())
+        file_handle.write(self.y.tostring())
+        file_handle.write(self.n_wav.tostring())
+        file_handle.write(self.valid.tostring())
+        file_handle.write(self.flux.tostring())
+        file_handle.write(self.error.tostring())
+        file_handle.write(self.logflux.tostring())
+        file_handle.write(self.logerror.tostring())
+
+    def read_binary(self, file_handle):
+        self.name = pickle.load(file_handle)
+        self.x = np.fromstring(file_handle.read(8), dtype=np.float64)[0]
+        self.y = np.fromstring(file_handle.read(8), dtype=np.float64)[0]
+        self.n_wav = np.fromstring(file_handle.read(4), dtype=np.int32)[0]
+        self.valid = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.int32)
+        self.flux = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
+        self.error = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
+        self.logflux = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
+        self.logerror = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
+
+    def read_ascii(self, file_handle):
+        line = file_handle.readline().strip()
+        if line:
+            cols = line.split()
+            self.name = cols[0]
+            self.x = np.float64(cols[1])
+            self.y = np.float64(cols[2])
+            self.n_wav = np.int32((len(cols)-3)/3)
+            self.valid = np.array(cols[3:3+self.n_wav], dtype=np.int32)
+            flux_and_error = np.array(cols[3+self.n_wav:], dtype=np.float32)
+            self.flux = flux_and_error[::2]
+            self.error = flux_and_error[1::2]
+            self._update_log_fluxes()
+        else:
+            raise Exception("End of file")
 
 def read_sources(filename, n_min_valid=0):
 

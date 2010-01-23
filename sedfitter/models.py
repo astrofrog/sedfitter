@@ -49,10 +49,10 @@ class Models(object):
             if self.n_distances:
                 apertures_au = filt['aperture_arcsec'] * distances * 1.e3
                 conv.interpolate(apertures_au)
-                conv.fluxes = conv.fluxes / distances**2
+                conv.flux = conv.flux / distances**2
                 self.logd = np.log10(distances)
 
-            model_fluxes.append(conv.fluxes)
+            model_fluxes.append(conv.flux)
 
         if self.n_distances:
             self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), len(distances))

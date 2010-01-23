@@ -1,12 +1,9 @@
 # Still to implement:
-# - Min/max A_v - yes
-# - Min/max scale - won't implement?
-# - Minimum number of datapoints - done
 # - Performance monitoring
-# - YSO version - done
 # - Output convolved fluxes
 # - Option to removed resolved models
 # - Optimize output -> go back to using FITS file, at least guarantee perfect backwards compatibility (even if it means performance decreases)
+# - Ensure that fitter behaves ok for SEDs defined in only one aperture
 
 import numpy as np
 
@@ -17,6 +14,7 @@ import timer
 from models import Models
 from extinction import Extinction
 from fit_info import FitInfo
+from source import Source
 
 import cPickle as pickle
 
@@ -26,8 +24,7 @@ def fit(parameter_file):
     # Read in fitting parameters
     par = parfile.read(parameter_file, 'par')
 
-    # Read in data
-    sources = source.read_sources(par['dfile'], n_min_valid=par['drequ'])
+    data_file = file(par['dfile'], 'rb')
 
     # Read in data format
     f = file(par['dform'], 'rb')
@@ -78,17 +75,24 @@ def fit(parameter_file):
     pickle.dump(models.names, fout, 2)
     pickle.dump(par['exlaw'], fout, 2)
 
-    for s in sources:
+    s = Source()
+
+    while True:
+
+        try:
+            s.read_ascii(data_file)
+        except:
+            break
 
         if s.n_data > int(par['drequ']):
 
-            info = FitInfo(s)
+            info = FitInfo(source=s)
             info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law, par['minav'], par['maxav'])
 
             info.sort()
             info.keep(par['oform'], par['onumb'])
 
-            pickle.dump(info, fout, 2)
+            info.write(fout)
 
             t.display()
 

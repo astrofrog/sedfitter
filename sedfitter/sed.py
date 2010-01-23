@@ -81,6 +81,9 @@ class SED(object):
         Interpolate the SED to different apertures
         '''
 
+        if self.n_ap==1:
+            return np.repeat(self.flux[0,:],len(apertures)).reshape(self.n_wav, len(apertures))
+
         # Create interpolating function
         flux_interp = interp1d(self.ap, self.flux.swapaxes(0,1))
 
@@ -92,6 +95,12 @@ class SED(object):
         wavelength. This method should be called with an interpolating
         function for aperture as a function of wavelength, in log10 space.
         '''
+
+        if np.any(apertures < self.ap.min()):
+            raise Exception("Aperture(s) requested too small")
+
+        if self.n_ap == 1:
+            return self.flux[0,:]
 
         # Find wavelength order
         order = np.argsort(wavelengths)

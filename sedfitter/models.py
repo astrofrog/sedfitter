@@ -4,6 +4,8 @@ import numpy as np
 
 from convolved_fluxes import ConvolvedFluxes
 import fitting_routines as f
+import parfile
+
 
 class Models(object):
 
@@ -20,12 +22,20 @@ class Models(object):
 
         return
 
-    def read(self, directory, filters, distances=None):
+    def read(self, directory, filters, distance_range=None):
 
-        if type(distances) == np.ndarray:
-            self.n_distances = len(distances)
+        # Read in model parameters
+        modpar = parfile.read("%s/models.conf" % directory, 'conf')
+
+        if modpar['aperture_dependent']:
+            if distance_range:
+                self.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
+                self.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), self.n_distances)
+            else:
+                raise Exception("For aperture-dependent models, a distange range is required")
         else:
             self.n_distances = None
+            self.distances = None
 
         model_fluxes = []
         self.wavelengths = []
@@ -47,16 +57,16 @@ class Models(object):
             self.wavelengths.append(conv.wavelength)
 
             if self.n_distances:
-                apertures_au = filt['aperture_arcsec'] * distances * 1.e3
+                apertures_au = filt['aperture_arcsec'] * self.distances * 1.e3
                 conv.interpolate(apertures_au)
-                conv.flux = conv.flux / distances**2
-                self.logd = np.log10(distances)
+                conv.flux = conv.flux / self.distances**2
+                self.logd = np.log10(self.distances)
 
             model_fluxes.append(conv.flux)
 
         if self.n_distances:
-            self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), len(distances))
-            self.fluxes = self.fluxes.swapaxes(1,2)
+            self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), self.n_distances)
+            self.fluxes = self.fluxes.swapaxes(1, 2)
             print self.fluxes.shape
 
         else:
@@ -116,8 +126,8 @@ class Models(object):
 
             sc_best = self.logd[best]
 
-            ch_best = ch_best[np.arange(self.n_models),best]
-            av_best = av_best[np.arange(self.n_models),best]
+            ch_best = ch_best[np.arange(self.n_models), best]
+            av_best = av_best[np.arange(self.n_models), best]
 
         else:
 

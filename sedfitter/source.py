@@ -62,10 +62,10 @@ class Source(object):
         return string
 
     def write_binary(self, file_handle):
-        pickle.dump(self.name, file_handle)
-        file_handle.write(self.x.tostring())
-        file_handle.write(self.y.tostring())
-        file_handle.write(self.n_wav.tostring())
+        pickle.dump(self.name, file_handle, 2)
+        pickle.dump(self.x, file_handle, 2)
+        pickle.dump(self.y, file_handle, 2)
+        pickle.dump(self.n_wav, file_handle, 2)
         file_handle.write(self.valid.tostring())
         file_handle.write(self.flux.tostring())
         file_handle.write(self.error.tostring())
@@ -74,14 +74,15 @@ class Source(object):
 
     def read_binary(self, file_handle):
         self.name = pickle.load(file_handle)
-        self.x = np.fromstring(file_handle.read(8), dtype=np.float64)[0]
-        self.y = np.fromstring(file_handle.read(8), dtype=np.float64)[0]
-        self.n_wav = np.fromstring(file_handle.read(4), dtype=np.int32)[0]
+        self.x = pickle.load(file_handle)
+        self.y = pickle.load(file_handle)
+        self.n_wav = pickle.load(file_handle)
         self.valid = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.int32)
         self.flux = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
         self.error = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
         self.logflux = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
         self.logerror = np.fromstring(file_handle.read(self.n_wav*4), dtype=np.float32)
+        self._update_log_fluxes()
 
     def read_ascii(self, file_handle):
         line = file_handle.readline().strip()
@@ -98,6 +99,14 @@ class Source(object):
             self._update_log_fluxes()
         else:
             raise Exception("End of file")
+       
+    def write_ascii(self, file_handle): 
+        file_handle.write("%-30s " % self.name)
+        file_handle.write("%9.5f %9.5f " % (self.x, self.y))
+        file_handle.write("%1i " * self.n_wav % tuple(self.valid.tolist()))
+        for j in range(self.n_wav):
+            file_handle.write("%11.3e %11.3e "% (self.flux[j], self.error[j]))
+        file_handle.write("\n")
 
 def read_sources(filename, n_min_valid=0):
 

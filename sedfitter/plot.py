@@ -15,21 +15,22 @@
 
 # Optimization:
 # - Compute interpolating functions as little as possible
-# - Create LineCollection and PatchCollection and do the plotting at the very end
 
-import parfile
 import cPickle as pickle
-from sed import SED
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
 from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
-from extinction import Extinction
-from fit_info import FitInfo
 
 import numpy as np
+
+from extinction import Extinction
+from fit_info import FitInfo
+from sed import SED
+
+import parfile
 
 mpl.rc('axes', titlesize='small')
 mpl.rc('axes', labelsize='small')
@@ -41,15 +42,46 @@ mpl.rc('patch', linewidth=0.5)
 
 fp = FontProperties(size='x-small')
 
+color = {}
 
-def plot_source_info(ax, i, par, info, model_name):
+color['gray'] = 0.75
+color['black'] = 0.00
+
+color['full'] = []
+color['full'].append((0.65, 0.00, 0.00))
+color['full'].append((0.20, 0.30, 0.80))
+color['full'].append((1.00, 0.30, 0.30))
+color['full'].append((1.00, 0.30, 0.60))
+color['full'].append((0.30, 0.80, 0.30))
+color['full'].append((0.50, 0.10, 0.80))
+color['full'].append((0.20, 0.60, 0.80))
+color['full'].append((1.00, 0.00, 0.00))
+color['full'].append((0.50, 0.25, 0.00))
+color['full'].append((0.90, 0.90, 0.00))
+color['full'].append((0.00, 0.50, 0.00))
+
+color['faded'] = []
+color['faded'].append((1.00, 0.70, 0.70))
+color['faded'].append((0.70, 0.70, 0.80))
+color['faded'].append((1.00, 0.80, 0.70))
+color['faded'].append((1.00, 0.75, 1.00))
+color['faded'].append((0.70, 0.80, 0.70))
+color['faded'].append((0.75, 0.60, 0.80))
+color['faded'].append((0.70, 0.75, 0.80))
+color['faded'].append((1.00, 0.70, 0.80))
+color['faded'].append((0.90, 0.80, 0.70))
+color['faded'].append((0.90, 0.90, 0.70))
+color['faded'].append((0.50, 0.90, 0.50))
+
+
+def plot_source_info(ax, i, info, model_name, plot_name, plot_info):
 
     labels = []
 
-    if par['pname']:
+    if plot_name:
         labels.append(info.source.name)
 
-    if par['pinfo']:
+    if plot_info:
         labels.append("Model: %s" % model_name)
         if i==0:
             labels.append("Best fit")
@@ -90,22 +122,22 @@ def plot_source_data(ax, source, filters):
     return ax
 
 
-def set_view_limits(ax, par, wav, source):
+def set_view_limits(ax, wav, source, x_mode, y_mode, x_range, y_range):
 
-    if par['xmode'] == 'A':
-        xmin = np.log10(np.min(wav[source.valid<>0])) - par['xmina']
-        xmax = np.log10(np.max(wav[source.valid<>0])) + par['xmaxa']
+    if x_mode == 'A':
+        xmin = np.log10(np.min(wav[source.valid<>0])) - x_range[0]
+        xmax = np.log10(np.max(wav[source.valid<>0])) + x_range[1]
     else:
-        xmin = np.log10(par['xminm'])
-        xmax = np.log10(par['xmaxm'])
+        xmin = np.log10(x_range[0])
+        xmax = np.log10(x_range[1])
 
-    if par['ymode'] == 'A':
+    if y_mode == 'A':
         plot_flux = source.logflux - 26. + np.log10(3.e8/(wav * 1.e-6))
-        ymin = np.min(plot_flux[source.valid<>0]) - par['ymina']
-        ymax = np.max(plot_flux[source.valid<>0]) + par['ymaxa']
+        ymin = np.min(plot_flux[source.valid<>0]) - y_range[0]
+        ymax = np.max(plot_flux[source.valid<>0]) + y_range[1]
     else:
-        ymin = np.log10(par['yminm'])
-        ymax = np.log10(par['ymaxm'])
+        ymin = np.log10(y_range[0])
+        ymax = np.log10(y_range[1])
 
     ax.set_xlim((xmin, xmax))
     ax.set_ylim((ymin, ymax))
@@ -121,17 +153,21 @@ def get_axes(fig):
     return fig.add_axes(rect)
 
 
-def plot(parameter_file, input_file, output_dir):
+def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type="interp", x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.), plot_name=True, plot_info=True):
 
     fin = file(input_file, 'rb')
+
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
     model_names = pickle.load(fin)
-    extinction_file = pickle.load(fin)
-    extinction = Extinction(extinction_file)
+    extinction = Extinction()
+    extinction.read_binary(fin)
 
-    # Read in plotting parameters
-    par = parfile.read(parameter_file, 'par')
+    wav = np.array([f['wav'] for f in filters])
+    ap = np.array([f['aperture_arcsec'] for f in filters])
+
+    unique_ap = np.unique(ap)
+    unique_ap.sort()
 
     # Read in model parameters
     modpar = parfile.read("%s/models.conf" % model_dir, 'conf')
@@ -140,18 +176,35 @@ def plot(parameter_file, input_file, output_dir):
 
     while True:
 
+        # Read in next fit
         try:
-            info.read(fin)
+            info.read_binary(fin)
         except:
             break
 
+        # Filter fits
+        info.keep(select_format[0], select_format[1])
+
+        # Initalize lines and colors list
         lines = []
+        colors = []
 
         for i in range(info.n_fits):
 
-            if (par['pmode'] == 'A' and i == 0) or par['pmode'] == 'I':
+            if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
                 fig = mpl.figure()
                 ax = get_axes(fig)
+
+            if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
+                if sed_type in ['interp', 'largest']:
+                    color_type = '0.00'
+                else:
+                    color_type = 'full'
+            else:
+                if sed_type in ['interp', 'largest']:
+                    color_type = '0.75'
+                else:
+                    color_type = 'faded'
 
             model_name = model_names[info.model_id[i]].strip()
 
@@ -163,39 +216,40 @@ def plot(parameter_file, input_file, output_dir):
 
             s.scale_to_distance(10.**info.sc[i])
             s.scale_to_av(info.av[i], extinction.av)
-            wav = np.array([f['wav'] for f in filters])
-            ap = np.array([f['ap'] for f in filters])
 
-            if par['stype'] == 'interp':
+            if sed_type == 'interp':
                 apertures = ap * 10.**info.sc[i] * 1000.
                 flux = s.interpolate_variable(wav, apertures)
-            elif par['stype'] == 'largest':
+            elif sed_type == 'largest':
                 apertures = np.array([ap.max()]) * 10.**info.sc[i] * 1000.
                 flux = s.interpolate(apertures)
-            elif par['stype'] == 'largest+smallest':
+            elif sed_type == 'largest+smallest':
                 apertures = np.array([ap.min(), ap.max()]) * 10.**info.sc[i] * 1000.
                 flux = s.interpolate(apertures)
-            elif par['stype'] == 'all':
-                raise Exception("stype=all not implemented")
+            elif sed_type == 'all':
+                apertures = unique_ap
+                flux = s.interpolate(apertures)
 
             if flux.ndim > 1:
                 for j in range(flux.shape[1]):
-                    lines.append(np.column_stack([np.log10(s.wav),np.log10(flux[:,j])]))
+                    lines.append(np.column_stack([np.log10(s.wav), np.log10(flux[:, j])]))
+                    colors.append(color[color_type][j])
             else:
-                lines.append(np.column_stack([np.log10(s.wav),np.log10(flux)]))
+                lines.append(np.column_stack([np.log10(s.wav), np.log10(flux)]))
+                colors.append(color[color_type])
 
-            if (par['pmode'] == 'A' and i == info.n_fits-1) or par['pmode'] == 'I':
+            if (plot_mode == 'A' and i == info.n_fits-1) or plot_mode == 'I':
 
-                ax.add_collection(LineCollection(lines, colors='0.75'))
+                ax.add_collection(LineCollection(lines, colors=colors))
 
                 ax = plot_source_data(ax, info.source, filters)
-                ax = set_view_limits(ax, par, wav, info.source)
-                ax = plot_source_info(ax, i, par, info, model_name)
+                ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
+                ax = plot_source_info(ax, i, info, model_name, plot_name, plot_info)
 
                 ax.set_xlabel('$\lambda$ ($\mu$m)')
                 ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
 
-                if par['pmode'] == 'A':
+                if plot_mode == 'A':
                     fig.savefig("%s/%s.png" % (output_dir, info.source.name))
                 else:
                     fig.savefig("%s/%s_%05i.png" % (output_dir, info.source.name, i+1))

@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+import sys
+
+import sedfitter
+import sedfitter.parfile as parfile
+
+
+def _usage(*args):
+
+    if len(args) == 1:
+        print "\n    ERROR: " + args[0] + ''
+
+    print '''
+    Usage: sed_plot [arguments]
+
+    Required arguments :
+      par_file=filename  - the parameter file (e.g. plot.par)
+      input=filename     - the input fitter FITS file
+      output=directory   - the output plots directory
+    '''
+    sys.exit(0)
+
+if len(sys.argv) == 1:
+    _usage()
+
+options = {}
+for option in sys.argv[1:]:
+    try:
+        key, value = option.split('=')
+    except:
+        _usage("Invalid option %s" % option)
+    options[key] = value
+
+if not 'par_file' in options:
+    _usage("Argument par_file is required")
+
+if not 'input' in options:
+    _usage("Argument input is required")
+
+if not 'output' in options:
+    _usage("Argument output is required")
+
+par = parfile.read(options['par_file'], 'par')
+
+if par['xmode'] == 'A':
+    x_range = (par['xmina'], par['xmaxa'])
+else:
+    x_range = (par['xminm'], par['xmaxm'])
+
+if par['ymode'] == 'A':
+    y_range = (par['ymina'], par['ymaxa'])
+else:
+    y_range = (par['yminm'], par['ymaxm'])
+
+# Call python plot function
+sedfitter.plot(options['input'], options['output'],
+               select_format=(par['oform'], par['onumb']),
+               plot_mode=par['pmode'],
+               sed_type=par['stype'],
+               x_mode=par['xmode'], x_range=x_range,
+               y_mode=par['ymode'], y_range=y_range,
+               plot_name=par['pname'], plot_info=par['pinfo'])

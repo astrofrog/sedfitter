@@ -54,15 +54,15 @@ class FitInfo(object):
         else:
             raise AttributeError(attribute)
 
-    def write(self, file_handle):
+    def write_binary(self, file_handle):
         self.source.write_binary(file_handle)
-        pickle.dump(self.n_fits, file_handle)
+        pickle.dump(self.n_fits, file_handle, 2)
         file_handle.write(self.av.astype(np.float32).tostring())
         file_handle.write(self.sc.astype(np.float32).tostring())
         file_handle.write(self.chi2.astype(np.float32).tostring())
         file_handle.write(self.model_id.astype(np.int32).tostring())
 
-    def read(self, file_handle):
+    def read_binary(self, file_handle):
         self.source = Source()
         self.source.read_binary(file_handle)
         n_fits = pickle.load(file_handle)

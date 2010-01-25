@@ -1,0 +1,70 @@
+#!/usr/bin/env python
+
+import sys
+import cPickle as pickle
+
+import numpy as np
+
+import sedfitter
+from sedfitter.fit_info import FitInfo
+from sedfitter.extinction import Extinction
+
+
+def _usage(*args):
+
+    if len(args) == 1:
+        print "\n    ERROR: " + args[0] + ''
+
+    print '''
+    Usage: sed_fitinfo2data [arguments]
+
+    Required arguments :
+      input=filename     - the input fitter FITS file
+      output=filename    - the output data file
+    '''
+    sys.exit(0)
+
+if len(sys.argv) == 1:
+    _usage()
+
+options = {}
+for option in sys.argv[1:]:
+    try:
+        key, value = option.split('=')
+    except:
+        _usage("Invalid option %s" % option)
+    options[key] = value
+
+if not 'input' in options:
+    _usage("Argument input is required")
+
+if not 'output' in options:
+    _usage("Argument output is required")
+
+# Open input and output file
+fin = file(options['input'], 'rb')
+fout = file(options['output'], 'wb')
+
+# Read in header of output file
+model_dir = pickle.load(fin)
+filters = pickle.load(fin)
+model_names = pickle.load(fin)
+extinction = Extinction()
+extinction.read_binary(fin)
+
+info = FitInfo()
+
+while True:
+
+    # Read in next fit
+    try:
+        info.read(fin)
+    except:
+        break
+
+    # Output the source
+    info.source.write_ascii(fout)
+
+# Close input and output files
+fin.close()
+fout.close()

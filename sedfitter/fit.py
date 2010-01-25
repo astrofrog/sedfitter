@@ -1,79 +1,57 @@
 # Still to implement:
 # - Performance monitoring
+# - Remove resolved models
+# - Optional FITS input/output
 # - Output convolved fluxes
-# - Option to removed resolved models
-# - Optimize output -> go back to using FITS file, at least guarantee perfect backwards compatibility (even if it means performance decreases)
-# - Ensure that fitter behaves ok for SEDs defined in only one aperture
-
-import numpy as np
-
-import parfile
-import source
-import timer
-
-from models import Models
-from extinction import Extinction
-from fit_info import FitInfo
-from source import Source
 
 import cPickle as pickle
 
+import numpy as np
 
-def fit(parameter_file):
+import timer
 
-    # Read in fitting parameters
-    par = parfile.read(parameter_file, 'par')
+from models import Models
+from fit_info import FitInfo
+from source import Source
 
-    data_file = file(par['dfile'], 'rb')
 
-    # Read in data format
-    f = file(par['dform'], 'rb')
-    f.readline()
-    nwav = int(f.readline().split('=')[0])
-    filter_names = f.readline().split('=')[0].strip().split()
-    apertures = np.array(f.readline().split('=')[0].strip().split(), float)
+def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
+        extinction_law=None, distance_range=None, av_range=None,
+        output_format=('F', 6.), output_convolved=False,
+        remove_resolved=False):
 
-    # Read in model parameters
-    modpar = parfile.read("%s/models.conf" % par['modir'], 'conf')
-
-    if modpar['aperture_dependent']:
-        if 'mind' in par and 'maxd' in par:
-            n_distances = 1 + (np.log10(par['maxd']) - np.log10(par['mind'])) / modpar['logd_step']
-            distances = np.logspace(np.log10(par['mind']), np.log10(par['maxd']), n_distances)
-        else:
-            raise Exception("For aperture-dependent models, mind/maxd are required")
-    else:
-        distances = None
+    # Open datafile
+    data_file = file(data, 'rb')
 
     # Construct filters dictionary
     filters = []
-    for i in range(nwav):
+    for i in range(len(apertures)):
         filters.append({'aperture_arcsec': apertures[i], 'name': filter_names[i]})
 
     # Read in models
-    models = Models(par['modir'], filters, distances=distances)
+    models = Models(model_dir, filters, distance_range=distance_range)
 
-    # Construct filters dictionary
-    filters = []
-    for i in range(nwav):
-        filters.append({'wav': models.wavelengths[i], 'ap': apertures[i], 'name': filter_names[i]})
+    # Add wavelength to filters
+    for i, f in enumerate(filters):
+        f['wav'] = models.wavelengths[i]
 
-    # Set extinction model
-    extinction = Extinction(par['exlaw'])
-    av_law = extinction.av(models.wavelengths)
+    # Set Av law
+    av_law = extinction_law.av(models.wavelengths)
 
-    # Set scale model
+    # Set scale model - make this a scalar
     sc_law = -2. * np.ones(av_law.shape)
 
     # Cycle through sources
 
     t = timer.Timer()
 
-    fout = file(par['ofile'], 'wb')
-    pickle.dump(par['modir'], fout, 2)
+    fout = file(output, 'wb')
+    pickle.dump(model_dir, fout, 2)
     pickle.dump(filters, fout, 2)
     pickle.dump(models.names, fout, 2)
-    pickle.dump(par['exlaw'], fout, 2)
+    extinction_law.write_binary(fout)
+
+    # NOTE _ CAN USE PROTOCOL 2 IN SOURCE FOR COORINDATES
 
     s = Source()
 
@@ -84,15 +62,15 @@ def fit(parameter_file):
         except:
             break
 
-        if s.n_data > int(par['drequ']):
+        if s.n_data > n_data_min:
 
             info = FitInfo(source=s)
-            info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law, par['minav'], par['maxav'])
+            info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law, av_range[0], av_range[1])
 
             info.sort()
-            info.keep(par['oform'], par['onumb'])
+            info.keep(output_format[0], output_format[1])
 
-            info.write(fout)
+            info.write_binary(fout)
 
             t.display()
 

@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+import sys
+
+import numpy as np
+
+import sedfitter
+import sedfitter.parfile as parfile
+from sedfitter.extinction import Extinction
+
+
+def _usage(*args):
+
+    if len(args) == 1:
+        print "\n    ERROR: " + args[0] + ''
+
+    print '''
+    Usage: sed_fit [arguments]
+
+    Required arguments :
+      par_file=filename  - the parameter file (e.g. config/sn_requirements.par)
+
+    Optional arguments :
+      output=filename    - the output directory
+      input=filename     - the input fitter data file
+      models=directory   - the models to use
+      best=yes/no        - whether to output only the best fit
+    '''
+    sys.exit(0)
+
+if len(sys.argv) == 1:
+    _usage()
+
+options = {}
+for option in sys.argv[1:]:
+    try:
+        key, value = option.split('=')
+    except:
+        _usage("Invalid option %s" % option)
+    options[key] = value
+
+if not 'par_file' in options:
+    _usage("Argument par_file is required")
+
+par = parfile.read(options['par_file'], 'par')
+
+if 'output' in options:
+    par['ofile'] = options['output']
+
+if 'input' in options:
+    par['dfile'] = options['input']
+
+if 'models' in options:
+    par['modir'] = options['models']
+
+if 'best' in options:
+    par['oform'] = "N"
+    par['onumb'] = 1
+
+# Parse config file
+f = file(par['dform'], 'rb')
+f.readline()
+nwav = int(f.readline().split('=')[0])
+filters = f.readline().split('=')[0].strip().split()
+apertures = np.array(f.readline().split('=')[0].strip().split(), float)
+
+# Construct extinction file object
+extinction = Extinction(par['exlaw'])
+
+if 'mind' in par and 'maxd' in par:
+    distance_range = (par['mind'], par['maxd'])
+else:
+    distance_range = None
+
+if 'kpres' in par:
+    remove_resolved = not par['kpres']
+else:
+    remove_resolved = False
+
+# Call python fit function
+sedfitter.fit(par['dfile'], filters, apertures, par['modir'], par['ofile'],
+              n_data_min=par['drequ'], extinction_law=extinction,
+              distance_range=distance_range,
+              av_range=(par['minav'], par['maxav']),
+              output_format=(par['oform'], par['onumb']),
+              output_convolved=par['oconv'], remove_resolved=remove_resolved)

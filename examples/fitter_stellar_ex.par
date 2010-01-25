@@ -1,0 +1,18 @@
+------------------------- Data --------------------------
+data_glimpse_ex.par     = dform = data format
+data_glimpse            = dfile = data file
+4                       = drequ = minimum number of datapoints
+
+------------------------ Fitting ------------------------
+models_kurucz           = modir = models directory
+ex_law_gl.par           = exlaw = extinction law
+0.                      = minav = Minimum interstellar extinction
+40.                     = maxav = Maximum interstellar extinction
+
+------------------------ Output -------------------------
+output_stellar.fits     = ofile = output filename
+N                       = oform = what to output (N/C/P/D/E/F)   
+1                       = onumb = number relating to the above option
+
+----------------------- Advanced ------------------------
+N                       = oconv = Output convolved fluxes

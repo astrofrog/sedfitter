@@ -1,0 +1,62 @@
+------------------ General - All programs ---------------
+
+F       = oform = what to plot (N/C/P/D/E/F)  
+2.      = onumb = number relating to the oform option
+
+------------------- General - SED plots -----------------
+
+A       = pmode = mode - I(ndividual) or A(ll SEDs on one plot)
+Y       = pgrey = if in A mode, whether to plot a greyscale
+
+A       = xmode = X values - A(uto)/M(anual)
+0.1     = xminm  = Xmin (if manual)
+100.    = xmaxm  = Xmax (if manual)
+1.      = xmina = Xmin margin in orders of magnitude (if auto)
+1.      = xmaxa = Xmax margin in orders of magnitude (if auto)
+
+A       = ymode = Y values (A(uto)/M(anual))
+1.e-14  = yminm  = Ymin (if manual)
+1.e-9   = ymaxm  = Ymax (if manual)
+1.      = ymina = Ymin margin in orders of magnitude (if auto)
+2.      = ymaxa = Ymax margin in orders of magnitude (if auto)
+
+Y       = pseds = plot SEDs (Y/N)
+N       = pconv = plot convolved fluxes (Y/N)
+Y       = patmo = overplot stellar atmosphere (Y/N)
+interp  = stype = what type of SED to show (see manual)
+
+N       = pinfo = show fit info on plot (Y/N)
+
+N       = pcapt = create color caption (Y/N)
+
+--------------- Advanced  - all plotting ---------------
+
+Y        = pname = show source name on plot (Y/N)
+.eps/VPS = devic = PGPLOT device (change to .eps/VCPS for color)
+0.75     = chlab = title and labels character height
+0.60     = chaxi = numerical axis character height
+2        = lwbox = line width of box, numbers, and labels
+2        = lwsed = line width of SEDs
+0.75     = shade = shade of grey
+2.5      = labdx = x-label displacement
+3.0      = labdy = y-label displacement
+
+--------------- Advanced - SED plotting ----------------
+
+400     = greyx = greyscale resolution (x direction)
+300     = greyy = greyscale resolution (y direction)
+0.8     = greyc = greyscale clipping value
+3.0     = greym = greyscale stretch
+
+--------------- Advanced - 1d plotting -----------------
+
+30     = histn = number of bins in histogram
+
+--------------- Advanced - 2d plotting -----------------
+
+8	= greyspl2d = greyscale resampling
+2048    = greybig2d = greyscale resolution (major direction)
+136     = greysma2d = greyscale resolution (minor direction)
+13.     = greycli2d = greyscale clipping value
+40.     = greymax2d = greyscale stretch
+0.75    = ch2dpoint = size of points in 2d plots

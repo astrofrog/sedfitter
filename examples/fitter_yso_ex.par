@@ -1,0 +1,21 @@
+------------------------- Data --------------------------
+data_glimpse_ex.par     = dform = data format
+data_nonstellar         = dfile = data file
+4                       = drequ = minimum number of datapoints
+
+------------------------ Fitting ------------------------
+models_r06              = modir = models directory
+ex_law_gl.par           = exlaw = extinction law
+2.                      = mind  = minimum distance in kpc
+2.5                     = maxd  = maximum distance in kpc
+0.                      = minav = Minimum interstellar extinction
+40.                     = maxav = Maximum interstellar extinction
+
+------------------------ Output -------------------------
+output_yso.fits             = ofile = output filename
+F                       = oform = what to output (N/C/P/D/E/F)   
+6.                      = onumb = number relating to the above option
+
+----------------------- Advanced ------------------------
+N                       = oconv = Output convolved fluxes
+N                       = kpext = Any sources larger than aperture? (Y/N)

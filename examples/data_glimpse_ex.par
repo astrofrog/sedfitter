@@ -1,0 +1,4 @@
+############### DATA-DEPENDANT PARAMETERS ###############
+7                       = Number of wavelengths
+2J 2H 2K I1 I2 I3 I4    = Filters (format: xx xx xx xx xx)
+3. 3. 3. 3. 3. 3. 3.   = Apertures in arcseconds

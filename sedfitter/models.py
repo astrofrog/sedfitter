@@ -29,8 +29,12 @@ class Models(object):
 
         if modpar['aperture_dependent']:
             if distance_range:
-                self.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
-                self.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), self.n_distances)
+                if distance_range[0] == distance_range[1]:
+                    self.n_distances = 1
+                    self.distances = np.array([distance_range[0]])
+                else:
+                    self.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
+                    self.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), self.n_distances)
             else:
                 raise Exception("For aperture-dependent models, a distange range is required")
         else:

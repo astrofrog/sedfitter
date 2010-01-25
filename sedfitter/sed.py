@@ -1,3 +1,5 @@
+import os
+
 from scipy.interpolate import interp1d
 
 import atpy
@@ -26,6 +28,9 @@ class SED(object):
             self.flux *= 10.**(self.av * self.law(self._wav))
 
     def read(self, filename, unit_wav='microns', unit_flux='ergs/cm^2/s'):
+
+        if not os.path.exists and os.path.exists(filename + '.gz'):
+            filename += ".gz"
 
         # Read file
 

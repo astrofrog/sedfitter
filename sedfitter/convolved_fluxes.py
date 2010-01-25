@@ -1,5 +1,6 @@
 from scipy.interpolate import interp1d
 import atpy
+import numpy as np
 
 
 class ConvolvedFluxes(object):

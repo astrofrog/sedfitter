@@ -67,11 +67,8 @@ class Models(object):
         if self.n_distances:
             self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), self.n_distances)
             self.fluxes = self.fluxes.swapaxes(1, 2)
-            print self.fluxes.shape
-
         else:
             self.fluxes = np.column_stack(model_fluxes)
-            print self.fluxes.shape
 
         self.names = conv.model_names
         self.n_models = conv.n_models

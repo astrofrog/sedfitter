@@ -86,13 +86,9 @@ while True:
     else:
         chi = info.chi2[0] / float(info.source.n_data)
 
-    print info.source.name, chi, thresh, chi < thresh
-
     if chi < thresh:
-        print "good"
         info.write_binary(fout_good)
     else:
-        print "bad"
         info.write_binary(fout_bad)
 
 # Close input and output files

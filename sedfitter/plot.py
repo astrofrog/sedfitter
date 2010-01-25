@@ -210,9 +210,9 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
 
             s = SED()
             if modpar['length_subdir'] == 0:
-                s.read(model_dir + '/seds/' + model_name + '_sed.fits.gz')
+                s.read(model_dir + '/seds/' + model_name + '_sed.fits')
             else:
-                s.read(model_dir + '/seds/%s/%s_sed.fits.gz' % (model_name[:modpar['length_subdir']], model_name))
+                s.read(model_dir + '/seds/%s/%s_sed.fits' % (model_name[:modpar['length_subdir']], model_name))
 
             s.scale_to_distance(10.**info.sc[i])
             s.scale_to_av(info.av[i], extinction.av)

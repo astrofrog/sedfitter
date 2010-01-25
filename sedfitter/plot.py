@@ -1,7 +1,7 @@
 # Still to implement:
 # - Axis numbers
-# - Interpolation of SEDs (stype) - needs testing
-# - Use number/format to know how many to plot (can use info.keep)
+# - Interpolation of SEDs (stype) - done - needs testing
+# - Use number/format to know how many to plot (can use info.keep) - done - needs testing
 
 # Low priority
 # - Grayscale SEDs

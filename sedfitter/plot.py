@@ -1,5 +1,5 @@
 # Still to implement:
-# - Axis numbers
+# - Axis numbers - done
 # - Interpolation of SEDs (stype) - done - needs testing
 # - Use number/format to know how many to plot (can use info.keep) - done - needs testing
 
@@ -23,15 +23,17 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
 from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
+import matplotlib.ticker as ticker
 
 import numpy as np
 
 from extinction import Extinction
 from fit_info import FitInfo
 from sed import SED
-
+import util
 import parfile
 
+mpl.rc('text', usetex=True)
 mpl.rc('axes', titlesize='small')
 mpl.rc('axes', labelsize='small')
 mpl.rc('xtick', labelsize='x-small')
@@ -44,8 +46,8 @@ fp = FontProperties(size='x-small')
 
 color = {}
 
-color['gray'] = 0.75
-color['black'] = 0.00
+color['gray'] = '0.75'
+color['black'] = '0.00'
 
 color['full'] = []
 color['full'].append((0.65, 0.00, 0.00))
@@ -87,7 +89,7 @@ def plot_source_info(ax, i, info, model_name, plot_name, plot_info):
             labels.append("Best fit")
         else:
             labels.append("Fit: %i" % (i+1))
-        labels.append("$\chi^2$ = %10.3f    Av = %5.1f   Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
+        labels.append("$\chi^2$ = %10.3f\,\,\,\,A$_{\\rm V}$ = %5.1f\,\,\,\,Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
 
     pos = 0.95
     for label in labels:
@@ -103,15 +105,18 @@ def plot_source_info(ax, i, info, model_name, plot_name, plot_info):
 def plot_source_data(ax, source, filters):
 
     wav = np.array([f['wav'] for f in filters])
-    plot_wav = np.log10(wav)
+    plot_wav = wav
     plot_flux = source.logflux - 26. + np.log10(3.e8/(wav * 1.e-6))
-    plot_error = source.logerror
+    plot_flux_up = 10.**(plot_flux + source.logerror)
+    plot_flux_down = 10.**(plot_flux - source.logerror)
+    plot_flux = 10.**plot_flux
+    plot_error = np.vstack([plot_flux - plot_flux_down, plot_flux_up - plot_flux])
 
     for j in range(source.n_wav):
 
         if source.valid[j] in [1, 4]:
             ax.scatter(plot_wav[j], plot_flux[j], marker='o', edgecolor='black', facecolor='black', zorder=100)
-            ax.errorbar(plot_wav[j], plot_flux[j], yerr=plot_error[j], color='black', zorder=100)
+            ax.errorbar(plot_wav[j], plot_flux[j], yerr=plot_error[:,j:j+1], color='black', zorder=100)
         elif source.valid[j] == 2:
             ax.scatter(plot_wav[j], plot_flux[j], marker='^', edgecolor='black', facecolor='black', zorder=100)
         elif source.valid[j] == 3:
@@ -125,22 +130,25 @@ def plot_source_data(ax, source, filters):
 def set_view_limits(ax, wav, source, x_mode, y_mode, x_range, y_range):
 
     if x_mode == 'A':
-        xmin = np.log10(np.min(wav[source.valid<>0])) - x_range[0]
-        xmax = np.log10(np.max(wav[source.valid<>0])) + x_range[1]
+        xmin = np.min(wav[source.valid<>0]) * 10.**(-x_range[0])
+        xmax = np.max(wav[source.valid<>0]) * 10.**(+x_range[1])
     else:
-        xmin = np.log10(x_range[0])
-        xmax = np.log10(x_range[1])
+        xmin = x_range[0]
+        xmax = x_range[1]
 
     if y_mode == 'A':
-        plot_flux = source.logflux - 26. + np.log10(3.e8/(wav * 1.e-6))
-        ymin = np.min(plot_flux[source.valid<>0]) - y_range[0]
-        ymax = np.max(plot_flux[source.valid<>0]) + y_range[1]
+        plot_flux = 10.**(source.logflux - 26. + np.log10(3.e8/(wav * 1.e-6)))
+        ymin = np.min(plot_flux[source.valid<>0]) * 10.**(-y_range[0])
+        ymax = np.max(plot_flux[source.valid<>0]) * 10.**(+y_range[1])
     else:
-        ymin = np.log10(y_range[0])
-        ymax = np.log10(y_range[1])
+        ymin = y_range[0]
+        ymax = y_range[1]
 
+    ax.set_xscale('log')
+    ax.set_yscale('log')
     ax.set_xlim((xmin, xmax))
     ax.set_ylim((ymin, ymax))
+    ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
 
     return ax
 
@@ -154,6 +162,8 @@ def get_axes(fig):
 
 
 def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type="interp", x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.), plot_name=True, plot_info=True):
+
+    util.create_dir(output_dir)
 
     fin = file(input_file, 'rb')
 
@@ -197,12 +207,12 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
 
             if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
                 if sed_type in ['interp', 'largest']:
-                    color_type = '0.00'
+                    color_type = 'black'
                 else:
                     color_type = 'full'
             else:
                 if sed_type in ['interp', 'largest']:
-                    color_type = '0.75'
+                    color_type = 'gray'
                 else:
                     color_type = 'faded'
 
@@ -232,10 +242,10 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
 
             if flux.ndim > 1:
                 for j in range(flux.shape[1]):
-                    lines.append(np.column_stack([np.log10(s.wav), np.log10(flux[:, j])]))
+                    lines.append(np.column_stack([s.wav, flux[:, j]]))
                     colors.append(color[color_type][j])
             else:
-                lines.append(np.column_stack([np.log10(s.wav), np.log10(flux)]))
+                lines.append(np.column_stack([s.wav, flux]))
                 colors.append(color[color_type])
 
             if (plot_mode == 'A' and i == info.n_fits-1) or plot_mode == 'I':
@@ -243,13 +253,14 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
                 ax.add_collection(LineCollection(lines, colors=colors))
 
                 ax = plot_source_data(ax, info.source, filters)
-                ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
                 ax = plot_source_info(ax, i, info, model_name, plot_name, plot_info)
 
                 ax.set_xlabel('$\lambda$ ($\mu$m)')
                 ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
 
+                ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
+
                 if plot_mode == 'A':
-                    fig.savefig("%s/%s.png" % (output_dir, info.source.name))
+                    fig.savefig("%s/%s.eps" % (output_dir, info.source.name))
                 else:
-                    fig.savefig("%s/%s_%05i.png" % (output_dir, info.source.name, i+1))
+                    fig.savefig("%s/%s_%05i.eps" % (output_dir, info.source.name, i+1))

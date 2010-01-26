@@ -2,7 +2,9 @@ import os
 
 from scipy.interpolate import interp1d
 
-import atpy
+# import atpy
+import pyfits
+
 from copy import copy
 import numpy as np
 
@@ -32,19 +34,28 @@ class SED(object):
         if not os.path.exists(filename) and os.path.exists(filename + '.gz'):
             filename += ".gz"
 
-        # Read file
+        hdulist = pyfits.open(filename)
+        self._wav = hdulist[1].data.field('WAVELENGTH')
+        self.ap = hdulist[2].data.field('APERTURE')
+        self._flux = hdulist[3].data.field('TOTAL_FLUX')
+        
+        self.n_wav = len(self._wav)
+        self.n_ap = len(self.ap)
 
-        ts = atpy.TableSet(filename, verbose=False)
+        curr_unit_wav = hdulist[1].columns[0].unit
+        curr_unit_flux = hdulist[3].columns[0].unit
 
-        self.n_wav = len(ts[0])
-        self.n_ap = len(ts[1])
-
-        self._wav = ts[0].WAVELENGTH
-        self.ap = ts[1].APERTURE
-        self._flux = ts[2].TOTAL_FLUX
-
-        curr_unit_wav = ts[0].columns['WAVELENGTH'].unit
-        curr_unit_flux = ts[2].columns['TOTAL_FLUX'].unit
+        # ts = atpy.TableSet(filename, verbose=False)
+        # 
+        # self.n_wav = len(ts[0])
+        # self.n_ap = len(ts[1])
+        # 
+        # self._wav = ts[0].WAVELENGTH
+        # self.ap = ts[1].APERTURE
+        # self._flux = ts[2].TOTAL_FLUX
+        # 
+        # curr_unit_wav = ts[0].columns['WAVELENGTH'].unit
+        # curr_unit_flux = ts[2].columns['TOTAL_FLUX'].unit
 
         # Convert wavelength units
 

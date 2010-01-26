@@ -1,7 +1,7 @@
 from scipy.interpolate import interp1d
-import atpy
+# import atpy
+import pyfits
 import numpy as np
-
 
 class ConvolvedFluxes(object):
 
@@ -15,31 +15,59 @@ class ConvolvedFluxes(object):
         '''
 
         # Open the convolved flux FITS file
-        t = atpy.TableSet(filename, verbose=False)
+        hdulist = pyfits.open(filename)
 
         # Try and read in the wavelength of the filter
-        if 'FILTWAV' in t.keywords:
-            self.wavelength = t.keywords['FILTWAV']
+        if 'FILTWAV' in hdulist[0].header:
+            self.wavelength = hdulist[0].header['FILTWAV']
         else:
             self.wavelength = None
 
         # Read in number of models and apertures
-        self.n_models = t.keywords['NMODELS']
-        self.n_ap = t.keywords['NAP']
+        self.n_models = hdulist[0].header['NMODELS']
+        self.n_ap = hdulist[0].header['NAP']
 
         # Read in model names
-        self.model_names = t[0].MODEL_NAME
+        self.model_names = hdulist[1].data.field('MODEL_NAME')
 
         # Read in flux and flux errors
-        self._flux = t[0].TOTAL_FLUX
-        self._flux_errors = t[0].TOTAL_FLUX_ERR
+        self._flux = hdulist[1].data.field('TOTAL_FLUX')
+        self._flux_errors = hdulist[1].data.field('TOTAL_FLUX_ERR')
 
         # Read in 99% cumulative and 50% surface brightness radii
-        self.radius_sigma_50 = t[0].RADIUS_SIGMA_50
-        self.radius_cumul_99 = t[0].RADIUS_CUMUL_99
+        self.radius_sigma_50 = hdulist[1].data.field('RADIUS_SIGMA_50')
+        self.radius_cumul_99 = hdulist[1].data.field('RADIUS_CUMUL_99')
 
         # Read in apertures
-        self._apertures = t[1].APERTURE
+        self._apertures = hdulist[2].data.field('APERTURE')
+
+        # Open the convolved flux FITS file
+        # t = atpy.TableSet(filename, verbose=False)
+
+        # Try and read in the wavelength of the filter
+        # if 'FILTWAV' in t.keywords:
+        # if 'FILTWAV' in hdulist[0].header:
+        #     self.wavelength = t.keywords['FILTWAV']
+        # else:
+        #     self.wavelength = None
+
+        # Read in number of models and apertures
+        # self.n_models = t.keywords['NMODELS']
+        # self.n_ap = t.keywords['NAP']
+
+        # Read in model names
+        # self.model_names = t[0].MODEL_NAME
+
+        # Read in flux and flux errors
+        # self._flux = t[0].TOTAL_FLUX
+        # self._flux_errors = t[0].TOTAL_FLUX_ERR
+
+        # Read in 99% cumulative and 50% surface brightness radii
+        # self.radius_sigma_50 = t[0].RADIUS_SIGMA_50
+        # self.radius_cumul_99 = t[0].RADIUS_CUMUL_99
+
+        # Read in apertures
+        # self._apertures = t[1].APERTURE
 
         # Create an interpolating function for the flux vs aperture
         if self._flux.ndim > 1:

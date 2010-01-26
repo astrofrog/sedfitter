@@ -58,6 +58,8 @@ select is given by ``onumb``. Setting ``oform`` to ``C``, ``D``, ``E``, or
 options are equivalent to the ``C`` and ``D`` options respectively, but with
 the \chi^2 value given per datapoint.
 
+.. _fitpar:
+
 The fitter parameter file
 -------------------------
 

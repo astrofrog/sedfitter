@@ -21,7 +21,7 @@ Contents:
    traditional.rst
    python_api.rst
    filter_names.rst
-   
+   model_packages.rst
 
 Indices and tables
 ==================

@@ -29,7 +29,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         filters.append({'aperture_arcsec': apertures[i], 'name': filter_names[i]})
 
     # Read in models
-    models = Models(model_dir, filters, distance_range=distance_range)
+    models = Models(model_dir, filters, distance_range=distance_range, remove_resolved=remove_resolved)
 
     # Add wavelength to filters
     for i, f in enumerate(filters):

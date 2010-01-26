@@ -16,13 +16,14 @@ class Models(object):
         self.wavelengths = None
         self.apertures = None
         self.logd = None
+        self.extended = []
 
         if args:
             self.read(*args, **kwargs)
 
         return
 
-    def read(self, directory, filters, distance_range=None):
+    def read(self, directory, filters, distance_range=None, remove_resolved=False):
 
         # Read in model parameters
         modpar = parfile.read("%s/models.conf" % directory, 'conf')
@@ -65,12 +66,17 @@ class Models(object):
                 conv.interpolate(apertures_au)
                 conv.flux = conv.flux / self.distances**2
                 self.logd = np.log10(self.distances)
+                if remove_resolved:
+                    self.extended.append(apertures_au[np.newaxis,:] < conv.radius_sigma_50[:,np.newaxis])
 
             model_fluxes.append(conv.flux)
 
         if self.n_distances:
             self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), self.n_distances)
             self.fluxes = self.fluxes.swapaxes(1, 2)
+            if remove_resolved:
+                self.extended = np.column_stack(self.extended).reshape(conv.n_models, len(filters), self.n_distances)
+                self.extended = self.extended.swapaxes(1, 2)
         else:
             self.fluxes = np.column_stack(model_fluxes)
 
@@ -121,6 +127,11 @@ class Models(object):
 
             # Calculate the chi-squared value
             ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
+
+            # Remove extended objects
+            if type(self.extended) == np.ndarray:
+                reset = np.any(self.extended[:, :, source.valid > 0], axis=2)
+                ch_best[reset] = np.inf
 
             # Find best-fit distance in each case
             best = np.argmin(ch_best, axis=1)

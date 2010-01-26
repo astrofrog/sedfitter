@@ -237,7 +237,7 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
                 apertures = np.array([ap.min(), ap.max()]) * 10.**info.sc[i] * 1000.
                 flux = s.interpolate(apertures)
             elif sed_type == 'all':
-                apertures = unique_ap
+                apertures = unique_ap * 10.**info.sc[i] * 1000.
                 flux = s.interpolate(apertures)
 
             if flux.ndim > 1:

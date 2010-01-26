@@ -76,15 +76,18 @@ color['faded'].append((0.90, 0.90, 0.70))
 color['faded'].append((0.50, 0.90, 0.50))
 
 
+def tex_friendly(string):
+    return string.replace('_','\_').replace('%','\%')
+
 def plot_source_info(ax, i, info, model_name, plot_name, plot_info):
 
     labels = []
 
     if plot_name:
-        labels.append(info.source.name)
+        labels.append(tex_friendly(info.source.name))
 
     if plot_info:
-        labels.append("Model: %s" % model_name)
+        labels.append("Model: %s" % tex_friendly(model_name))
         if i==0:
             labels.append("Best fit")
         else:

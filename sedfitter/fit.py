@@ -13,12 +13,37 @@ import timer
 from models import Models
 from fit_info import FitInfo
 from source import Source
+import util
 
 
 def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         extinction_law=None, distance_range=None, av_range=None,
         output_format=('F', 6.), output_convolved=False,
         remove_resolved=False):
+
+    print " ------------------------------------------------------------"
+    print "  => Fitting parameters"
+    print " ------------------------------------------------------------"
+    print ""
+    print "   Minimum A_V      : %9.3f mag" % av_range[0]
+    print "   Maximum A_V      : %9.3f mag" % av_range[1]
+    print "   Minimum distance : %9.3f kpc" % distance_range[0]
+    print "   Maximum distance : %9.3f kpc" % distance_range[1]
+    print ""
+    print " ------------------------------------------------------------"
+    print "  => Output parameters"
+    print " ------------------------------------------------------------"
+    print ""
+    print "   File   : %s" % output
+    print "   Format : %s" % output_format[0]
+    print "   Number : %g" % output_format[1]
+    print ""
+    print " ------------------------------------------------------------"
+    print "  => Data format parameters"
+    print " ------------------------------------------------------------"
+    print ""
+    print "   Number of filters :  %i" % len(filter_names)
+    print ""
 
     # Open datafile
     data_file = file(data, 'rb')
@@ -35,6 +60,15 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     for i, f in enumerate(filters):
         f['wav'] = models.wavelengths[i]
 
+    print ''
+    print '     Filter    Wavelength    Aperture (")   '
+    print '    ----------------------------------------'
+    for f in filters:
+        print '       %5s   %9.2f  %9.2f        ' % (f['name'], f['aperture_arcsec'], f['wav'])
+    print ''
+
+
+
     # Set Av law
     av_law = extinction_law.av(models.wavelengths)
 
@@ -43,7 +77,8 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
 
     # Cycle through sources
 
-    t = timer.Timer()
+
+    util.delete_file(output)
 
     fout = file(output, 'wb')
     pickle.dump(model_dir, fout, 2)
@@ -54,6 +89,8 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     # NOTE _ CAN USE PROTOCOL 2 IN SOURCE FOR COORINDATES
 
     s = Source()
+
+    t = timer.Timer()
 
     while True:
 

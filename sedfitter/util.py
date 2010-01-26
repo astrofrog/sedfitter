@@ -17,6 +17,7 @@ def delete_dir(dir_name):
         else:
             print "Aborting..."
             sys.exit()
+        print ""
 
 
 def delete_file(file_name):
@@ -28,3 +29,4 @@ def delete_file(file_name):
         else:
             print "Aborting..."
             sys.exit()
+        print ""

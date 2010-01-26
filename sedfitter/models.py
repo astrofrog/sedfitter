@@ -28,6 +28,13 @@ class Models(object):
         # Read in model parameters
         modpar = parfile.read("%s/models.conf" % directory, 'conf')
 
+        print " ------------------------------------------------------------"
+        print "  => Model parameters"
+        print " ------------------------------------------------------------"
+        print ""
+        print "   Models              :  %s" % modpar['name']
+        print "   Log[d] stepping     :  %g" % modpar['logd_step']
+
         if modpar['aperture_dependent']:
             if distance_range:
                 if distance_range[0] == distance_range[1]:
@@ -36,11 +43,18 @@ class Models(object):
                 else:
                     self.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
                     self.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), self.n_distances)
+                print "   Number of distances :  %i" % self.n_distances
             else:
                 raise Exception("For aperture-dependent models, a distange range is required")
         else:
             self.n_distances = None
             self.distances = None
+
+        print ""
+        print " ------------------------------------------------------------"
+        print "  => Reading in convolved fluxes"
+        print " ------------------------------------------------------------"
+        print ""
 
         model_fluxes = []
         self.wavelengths = []
@@ -55,7 +69,7 @@ class Models(object):
                 else:
                     raise Exception("File not found: "+filename)
 
-            print "Reading "+filename
+            print "   Reading "+filename
 
             conv = ConvolvedFluxes(filename)
 

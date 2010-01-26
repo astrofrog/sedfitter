@@ -252,7 +252,7 @@ The **advanced** options required by all programs are::
 These are very technical options used to change the appearance of the plots. The default values are sensible, but you can always tweak them if needed.
 
 SED plotting with ``sed_plot``
---------------------------
+------------------------------
 
 This is the main plotting program which produced SED plots. The ``plot`` specific parameters are:
 

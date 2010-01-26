@@ -20,6 +20,7 @@ Contents:
    preparing_data.rst
    traditional.rst
    python_api.rst
+   filter_names.rst
    
 
 Indices and tables

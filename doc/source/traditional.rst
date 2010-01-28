@@ -2,16 +2,25 @@
 Traditional command-line tools
 ==============================
 
-During the installation of the SED fitter, a number of executables are added to the ``bin/`` directory of the Python installation, and are thus available anywhere on the command-line.
+There are two main ways to use the SED fitting utilities. The first is to
+use it using command-line executables, which are used identically to the
+fortran version of the SED fitting tool. This is provided to allow users to
+upgrade to the Python version without having to make major changes to
+pipeline scripts, and is described in this section. The second method is to use the routines from Python directly. This is described in :ref:`pythonapi`.
+
+During the installation of the SED fitter, a number of executables are added to the ``bin/`` directory of the Python installation, and are thus available anywhere on the command-line provided the path is set correctly.
 
 .. note::
    Since the commands are available anywhere on the system regardless of
    directory, general names such as ``fit`` and ``plot`` (which were used in
    the Fortran version of the fitter) have been renamed to have the ``sed_``
    prefix. Thus, ``fit`` is not ``sed_fit``, ``plot`` is now ``sed_plot``, and
-   so on.
+   so on. If you do want to use ``fit`` and ``plot``, you should be able to
+   use the ``alias`` command to do this.
    
-The command-line interface to the SED fitting tool uses parameter files (identical to the Fortran version) to describe data, fitting, and plotting parameters. These are described in the following sub-sections.
+The command-line interface to the SED fitting tool uses parameter files (identical to the Fortran version) to describe data, fitting, and plotting parameters. These are described in the following sections.
+
+A typical pipeline is to first run the fitting, then to run post-processing scripts on the output file. This can include plotting, as well as filtering and re-fitting a subset of sources. For example, one can first run ``sed_fit`` with stellar photosphere models, filter out good and bad fits with ``sed_filter_output``, produce a datafile of the bad fits with ``fitinfo2data``, and re-run ``sed_fit`` on this file with different models, and finally to plot up the results with ``sed_plot``.
 
 Fitting
 =======
@@ -32,7 +41,7 @@ An example of such a file is the following::
 
 This file contains the parameters one would need for a datafile containing 2MASS and *Spitzer*/IRAC fluxes. The first line is just used for comments and is ignored. For the subsequent lines, the information to the right of the ``=`` sign is ignored. The second line should contain the number of wavelengths/filters specified. The third line should be used to specify the filters in which the data are given, in the same order as in the data file. Filters are specified by two or more characters separated by a space. For a list of all the filters available, see :ref:`filters`. The fourth line gives the aperture radii that were used to compute the fluxes (in arcseconds).
 
-The aperture information can be used for example to eliminate SED models of YSOs which would have been well resolved in a given aperture when using the aperture-dependent SED fitter. If this option is set in the fitter parameter file (see :ref:`fitterpar`), then models where :math:`r_{1/2}\,>\,{\rm aperture}` in at least one aperture are discarded, where :math:`r_{1/2}` is the outermost radius at which the surface brightness falls to 50% of the peak flux. This is because if the surface brightness of a model is half of the peak surface brightness at the edge of the aperture, then this means that it is clearly resolved with respect to the aperture size. For these reasons, the aperture size should be specified to the best of one's knowledge. If the flux was measured with an irregular aperture, then the aperture should correspond roughly to half of the maximum length of the aperture, and if the flux was measured using PSF photometry, it should be set to a few times the half-width at half maximum.
+The aperture information can be used for example to eliminate SED models of YSOs which would have been well resolved in a given aperture when using the aperture-dependent SED fitter. If this option is set in the fitter parameter file (see :ref:`fitpar`), then models where :math:`r_{1/2}\,>\,{\rm aperture}` in at least one aperture are discarded, where :math:`r_{1/2}` is the outermost radius at which the surface brightness falls to 50% of the peak flux. This is because if the surface brightness of a model is half of the peak surface brightness at the edge of the aperture, then this means that it is clearly resolved with respect to the aperture size. For these reasons, the aperture size should be specified to the best of one's knowledge. If the flux was measured with an irregular aperture, then the size specified should correspond roughly to half of the maximum length of the aperture, and if the flux was measured using PSF photometry, it should be set to a few times the half-width at half maximum.
 
 .. _parnotes:
 
@@ -56,14 +65,14 @@ select is given by ``onumb``. Setting ``oform`` to ``C``, ``D``, ``E``, or
 :math:`\chi^2` value below ``onumb``. The ``D`` option selects all fits with a
 :math:`\chi^2-\chi^2_{\rm best}` value below ``onumb``. The ``E`` and ``F``
 options are equivalent to the ``C`` and ``D`` options respectively, but with
-the \chi^2 value given per datapoint.
+the :math:`\chi^2` value given per datapoint.
 
 .. _fitpar:
 
 The fitter parameter file
 -------------------------
 
-The fitter parameter file is one containing parameters for the fitting process. Two examples of such a file - ``fitter_stellar_ex.par`` and ``fitter_yso_ex.par` - are given in the ``examples`` directory in the SED fitting tool tar file. The first is an example of parameter file for aperture and scale-independent models (e.g. Kurucz stellar photospheres) and the latter is an example of parameter file for aperture and scale-dependent models  (e.g. R06 YSO models). The parameters required are:
+The fitter parameter file contains parameters for the fitting process. Two examples of such a file - ``fitter_stellar_ex.par`` and ``fitter_yso_ex.par`` - are given in the ``examples`` directory in the SED fitting tool tar file. The first is an example of parameter file for aperture and scale-independent models (e.g. Kurucz stellar photospheres) and the latter is an example of parameter file for aperture and scale-dependent models  (e.g. R06 YSO models). The parameters required are:
 
 * The filenames of the data parameter file and the input data file in fitter
   format::
@@ -101,8 +110,8 @@ The fitter parameter file is one containing parameters for the fitting process. 
     2.                      = mind  = minimum distance in kpc
     2.5                     = maxd  = maximum distance in kpc
 
-  These options are not required for the aperture-independent fitter as shown
-  in the ``fitter_stellar_ex.par`` file provided.
+  These options are for aperture-independent models as shown in the
+  ``fitter_stellar_ex.par`` file provided.
 
 * The extinction law to use.::
 
@@ -111,7 +120,7 @@ The fitter parameter file is one containing parameters for the fitting process. 
 * Output options - the ``oform`` and ``onumb`` options specify the maximum
   number of fits to be stored in the fitter output file::
   
-    output.fits             = ofile = output filename
+    output.fitinfo          = ofile = output filename
     F                       = oform = what to output (N/C/P/D/E/F)   
     6.                      = onumb = number relating to the above option
 
@@ -128,14 +137,14 @@ The fitter parameter file is one containing parameters for the fitting process. 
     N                       = kpext = Any sources larger than aperture? (Y/N)
 
   If set to ``N``, models with :math:`r_{1/2}\,>\,{\rm aperture}` in at least
-  one aperture are discarded (see :ref:`datadescr`). This option is not
-  required for the aperture-independent fitter as shown in the
-  ``fitter_stellar_ex.par`` file provided.
+  one aperture are discarded (see :ref:`datadescr`). This option is ignored
+  for aperture-independent models as shown in the ``fitter_stellar_ex.par``
+  file provided.
 
 Running the fitter
 ------------------
 
-To run the fitter, use the ``sed_fit`` or ``sed_fit_stellar`` command::
+To run the fitter, use the ``sed_fit`` command::
 
   Usage: fit [arguments]
   
@@ -148,9 +157,9 @@ To run the fitter, use the ``sed_fit`` or ``sed_fit_stellar`` command::
     models=directory   - the models to use
     best=yes/no        - whether to output only the best fit
 
-For example if your parameter file is named ``fitter.par``, and you are fitting stellar photosphere models, type::
+For example if your parameter file is named ``fitter.par``, use::
 
-    sed_fit_stellar par_file=fitter.par
+    sed_fit par_file=fitter.par
 
 The fitter should now run! An output file will be created, containing information about the sources and the model fits. This output can be further processed with the programs described in the following sections.
 
@@ -164,7 +173,7 @@ To make it easier to write pipeline scripts to fit a region several times with d
 * ``models=directory`` tells the fitter which models to use
 
 * ``best=yes`` tells the fitter to output only the best SED, effectively
-  forcing ``oform=N`` and ``onumb=1``. Setting best=no defauts to the
+  forcing ``oform=N`` and ``onumb=1``. Setting ``best=no`` defaults to the
   ``oform`` and ``onumb`` values in the fitter parameter file
 
 You can use any combination of these. If you do not specify one of these options, the value in the parameter file will be used instead.
@@ -209,9 +218,9 @@ This command will create two new files in the original output directory, one for
 Making a data file from an output file
 --------------------------------------
 
-A utility named ``fits2data`` is available to produce a data file suitable for input to the fitter from an output file. It is used as follows:
+A utility named ``fitinfo2data`` is available to produce a data file suitable for input to the fitter from an output file. It is used as follows::
 
-  Usage: fits2data [arguments]
+  Usage: fitinfo2data [arguments]
   
   Required arguments :
     input=filename     - the input fitter FITS file
@@ -226,11 +235,13 @@ Overview
 --------
 
 .. note::
-    ``plot_params_1d`` and ``plot_params_2d`` are not implemented to date.
+    ``sed_plot_param_1d`` and ``sed_plot_param_2d`` are not implemented to
+    date, and some of the advanced features for ``sed_plot`` are also not
+    implemented.
 
-There are three tools available to plot the results. ``plot`` produces plots of the SED fits, ``plot_params_1d`` produces histograms of parameter values, and ``plot_params_2d`` produces plots with one parameter on each axis (useful to distinguish real from artificial correlations between parameters). Two examples of plotting parameter files are provided in the ``example/`` directory: ``plot_stellar_ex.par`` is set to show only the best fit (useful for stellar photosphere models for example) and ``plot_yso_ex.par`` is set to show a large number of good fits, making use of the greyscale feature and interpolating the SED to different apertures at different wavelengths (useful for the YSO models for example).
+There are three tools available to plot the results. ``sed_plot`` produces plots of the SED fits, ``plot_params_1d`` produces histograms of parameter values, and ``sed_plot_param_2d`` produces plots with one parameter on each axis (useful to distinguish real from artificial correlations between parameters). Two examples of plotting parameter files are provided in the ``example/`` directory: ``plot_stellar_ex.par`` is set to show only the best fit (useful for stellar photosphere models for example) and ``plot_yso_ex.par`` is set to show a large number of good fits, making use of the greyscale feature and interpolating the SED to different apertures at different wavelengths (useful for the YSO models for example).
 
-Both example parameter files contains all the parameters required by the three plotting programs. Either of the files can technically be split into three different files, but there are advantages of not doing so, for example to make it easy to consistently change the number of model fits shown in the different plots (via the ``oform`` and ``onumb`` parameters). The parameters are split into \textbf{General} and \textbf{Advanced} parameters, and in each case, whether they apply to all programs, or one in particular.
+Both example parameter files contains all the parameters required by the three plotting programs. Either of the files can technically be split into three different files, but there are advantages of not doing so, for example to make it easy to consistently change the number of model fits shown in the different plots (via the ``oform`` and ``onumb`` parameters). The parameters are split into **general** and **advanced** parameters, and in each case, whether they apply to all programs, or one in particular.
 
 The **general** options required by all programs are::
 
@@ -256,7 +267,7 @@ These are very technical options used to change the appearance of the plots. The
 SED plotting with ``sed_plot``
 ------------------------------
 
-This is the main plotting program which produced SED plots. The ``plot`` specific parameters are:
+This is the main plotting program which produced SED plots. The ``sed_plot`` specific parameters are:
 
 * Options to control the general type of plot::
 
@@ -268,7 +279,7 @@ This is the main plotting program which produced SED plots. The ``plot`` specifi
   fit is shown in black, and the subsequent fits are shown in grey. However,
   this may produce ``eps`` files which take a while to draw - the ``pgrey``
   option fixes this by rasterizing all the grey SEDs into a single greyscale
-  map, which makes loading almost instantaneous.
+  map, which makes loading almost instantaneous (not implemented yet).
 
 * Options to control the minimum and maximum values shown::
 
@@ -290,8 +301,8 @@ This is the main plotting program which produced SED plots. The ``plot`` specifi
   options are set to ``A``, then the plotting tool automatically finds the
   minimum and maximum values from the data, and adds a margin specified in the
   above parameters. For example, if ``xmode=A``, and if the minimum datapoint
-  is at 1&mu;m, and the ``xmina`` margin is set to ``1``, then the minimum
-  wavelength on the plot will be 0.1&mu;m.
+  is at 1 microns, and the ``xmina`` margin is set to ``1``, then the minimum
+  wavelength on the plot will be 0.1 microns.
 
 * Options to control what to plot::
  
@@ -320,13 +331,12 @@ This is the main plotting program which produced SED plots. The ``plot`` specifi
       aperture as a function of wavelength.
 
     * ``all`` - the SEDs for all the different apertures with color coded
-      lines. Note that this is no longer possible when ``pmode=A`` as this
-      produced confusing plots.
+      lines.
 
   In the case where ``stype=all``, a color caption can be produced showing the
   color of each SED as a function of aperture. Finally, ``pinfo`` allows the
-  :math:`\chi^2`, A$_{\rm V}$ and scalefactor to be overplotted on the SED
-  plot.
+  :math:`\chi^2`, :math:`A_{\rm V}` and scalefactor to be overplotted on the
+  SED plot.
 
 * Options for customizing the look of the plots::
 
@@ -335,21 +345,21 @@ This is the main plotting program which produced SED plots. The ``plot`` specifi
     2.5     = greyc = greyscale clipping value
     8.0     = greym = greyscale stretch
 
-The ``plot`` command is used as follows::
+The ``sed_plot`` command is used as follows::
 
-  Usage: plot [arguments]
+  Usage: sed_plot [arguments]
  
   Required arguments :
     par_file=filename  - the parameter file (e.g. plot.par)
     input=filename     - the input FITS file
     output=filename    - the output plots directory
  
-Histogram plotting with ``plot_params_1d``
-------------------------------------------
+Histogram plotting with ``sed_plot_param_1d``
+---------------------------------------------
 
 This plotting program can produce histograms of the parameters of a given number of YSO fits. How many fits are shown is controlled as before using the ``oform`` and ``onumb`` parameters.
 
-.. note:
+.. note::
     All the fits which contribute to the histogram are weighted equally.
 
 As well as the common options specified in :ref:`plotcommon` an advanced option is available to specify the number of bins in the histogram. This number should be a multiple of 10 for best results::
@@ -358,7 +368,7 @@ As well as the common options specified in :ref:`plotcommon` an advanced option 
 
 This tool is used as::
 
-  Usage: plot_param_1d [arguments]
+  Usage: sed_plot_param_1d [arguments]
   
   Required arguments :
     par_file=filename  - the parameter file (e.g. plot.par)
@@ -368,16 +378,18 @@ This tool is used as::
     log=yes/no         - whether to plot the parameter on a log scale
     zero=yes/no        - if log=yes, whether to show zero values
 
-For a list of possible ``parameter`` values for the R06 or the Kurucz models, see :ref:`parnames`. If you define your own set of models, whatever numerical parameters you include in ``parameters.fits.gz`` will be available here.
+.. For a list of possible ``parameter`` values for the R06 or the Kurucz models, see :ref:`parnames`. If you define your own set of models, whatever numerical parameters you include in ``parameters.fits.gz`` will be available here.
+
+Any numerical parameters specified in the model package used can be plotted here.
 
 Two histograms are shown in each plot. In grey, the distribution of models in the grid is shown, normalized so that the maximum value is 1. The hashed histogram shows the distribution of the fits, also normalized to its maximum value (the normalization factor is not the same for the two histograms as the good fits only represent a small fraction of all the models in the grid).
 
-2-D parameter plotting with ``plot_params_2d``
-----------------------------------------------
+2-D parameter plotting with ``sed_plot_param_2d``
+-------------------------------------------------
 
 This plotting program can produce two-dimensional maps of the parameters.  How many fits are shown is controlled as before using the ``oform`` and ``onumb`` parameters.
 
-As well as the common options specified in \S\ref{sec:plotoverview} a few advanced options are available, although the default values should be sensible::
+As well as the common options specified in :ref:`plotcommon`, a few advanced options are available, although the default values should be sensible::
 
     8       = greyspl2d = greyscale resampling
     2048    = greybig2d = greyscale resolution (major direction)
@@ -388,7 +400,7 @@ As well as the common options specified in \S\ref{sec:plotoverview} a few advanc
 
 This tool is used as::
 
-  Usage: plot_param_2d [arguments]
+  Usage: sed_plot_param_2d [arguments]
   
   Required arguments :
     par_file=filename  - the parameter file (e.g. plot.par)

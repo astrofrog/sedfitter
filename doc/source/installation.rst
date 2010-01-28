@@ -14,6 +14,8 @@ The SED fitter requires Python 2.5 or 2.6, and the following Python packages to 
 
 * `Matplotlib <http://matplotlib.sourceforge.net/>`_
 
+First-time Python users may want to consider an all-in-one Python installation package, such as the `Enthought Python Distribution <http://www.enthought.com/products/getepd.php>`_ which contains all three of the above packages (and many more).
+
 .. _installation:
 
 Installation
@@ -38,7 +40,7 @@ SVN installation
 
 Use `subversion <http://subversion.tigris.org/>`_ to check out the latest development version::
 
-    svn co svn://caravan.astro.wisc.edu/sedfitter/sedfitter  --username fitteruser
+    svn co svn://caravan.astro.wisc.edu/pysedfitter/sedfitter  --username fitteruser
 
 then install the package using::
 
@@ -47,14 +49,14 @@ then install the package using::
    
 Contact me if you do not know the svn password. The advantage of using subversion is that it is extremely easy to update the source code when bugs are fixed and features added.
 
-Once the package is installed, you can safely remove the ``sedfitter`` directory (although you may want to keep it for easy updating, see :ref:`updating`).
+Once the package is installed, you can safely remove the ``sedfitter`` directory (although you may want to keep it for easy :ref:`updating`).
 
 .. _updating:
 
 Updating
 ========
 
-To update an existing installation, just follow the instructions for :ref:`installation`. If you are using subversion, and you have kept the original ``sedfitter`` directory, you can update by going to that directory and typing::
+To update an existing installation, just follow the :ref:`installation` instructions. If you are using subversion, and you have kept the original ``sedfitter`` directory, you can update by going to that directory and typing::
 
     svn update
     python setup.py install

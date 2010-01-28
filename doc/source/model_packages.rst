@@ -1,3 +1,5 @@
+.. _modelpackages:
+
 =========================
 Creating model packages
 =========================

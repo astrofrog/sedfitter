@@ -1,3 +1,5 @@
+.. _dataformat:
+
 ==================
 Preparing the data
 ==================
@@ -17,3 +19,13 @@ The data file you will need to feed to the fitter should contain one source per 
 * Columns ``4 + n`` to ``3(n + 1)`` should contain the fluxes and flux uncertainties, alternated, in mJy. For lower and upper limits, the error should be set to the confidence placed on the limit, with 0 corresponding to 0% and 1 corresponding to 100%. For example, in the case of an upper limit, setting the confidence to 1 effectively forbids any models to be larger than the upper limit, while setting the confidence between 0 and 1 allows such models, but introduces a :math:`\chi^2` penalty dependent on the confidence. Setting the confidence to 0 effectively disables the upper limit.
 
 We refer to this format as the **fitter data format**. Note that in a single data file, all lines should have the same number of columns. If one or more fluxes are not available for a specific source, the flag for these fluxes can be set to ``0``.
+
+.. note::
+    The data format is now more flexible in that it no longer requires being
+    in an exact format - all that is required is that the order of the columns
+    be correct. The downside to this is that spaces are no longer acceptable
+    in filenames. Labels in plots are processed with LaTeX, and therefore you
+    should still be able to include a space there by using the ~ symbol in the
+    source name (which is used for unbreakable spaces in LaTeX).
+
+

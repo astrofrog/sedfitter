@@ -9,14 +9,24 @@ The scale factor :math:`S` (which is related to the luminosity and distance of t
 To quantify the goodness/badness of each fit to each source, we calculate the :math:`\chi^2` value:
 
 .. math::
-    \chi^2 = \sum_{i=1}^{n}\left(\frac{F_{i}-M_{i}}{\sigma_{i}^2}\right)^2
+    \chi^2=\sum_{i=1}^N \left(\frac{\langle\,\log_{10}{[F_{\nu}(\lambda_i)]}\,\rangle-\log_{10}{[M_{\nu}(\lambda_i)]}}{\sigma(\langle\,\log_{10}{[F_{\nu}](\lambda_i)}\,\rangle)}\right)^2
 
-where :math:`F_{i}` are the flux values at a given wavelength :math:`\lambda_{i}`, :math:`\sigma_{i}` are the flux errors, and :math:`M_{i}` are the extincted and scaled model values. In this manual we sometimes refer to the :math:`\chi^2` per datapoint, :math:`n_{\rm data}`, where the number of datapoints does *not* include upper and lower limits.
+where :math:`\langle\,\log_{10}{[F_{\nu}(\lambda_i)]}\,\rangle` are the mean  fluxes in log space, flux values at a given wavelength :math:`\lambda_{i}`, :math:`\sigma(\langle\,\log_{10}{[F_{\nu}](\lambda_i)}\,\rangle)` are the flux uncertainties in log space, and :math:`\log_{10}{[M_{\nu}(\lambda_i)]}` are the extincted and scaled model log fluxes. For more details, see `Robitaille et al (2007) <http://adsabs.harvard.edu/abs/2007ApJS..169..328R>`_. In this manual we sometimes refer to the :math:`\chi^2` per datapoint, :math:`\chi^2/n_{\rm data}`, where the number of datapoints does *not* include upper and lower limits.
 
-There are two kinds of models that can be used with the SED fitter:
+The SED fitter uses the concept of *model packages*, which are single directories containing SEDs, convolved fluxes, parameters, and a description of the models, all in a common format. There are two kinds of models that can be used with the SED fitter:
 
-* Models for which there is no aperture dependence on the flux and for which the absolute distance cannot be determined (e.g. stellar photosphere models)
-* Models for which the flux depends on the aperture chosen and/or for which the distance can be found from the scalefactor of the fit. (e.g. YSO models). In this case, the fitting procedure is more complex as it involves computing the aperture-dependent SEDs for a fine grid of distances, and optionally removing models that would clearly be extended relative to the aperture chosen. This is described in more detail in Paper II.
+* Models for which the absolute distance cannot be determined from the fit
+  (e.g. unscaled stellar photosphere models). This is usually used for the
+  purpose of filtering out a certain class of sources, for example
+  foreground/background stars.
 
-Two binaries are available for fitting, optimized for each case: ``fit_stellar`` should be used for models with no aperture dependence and no distance information, while ``fit`` should be used for models with aperture-dependent fluxes and/or absolutely scaled models. Unlike the previous versions of the fitter, only one set of models can be used at a time, however, it is easy to produce a new set of models without changing a single line of code in the fitter distribution. If you wish to produce your own package of models, see the ``model_packages.pdf`` file.
+* Models that are absolutely scaled in flux, to a distance of 1kpc. In this
+  case, it is also possible to specify fluxes as a function of aperture - in
+  this case, the fitting procedure is more complex as it involves computing
+  the aperture-dependent SEDs for a fine grid of distances, and optionally
+  removing models that would clearly be extended relative to the aperture
+  chosen. This is described in more detail in `Robitaille et al (2007)
+  <http://adsabs.harvard.edu/abs/2007ApJS..169..328R>`_.
+
+From a user point of view, the only difference between the two is that the ``mind``/``maxd`` parameters in :ref:`fitpar`. For more information, see :ref:`availablemodel` and :ref:`modelpackages`.
 

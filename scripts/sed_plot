@@ -52,6 +52,16 @@ if par['ymode'] == 'A':
     y_range = (par['ymina'], par['ymaxa'])
 else:
     y_range = (par['yminm'], par['ymaxm'])
+    
+if par['pgrey']:
+    warnings.warn('pgrey not implemented')
+
+if par['pconv']:
+    warnings.warn('pconv not implemented')
+
+if par['patmo']:
+    warnings.warn('patmo not implemented')
+
 
 # Call python plot function
 sedfitter.plot(options['input'], options['output'],

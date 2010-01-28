@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-scripts = ['sed_fit', 'sed_plot', 'sed_filter_output', 'sed_fitinfo2data']
+scripts = ['sed_fit', 'sed_plot', 'sed_filter_output', 'sed_fitinfo2data', 'sed_fitinfo2ascii']
 
 setup(name='sedfitter',
       version='0.1.0',

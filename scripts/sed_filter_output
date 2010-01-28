@@ -43,9 +43,13 @@ if (not 'cpd' in options and not 'chi' in options) \
     _usage("One of cpd or chi is required")
 
 # Open input and output file
+
+if options['input'][-8:] <> '.fitinfo':
+    raise Exception("Extension of output file should be .fitinfo")
+    
 fin = file(options['input'], 'rb')
-fout_good = file(options['input'].replace('.pickle', '_good.pickle'), 'wb')
-fout_bad = file(options['input'].replace('.pickle', '_bad.pickle'), 'wb')
+fout_good = file(options['input'].replace('.fitinfo', '_good.fitinfo'), 'wb')
+fout_bad = file(options['input'].replace('.fitinfo', '_bad.fitinfo'), 'wb')
 
 # Read in header of output file
 model_dir = pickle.load(fin)

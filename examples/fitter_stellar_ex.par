@@ -10,7 +10,7 @@ ex_law_gl.par           = exlaw = extinction law
 40.                     = maxav = Maximum interstellar extinction
 
 ------------------------ Output -------------------------
-output_stellar.fits     = ofile = output filename
+output_stellar.fitinfo     = ofile = output filename
 N                       = oform = what to output (N/C/P/D/E/F)   
 1                       = onumb = number relating to the above option
 

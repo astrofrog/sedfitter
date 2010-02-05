@@ -109,7 +109,7 @@ class ConvolvedFluxes(object):
         '''
 
         # If any apertures are larger than the defined max, reset to max
-        apertures[apertures > self._apertures.max()] == self._apertures.max()
+        apertures[apertures > self._apertures.max()] = self._apertures.max()
 
         # If any apertures are smaller than the defined min, raise Exception
         if np.any(apertures < self._apertures.min()):

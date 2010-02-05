@@ -5,6 +5,8 @@ import sys
 import sedfitter
 import sedfitter.parfile as parfile
 
+import warnings
+
 
 def _usage(*args):
 
@@ -52,7 +54,7 @@ if par['ymode'] == 'A':
     y_range = (par['ymina'], par['ymaxa'])
 else:
     y_range = (par['yminm'], par['ymaxm'])
-    
+
 if par['pgrey']:
     warnings.warn('pgrey not implemented')
 

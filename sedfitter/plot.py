@@ -164,7 +164,7 @@ def get_axes(fig):
     return fig.add_axes(rect)
 
 
-def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type="interp", x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.), plot_name=True, plot_info=True):
+def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type="interp", x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.), plot_name=True, plot_info=True, extension='eps'):
 
     util.create_dir(output_dir)
 
@@ -264,6 +264,6 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
                 ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
 
                 if plot_mode == 'A':
-                    fig.savefig("%s/%s.eps" % (output_dir, info.source.name))
+                    fig.savefig("%s/%s.%s" % (output_dir, info.source.name, extension))
                 else:
-                    fig.savefig("%s/%s_%05i.eps" % (output_dir, info.source.name, i+1))
+                    fig.savefig("%s/%s_%05i.%s" % (output_dir, info.source.name, i+1, extension))

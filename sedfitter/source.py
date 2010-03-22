@@ -21,8 +21,10 @@ def log_fluxes(valid, flux, error):
     logerror[r] = error[r]
 
     # Log10[Fluxes]
+    r = valid == 4
     logflux[r] = flux[r]
     logerror[r] = error[r]
+    
     weight[r] = 1./logerror[r]**2.
 
     return weight, logflux, logerror

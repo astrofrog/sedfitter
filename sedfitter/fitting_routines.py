@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def linear_regression(data, weights, pattern1, pattern2):
 
     c1 = np.sum(data*pattern1*weights, axis=1)
@@ -19,9 +20,10 @@ def linear_regression(data, weights, pattern1, pattern2):
 def optimal_scaling(data, weights, pattern1):
     return np.sum(data*pattern1*weights, axis=data.ndim-1) / np.sum(pattern1*pattern1*weights)
 
+
 def chi_squared(valid, data, error, weight, model):
     '''
-    valid has dimension (n_wav,)
+    valid has dimension (n_wav, )
     data has dimension (n_wav, n_models)
     error has dimension(n_wav)
     weight has dimension(n_wav)
@@ -40,20 +42,24 @@ def chi_squared(valid, data, error, weight, model):
         raise Exception("Chi^2 array has unexpected number of dimensions: %i" % chi2_array.ndim)
 
     # Reset lower limits where model < data
-    reset = model < data
     if chi2_array.ndim == 2:
-        reset[:, valid<>2] = False
+        for j in np.where(valid==2):
+            reset = model[:, j] < data[:, j]
+            chi2_array[:, j][reset] == -2. * np.log10(1.-error[j])
     else:
-        reset[:, :, valid<>2] = False
-    chi2_array[reset] = -2. * np.log10(1.-error[valid==2])
+        for j in np.where(valid==2):
+            reset = model[:, :, j] < data[:, :, j]
+            chi2_array[:, :, j][reset] == -2. * np.log10(1.-error[j])
 
     # Reset upper limits where model > data
-    reset = model > data
     if chi2_array.ndim == 2:
-        reset[:, valid<>3] = False
+        for j in np.where(valid==3):
+            reset = model[:, j] > data[:, j]
+            chi2_array[:, j][reset] == -2. * np.log10(1.-error[j])
     else:
-        reset[:, :, valid<>3] = False
-    chi2_array[reset] = -2. * np.log10(1.-error[valid==3])
+        for j in np.where(valid==3):
+            reset = model[:, :, j] > data[:, :, j]
+            chi2_array[:, :, j][reset] == -2. * np.log10(1.-error[j])
 
     # Check that there are no infinities
     chi2_array[np.isinf(chi2_array)] = 1.e30

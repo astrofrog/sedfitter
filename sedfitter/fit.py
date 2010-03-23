@@ -83,7 +83,6 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     fout = file(output, 'wb')
     pickle.dump(model_dir, fout, 2)
     pickle.dump(filters, fout, 2)
-    pickle.dump(models.names, fout, 2)
     extinction_law.write_binary(fout)
 
     # NOTE _ CAN USE PROTOCOL 2 IN SOURCE FOR COORINDATES
@@ -102,7 +101,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         if s.n_data > n_data_min:
 
             info = FitInfo(source=s)
-            info.av, info.sc, info.chi2 = models.fit(s, av_law, sc_law, av_range[0], av_range[1])
+            info.av, info.sc, info.chi2, info.model_name = models.fit(s, av_law, sc_law, av_range[0], av_range[1])
 
             info.sort()
             info.keep(output_format[0], output_format[1])

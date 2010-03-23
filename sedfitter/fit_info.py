@@ -11,6 +11,7 @@ class FitInfo(object):
         self.sc = None
         self.chi2 = None
         self.model_id = None
+        self.model_name = None
 
         return
 
@@ -20,6 +21,7 @@ class FitInfo(object):
         self.av = self.av[order]
         self.sc = self.sc[order]
         self.chi2 = self.chi2[order]
+        self.model_name = self.model_name[order]
         self.model_id = order
 
         return
@@ -31,26 +33,27 @@ class FitInfo(object):
         elif form=='N' or not form: # Form N is parsed as boolean
             n_fits = int(number)
         elif form=='C':
-            n_fits = len(self.chi2 <= number)
+            n_fits = np.sum(self.chi2 <= number)
         elif form=='D':
-            n_fits = len(self.chi2 - self.chi2[0] <= number)
+            n_fits = np.sum(self.chi2 - self.chi2[0] <= number)
         elif form=='E':
-            n_fits = len((self.chi2 / self.source.n_wav) <= number)
+            n_fits = np.sum((self.chi2 / self.source.n_wav) <= number)
         elif form=='F':
-            n_fits = len((self.chi2 - self.chi2[0]) / self.source.n_wav <= number)
+            n_fits = np.sum((self.chi2 - self.chi2[0]) / self.source.n_wav <= number)
         else:
             raise Exception("Unknown format: %s" % form)
 
         self.av = self.av[:n_fits]
         self.sc = self.sc[:n_fits]
         self.chi2 = self.chi2[:n_fits]
+        self.model_name = self.model_name[:n_fits]
         self.model_id = self.model_id[:n_fits]
 
         return
 
     def __getattr__(self, attribute):
         if attribute == 'n_fits':
-            return len(self.model_id)
+            return len(self.chi2)
         else:
             raise AttributeError(attribute)
 
@@ -61,6 +64,8 @@ class FitInfo(object):
         file_handle.write(self.sc.astype(np.float32).tostring())
         file_handle.write(self.chi2.astype(np.float32).tostring())
         file_handle.write(self.model_id.astype(np.int32).tostring())
+        pickle.dump(self.model_name.itemsize, file_handle, 2)
+        file_handle.write(self.model_name.tostring())
 
     def read_binary(self, file_handle):
         self.source = Source()
@@ -70,3 +75,5 @@ class FitInfo(object):
         self.sc = np.fromstring(file_handle.read(n_fits*4), dtype=np.float32)
         self.chi2 = np.fromstring(file_handle.read(n_fits*4), dtype=np.float32)
         self.model_id = np.fromstring(file_handle.read(n_fits*4), dtype=np.int32)
+        itemsize = pickle.load(file_handle)
+        self.model_name = np.fromstring(file_handle.read(n_fits*itemsize), dtype='|S%i' % itemsize)

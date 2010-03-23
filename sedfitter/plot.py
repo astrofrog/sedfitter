@@ -79,7 +79,7 @@ color['faded'].append((0.50, 0.90, 0.50))
 def tex_friendly(string):
     return string.replace('_','\_').replace('%','\%')
 
-def plot_source_info(ax, i, info, model_name, plot_name, plot_info):
+def plot_source_info(ax, i, info, plot_name, plot_info):
 
     labels = []
 
@@ -87,7 +87,7 @@ def plot_source_info(ax, i, info, model_name, plot_name, plot_info):
         labels.append(tex_friendly(info.source.name))
 
     if plot_info:
-        labels.append("Model: %s" % tex_friendly(model_name))
+        labels.append("Model: %s" % tex_friendly(info.model_name[i]))
         if i==0:
             labels.append("Best fit")
         else:
@@ -172,7 +172,6 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
 
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
-    model_names = pickle.load(fin)
     extinction = Extinction()
     extinction.read_binary(fin)
 
@@ -202,13 +201,13 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
         lines = []
         colors = []
 
-        for i in range(info.n_fits):
+        for i in range(info.n_fits-1,-1,-1):
 
-            if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
+            if (plot_mode == 'A' and i == info.n_fits-1) or plot_mode == 'I':
                 fig = mpl.figure()
                 ax = get_axes(fig)
 
-            if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
+            if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
                 if sed_type in ['interp', 'largest']:
                     color_type = 'black'
                 else:
@@ -219,13 +218,11 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
                 else:
                     color_type = 'faded'
 
-            model_name = model_names[info.model_id[i]].strip()
-
             s = SED()
             if modpar['length_subdir'] == 0:
-                s.read(model_dir + '/seds/' + model_name + '_sed.fits')
+                s.read(model_dir + '/seds/' + info.model_name[i] + '_sed.fits')
             else:
-                s.read(model_dir + '/seds/%s/%s_sed.fits' % (model_name[:modpar['length_subdir']], model_name))
+                s.read(model_dir + '/seds/%s/%s_sed.fits' % (info.model_name[i][:modpar['length_subdir']], info.model_name[i]))
 
             s.scale_to_distance(10.**info.sc[i])
             s.scale_to_av(info.av[i], extinction.av)
@@ -251,12 +248,16 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
                 lines.append(np.column_stack([s.wav, flux]))
                 colors.append(color[color_type])
 
-            if (plot_mode == 'A' and i == info.n_fits-1) or plot_mode == 'I':
+            if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
 
                 ax.add_collection(LineCollection(lines, colors=colors))
 
                 ax = plot_source_data(ax, info.source, filters)
-                ax = plot_source_info(ax, i, info, model_name, plot_name, plot_info)
+
+                if plot_mode == 'A':
+                    ax = plot_source_info(ax, 0, info, plot_name, plot_info)
+                else:
+                    ax = plot_source_info(ax, i, info, plot_name, plot_info)
 
                 ax.set_xlabel('$\lambda$ ($\mu$m)')
                 ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')

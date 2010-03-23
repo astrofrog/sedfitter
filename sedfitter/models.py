@@ -94,7 +94,7 @@ class Models(object):
         else:
             self.fluxes = np.column_stack(model_fluxes)
 
-        self.names = conv.model_names
+        self.names = np.char.strip(conv.model_names)
         self.n_models = conv.n_models
 
         self.valid = self.fluxes <> 0
@@ -159,4 +159,4 @@ class Models(object):
 
             raise Exception("Unexpected number of dimensions in flux array")
 
-        return av_best, sc_best, ch_best
+        return av_best, sc_best, ch_best, self.names

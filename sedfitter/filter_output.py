@@ -28,20 +28,17 @@ def filter_output(input=None, output_good='auto', output_bad='auto', chi=None,
     # Read in header of output file
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
-    model_names = pickle.load(fin)
     extinction_law = Extinction()
     extinction_law.read_binary(fin)
 
     # Output header to good fits file
     pickle.dump(model_dir, fout_good, 2)
     pickle.dump(filters, fout_good, 2)
-    pickle.dump(model_names, fout_good, 2)
     extinction_law.write_binary(fout_good)
 
     # Output header to bad fits file
     pickle.dump(model_dir, fout_bad, 2)
     pickle.dump(filters, fout_bad, 2)
-    pickle.dump(model_names, fout_bad, 2)
     extinction_law.write_binary(fout_bad)
 
     info = FitInfo()

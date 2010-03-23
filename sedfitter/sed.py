@@ -142,8 +142,8 @@ class SED(object):
         apertures = 10.**log10_ap_interp(np.log10(self.wav))
 
         # Extrapolate on either side
-        apertures[np.log10(self.wav) < log10_ap_interp.x[0]] = self.ap[0]
-        apertures[np.log10(self.wav) > log10_ap_interp.x[-1]] = self.ap[-1]
+        apertures[np.log10(self.wav) < log10_ap_interp.x[0]] = 10.**log10_ap_interp.y[0]
+        apertures[np.log10(self.wav) > log10_ap_interp.x[-1]] = 10.**log10_ap_interp.y[-1]
 
         # Interpolate and return only diagonal elements
         return flux_interp(apertures).diagonal()

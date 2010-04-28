@@ -24,8 +24,12 @@ def log_fluxes(valid, flux, error):
     r = valid == 4
     logflux[r] = flux[r]
     logerror[r] = error[r]
-    
     weight[r] = 1./logerror[r]**2.
+    
+    # Ignored points
+    r = valid == 9
+    logflux[r] = np.log10(flux[r]) - 0.5 * (error[r]/flux[r]) ** 2. / np.log(10.)
+    logerror[r] = np.abs(error[r]/flux[r]) / np.log(10.)    
 
     return weight, logflux, logerror
 

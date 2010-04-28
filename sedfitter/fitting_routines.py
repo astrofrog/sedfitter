@@ -43,23 +43,25 @@ def chi_squared(valid, data, error, weight, model):
 
     # Reset lower limits where model < data
     if chi2_array.ndim == 2:
-        for j in np.where(valid==2):
+        for j in np.where(valid==2)[0]:
             reset = model[:, j] < data[:, j]
-            chi2_array[:, j][reset] == -2. * np.log10(1.-error[j])
+            chi2_array[:, j][reset] = -2. * np.log10(1.-error[j])
     else:
-        for j in np.where(valid==2):
+        for j in np.where(valid==2)[0]:
             reset = model[:, :, j] < data[:, :, j]
-            chi2_array[:, :, j][reset] == -2. * np.log10(1.-error[j])
+            chi2_array[:, :, j][reset] = -2. * np.log10(1.-error[j])
 
     # Reset upper limits where model > data
     if chi2_array.ndim == 2:
-        for j in np.where(valid==3):
+        for j in np.where(valid==3)[0]:
             reset = model[:, j] > data[:, j]
-            chi2_array[:, j][reset] == -2. * np.log10(1.-error[j])
+            chi2_array[:, j][reset] = -2. * np.log10(1.-error[j])
     else:
-        for j in np.where(valid==3):
+        for j in np.where(valid==3)[0]:
             reset = model[:, :, j] > data[:, :, j]
-            chi2_array[:, :, j][reset] == -2. * np.log10(1.-error[j])
+            print (-2. * np.log10(1.-error[j])).shape
+            print chi2_array[:, :, j][reset].shape
+            chi2_array[:, :, j][reset] = -2. * np.log10(1.-error[j])
 
     # Check that there are no infinities
     chi2_array[np.isinf(chi2_array)] = 1.e30

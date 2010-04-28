@@ -59,8 +59,6 @@ def chi_squared(valid, data, error, weight, model):
     else:
         for j in np.where(valid==3)[0]:
             reset = model[:, :, j] > data[:, :, j]
-            print (-2. * np.log10(1.-error[j])).shape
-            print chi2_array[:, :, j][reset].shape
             chi2_array[:, :, j][reset] = -2. * np.log10(1.-error[j])
 
     # Check that there are no infinities

@@ -77,7 +77,8 @@ color['faded'].append((0.50, 0.90, 0.50))
 
 
 def tex_friendly(string):
-    return string.replace('_','\_').replace('%','\%')
+    return string.replace('_', '\_').replace('%', '\%')
+
 
 def plot_source_info(ax, i, info, plot_name, plot_info):
 
@@ -92,7 +93,7 @@ def plot_source_info(ax, i, info, plot_name, plot_info):
             labels.append("Best fit")
         else:
             labels.append("Fit: %i" % (i+1))
-        labels.append("$\chi^2$ = %10.3f\,\,\,\,A$_{\\rm V}$ = %5.1f\,\,\,\,Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
+        labels.append("$\chi^2$ = %10.3f\, \, \, \, A$_{\\rm V}$ = %5.1f\, \, \, \, Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
 
     pos = 0.95
     for label in labels:
@@ -105,7 +106,7 @@ def plot_source_info(ax, i, info, plot_name, plot_info):
     return ax
 
 
-def plot_source_data(ax, source, filters):
+def plot_source_data(ax, source, filters, size=20, capsize=3):
 
     wav = np.array([f['wav'] for f in filters])
     plot_wav = wav
@@ -118,14 +119,14 @@ def plot_source_data(ax, source, filters):
     for j in range(source.n_wav):
 
         if source.valid[j] in [1, 4]:
-            ax.scatter(plot_wav[j], plot_flux[j], marker='o', edgecolor='black', facecolor='black', zorder=100)
-            ax.errorbar(plot_wav[j], plot_flux[j], yerr=plot_error[:,j:j+1], color='black', zorder=100)
+            ax.scatter(plot_wav[j], plot_flux[j], marker='o', edgecolor='black', facecolor='black', zorder=100, s=size)
+            ax.errorbar(plot_wav[j], plot_flux[j], yerr=plot_error[:, j:j+1], color='black', zorder=100, capsize=capsize)
         elif source.valid[j] == 2:
-            ax.scatter(plot_wav[j], plot_flux[j], marker='^', edgecolor='black', facecolor='black', zorder=100)
+            ax.scatter(plot_wav[j], plot_flux[j], marker='^', edgecolor='black', facecolor='black', zorder=100, s=size)
         elif source.valid[j] == 3:
-            ax.scatter(plot_wav[j], plot_flux[j], marker='v', edgecolor='black', facecolor='black', zorder=100)
+            ax.scatter(plot_wav[j], plot_flux[j], marker='v', edgecolor='black', facecolor='black', zorder=100, s=size)
         elif source.valid[j] == 9:
-            ax.scatter(plot_wav[j], plot_flux[j], marker='o', edgecolor='black', facecolor='none', zorder=100)
+            ax.scatter(plot_wav[j], plot_flux[j], marker='o', edgecolor='black', facecolor='none', zorder=100, s=size)
 
     return ax
 
@@ -164,10 +165,13 @@ def get_axes(fig):
     return fig.add_axes(rect)
 
 
-def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type="interp", x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.), plot_name=True, plot_info=True, extension='eps'):
+def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None, plot_mode="A", sed_type="interp", x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.), plot_name=True, plot_info=True, format='eps'):
 
-    util.create_dir(output_dir)
-
+    if output_dir:
+        util.create_dir(output_dir)
+    else:
+        figures = {}
+        
     fin = file(input_file, 'rb')
 
     model_dir = pickle.load(fin)
@@ -197,11 +201,14 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
         # Filter fits
         info.keep(select_format[0], select_format[1])
 
+        if plot_max:
+            info.keep('N', plot_max)
+
         # Initalize lines and colors list
         lines = []
         colors = []
 
-        for i in range(info.n_fits-1,-1,-1):
+        for i in range(info.n_fits-1, -1, -1):
 
             if (plot_mode == 'A' and i == info.n_fits-1) or plot_mode == 'I':
                 fig = mpl.figure()
@@ -264,7 +271,14 @@ def plot(input_file, output_dir, select_format=("N", 1), plot_mode="A", sed_type
 
                 ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
 
-                if plot_mode == 'A':
-                    fig.savefig("%s/%s.%s" % (output_dir, info.source.name, extension))
+                if output_dir:
+                    if plot_mode == 'A':
+                        filename = "%s/%s.%s" % (output_dir, info.source.name, format)
+                    else:
+                        filename = "%s/%s_%05i.%s" % (output_dir, info.source.name, i+1, format)
+                    fig.savefig(filename, bbox_inches='tight')
                 else:
-                    fig.savefig("%s/%s_%05i.%s" % (output_dir, info.source.name, i+1, extension))
+                    figures[info.source.name] = {'source':info.source, 'filters':filters, 'lines':LineCollection(lines, colors=colors)}
+                    
+    if not output_dir:
+        return figures

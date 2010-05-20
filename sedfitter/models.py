@@ -94,7 +94,11 @@ class Models(object):
         else:
             self.fluxes = np.column_stack(model_fluxes)
 
-        self.names = np.char.strip(conv.model_names)
+        try:
+            self.names = np.char.strip(conv.model_names)
+        except:
+            self.names = np.array([x.strip() for x in conv.model_names],dtype=conv.model_names.dtype)
+
         self.n_models = conv.n_models
 
         self.valid = self.fluxes <> 0

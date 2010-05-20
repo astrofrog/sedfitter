@@ -23,7 +23,10 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None, param
 
     # Read in parameters file
     tpar = atpy.Table(model_dir + '/parameters.fits.gz')
-    par_model_names = np.char.strip(tpar.MODEL_NAME)
+    try:
+        par_model_names = np.char.strip(tpar.MODEL_NAME)
+    except:
+        par_model_names = np.array([x.strip() for x in tpar.MODEL_NAME],dtype=tpar.MODEL_NAME.dtype)
 
     format = {}
     for par in tpar.names:

@@ -17,9 +17,44 @@ import util
 
 
 def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
-        extinction_law=None, distance_range=None, av_range=None,
+        extinction_law=None, av_range=None, distance_range=None,
         output_format=('F', 6.), output_convolved=False,
         remove_resolved=False):
+    '''
+    Fit a set of sources with models
+    
+    Required Arguments:
+    
+        *data*: [ string ]
+            Filename of the file containing the data, one source per line.
+            (see :ref:`dataformat` for details about the format)
+            
+        *filter_names*: [ tuple or list ]
+            List of the filters that the data is specified in.
+            
+        *apertures*: [ tuple or list ]
+            List of the aperture radii that the data is specified in.
+            
+        *models_dir*: [ string ]
+            Name of the directory containing the models to use.
+            
+        *output*: [ string ]
+            Name of the file to output the fit information to (in binary format).
+            
+    Required Keyword Arguments:
+    
+        *extinction_law*: [ Extinction instance ]
+            The extinction law to use
+    
+        *av_range*: [ tuple ]
+            Tuple of the minimum and maximum Av to allow in the fitting
+            
+    Optional Arguments:
+            
+        *n_data_min*
+    
+    '''    
+    
 
     print " ------------------------------------------------------------"
     print "  => Fitting parameters"

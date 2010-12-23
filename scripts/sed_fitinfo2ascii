@@ -48,7 +48,6 @@ fout = file(options['output'], 'wb')
 # Read in header of output file
 model_dir = pickle.load(fin)
 filters = pickle.load(fin)
-model_names = pickle.load(fin)
 extinction = Extinction()
 extinction.read_binary(fin)
 
@@ -64,7 +63,7 @@ while True:
         
     fout.write(info.source.name + '\n')
     for i in range(info.n_fits):
-        fout.write('%5i %30s %10.3f %10.3f %10.3f\n' % (i, model_names[info.model_id[i]], info.chi2[i], info.av[i], info.sc[i]))
+        fout.write('%5i %30s %10.3f %10.3f %10.3f\n' % (i, info.model_name[i], info.chi2[i], info.av[i], info.sc[i]))
 
 # Close input and output files
 fin.close()

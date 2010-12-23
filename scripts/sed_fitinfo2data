@@ -48,7 +48,6 @@ fout = file(options['output'], 'wb')
 # Read in header of output file
 model_dir = pickle.load(fin)
 filters = pickle.load(fin)
-model_names = pickle.load(fin)
 extinction = Extinction()
 extinction.read_binary(fin)
 

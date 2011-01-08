@@ -64,6 +64,7 @@ if par['pconv']:
 if par['patmo']:
     warnings.warn('patmo not implemented')
 
+format = par['devic'].split('/')[0].replace('.', '')
 
 # Call python plot function
 sedfitter.plot(options['input'], options['output'],
@@ -72,4 +73,4 @@ sedfitter.plot(options['input'], options['output'],
                sed_type=par['stype'],
                x_mode=par['xmode'], x_range=x_range,
                y_mode=par['ymode'], y_range=y_range,
-               plot_name=par['pname'], plot_info=par['pinfo'])
+               plot_name=par['pname'], plot_info=par['pinfo'], format=format)

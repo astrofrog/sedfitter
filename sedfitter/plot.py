@@ -204,15 +204,16 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None, plo
         if plot_max:
             info.keep('N', plot_max)
 
-        # Initalize lines and colors list
-        lines = []
-        colors = []
-
         for i in range(info.n_fits-1, -1, -1):
 
             if (plot_mode == 'A' and i == info.n_fits-1) or plot_mode == 'I':
                 fig = mpl.figure()
                 ax = get_axes(fig)
+
+            # Initalize lines and colors list
+            if (plot_mode == 'A' and i == info.n_fits-1) or plot_mode == 'I':
+                lines = []
+                colors = []
 
             if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
                 if sed_type in ['interp', 'largest']:

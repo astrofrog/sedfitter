@@ -21,6 +21,10 @@ def convolve_model_dir(model_dir, filters):
         A list of Filter objects to use for the convolution
     '''
 
+    for f in filters:
+        if f.name is None:
+            raise Exception("filters need to be named")
+
     # Find all SED files to convolve
     sed_files = glob.glob(model_dir + '/seds/*.fits.gz') + \
                 glob.glob(model_dir + '/seds/*.fits')
@@ -53,9 +57,11 @@ def convolve_model_dir(model_dir, filters):
 
         # Convolve
         for i, f in enumerate(binned_filters):
+            fluxes[i].model_names[im] = s.name
             if n_ap == 1:
                 fluxes[i]._flux[im] = np.sum(s.flux * f.r)
             else:
                 raise NotImplemented()
 
-    return fluxes
+    for i, f in enumerate(binned_filters):
+        fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits')

@@ -59,7 +59,7 @@ def convolve_model_dir(model_dir, filters):
         for i, f in enumerate(binned_filters):
             fluxes[i].model_names[im] = s.name
             if n_ap == 1:
-                fluxes[i]._flux[im] = np.sum(s.flux * f.r)
+                fluxes[i].flux[im] = np.sum(s.flux * f.r)
             else:
                 raise NotImplemented()
 

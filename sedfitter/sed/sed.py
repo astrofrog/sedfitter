@@ -8,6 +8,8 @@ import pyfits
 from copy import copy
 import numpy as np
 
+c = 299792458
+
 
 class SED(object):
 
@@ -30,21 +32,48 @@ class SED(object):
         if 'law' in self.__dict__:
             self.flux *= 10. ** (self.av * self.law(self._wav))
 
-    def read(self, filename, unit_wav='microns', unit_flux='ergs/cm^2/s'):
+    def read(self, filename, unit_wav='microns', unit_freq='Hz', unit_flux='ergs/cm^2/s', order='freq'):
+        '''
+        Read an SED from a FITS file.
+
+        Parameters
+        ----------
+        filename: str
+            The name of the file to read the SED from.
+        unit_wav: str, optional
+            The units to convert the wavelengths to.
+        unit_freq: str, optional
+            The units to convert the frequency to.
+        unit_flux: str, optional
+            The units to convert the flux to.
+        order: str, optional
+            Whether to sort the SED by increasing wavelength (`wav`) or
+            frequency ('freq').
+        '''
 
         if not os.path.exists(filename) and os.path.exists(filename + '.gz'):
             filename += ".gz"
 
-        hdulist = pyfits.open(filename)
-        self._wav = hdulist[1].data.field('WAVELENGTH')
-        self.ap = hdulist[2].data.field('APERTURE')
-        self._flux = hdulist[3].data.field('TOTAL_FLUX')
+        hdulist = pyfits.open(filename, memmap=False)
 
-        self.n_wav = len(self._wav)
-        self.n_ap = len(self.ap)
+        self.name = hdulist[0].header['MODEL']
 
-        curr_unit_wav = hdulist[1].columns[0].unit
-        curr_unit_flux = hdulist[3].columns[0].unit
+        wav = hdulist[1].data.field('WAVELENGTH')
+        nu = hdulist[1].data.field('FREQUENCY')
+        ap = hdulist[2].data.field('APERTURE')
+        flux = hdulist[3].data.field('TOTAL_FLUX')
+        error = hdulist[3].data.field('TOTAL_FLUX_ERR')
+
+        self.n_wav = len(wav)
+        self.n_ap = len(ap)
+
+        unit_wav = unit_wav.lower()
+        unit_freq = unit_freq.lower()
+        unit_flux = unit_flux.lower()
+
+        curr_unit_wav = hdulist[1].columns[0].unit.lower()
+        curr_unit_freq = hdulist[1].columns[1].unit.lower()
+        curr_unit_flux = hdulist[3].columns[0].unit.lower()
 
         # ts = atpy.TableSet(filename, verbose=False)
         #
@@ -58,40 +87,63 @@ class SED(object):
         # curr_unit_wav = ts[0].columns['WAVELENGTH'].unit
         # curr_unit_flux = ts[2].columns['TOTAL_FLUX'].unit
 
-        # Convert wavelength units
-
-        if unit_wav == 'microns':
-            if curr_unit_wav.lower() == 'm':
-                self._wav *= 1.e6
-            elif curr_unit_wav.lower() == 'nm':
-                self._wav /= 1000.
-            elif curr_unit_wav.lower() == 'microns':
-                pass
-            else:
-                raise Exception("Don't know how to convert %s to %s" % (curr_unit_wav, unit_wav))
+        # Convert wavelength to microns
+        if curr_unit_wav == 'm':
+            wav_microns = wav * 1.e6
+        elif curr_unit_wav == 'nm':
+            wav_microns = wav / 1000.
+        elif curr_unit_wav == 'microns':
+            wav_microns = wav
         else:
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_wav, unit_wav))
 
-        # Convert flux units
+        # Convert wavelength to requested units
+        if unit_wav == 'microns':
+            self.wav = wav_microns
+        else:
+            raise Exception("Don't know how to convert %s to %s" % (curr_unit_wav, unit_wav))
 
-        if unit_flux == 'ergs/cm^2/s':
-            if curr_unit_flux.lower() == 'ergs/s':
-                self._flux /= 3.086e21 ** 2.
-            elif curr_unit_flux.lower() == 'mjy':
-                self._flux *= 3.e8 / (self._wav * 1.e-6) * 1.e-26
-            elif curr_unit_flux.lower() == 'ergs/cm^2/s':
-                pass
-            else:
-                raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
+        # Convert frequency to Hz
+        if curr_unit_freq == 'hz':
+            nu_hz = nu
+        else:
+            raise Exception("Don't know how to convert %s to %s" % (curr_unit_freq, unit_freq))
+
+        # Convert frequency to requested units
+        if unit_freq == 'hz':
+            self.nu = nu_hz
+        else:
+            raise Exception("Don't know how to convert %s to %s" % (curr_unit_freq, unit_freq))
+
+        # Convert flux to ergs/cm^2/s
+        if curr_unit_flux == 'ergs/s':
+            flux_cgs = flux / 3.086e21 ** 2.
+        elif curr_unit_flux == 'mjy':
+            flux_cgs = flux * c / (wav_microns * 1.e-6) * 1.e-26
+        elif curr_unit_flux == 'ergs/cm^2/s':
+            flux_cgs = flux
         else:
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
-        # Initialize distance and Av
+        if unit_flux == 'ergs/s':
+            self.flux = flux_cgs * 3.086e21 ** 2.
+        elif unit_flux == 'mjy':
+            self.flux = flux_cgs / c * (wav_microns * 1.e-6) / 1.e-26
+        elif unit_flux == 'ergs/cm^2/s':
+            self.flux = flux_cgs
+        else:
+            raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
+        # Sort SED
+        if order == 'freq' and self.nu[0] > self.nu[-1] or \
+           order == 'wav' and self.wav[0] > self.wav[-1]:
+            self.wav = self.wav[::-1]
+            self.nu = self.nu[::-1]
+            self.flux = self.flux[::-1]
+
+        # Initialize distance and Av
         self.distance = 1.
         self.av = 0.
-        self.wav = self._wav
-        self.flux = self._flux
 
     def interpolate(self, apertures):
         '''

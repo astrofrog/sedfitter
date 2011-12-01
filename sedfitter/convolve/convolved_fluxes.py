@@ -19,8 +19,8 @@ class ConvolvedFluxes(object):
         if n_models is not None:
 
             self.model_names = np.zeros(n_models, dtype='S30')
-            self.radius_sigma_50 = np.zeros(n_models, dtype=float)
-            self.radius_cumul_99 = np.zeros(n_models, dtype=float)
+            self.radius_sigma_50 = None
+            self.radius_cumul_99 = None
             self._apertures = np.zeros(n_ap)
 
             if n_ap == 1:
@@ -119,7 +119,12 @@ class ConvolvedFluxes(object):
 
     def write(self, filename):
         '''
-        Write convolved flux to a FITS file
+        Write convolved flux to a FITS file.
+
+        Parameters
+        ----------
+        filename: str
+            The name of the file to output the convolved fluxes to.
         '''
 
         ts = atpy.TableSet()
@@ -132,8 +137,8 @@ class ConvolvedFluxes(object):
         ts[0].add_column('MODEL_NAME', self.model_names)
         ts[0].add_column('TOTAL_FLUX', self.flux)
         ts[0].add_column('TOTAL_FLUX_ERR', self.flux_err)
-        ts[0].add_column('RADIUS_SIGMA_50', self.radius_sigma_50)
-        ts[0].add_column('RADIUS_CUMUL_99', self.radius_cumul_99)
+        ts[0].add_column('RADIUS_SIGMA_50', self.find_radius_sigma(0.50))
+        ts[0].add_column('RADIUS_CUMUL_99', self.find_radius_cumul(0.99))
 
         ts.append(atpy.Table(name='APERTURES'))
         ts[1].add_column("APERTURE", self.apertures)
@@ -142,7 +147,7 @@ class ConvolvedFluxes(object):
 
     def interpolate(self, apertures):
         '''
-        Interpolate the flux to the apertures specified
+        Interpolate the flux to the apertures specified.
         '''
 
         # If any apertures are larger than the defined max, reset to max
@@ -162,57 +167,72 @@ class ConvolvedFluxes(object):
         self.apertures = apertures
 
     def find_radius_cumul(self, fraction):
+        '''
+        Find for each model the radius containing a fraction of the flux.
 
+        Parameters
+        ----------
+        fraction: float
+            The fraction to use when determining the radius
+        '''
         log.info("Finding radius containing %g%s of the flux" % (fraction * 100., '%'))
 
         radius = np.zeros(self.n_models)
 
-        if self.apertures is None:
+        if self._apertures is None:
 
             return radius
 
         else:
 
-            required = fraction * self.flux[:, -1]
+            required = fraction * self._flux[:, -1]
 
             # Linear interpolation - need to loop over apertures for vectorization
-            for ia in range(len(self.apertures) - 1):
-                calc = (required >= self.flux[:, ia]) & (required < self.flux[:, ia + 1])
-                radius[calc] = (required[calc] - self.flux[calc, ia]) / \
-                               (self.flux[calc, ia + 1] - self.flux[calc, ia]) * \
-                               (self.apertures[ia + 1] - self.apertures[ia]) + \
-                               self.apertures[ia]
+            for ia in range(len(self._apertures) - 1):
+                calc = (required >= self._flux[:, ia]) & (required < self._flux[:, ia + 1])
+                radius[calc] = (required[calc] - self._flux[calc, ia]) / \
+                               (self._flux[calc, ia + 1] - self._flux[calc, ia]) * \
+                               (self._apertures[ia + 1] - self._apertures[ia]) + \
+                               self._apertures[ia]
 
-            calc = (required < self.flux[:, 0])
-            radius[calc] = self.apertures[0]
+            calc = (required < self._flux[:, 0])
+            radius[calc] = self._apertures[0]
 
-            calc = (required >= self.flux[:, -1])
-            radius[calc] = self.apertures[-1]
+            calc = (required >= self._flux[:, -1])
+            radius[calc] = self._apertures[-1]
 
             return radius
 
     def find_radius_sigma(self, fraction):
+        '''
+        Find for each model the outermost radius where the surface brightness
+        is larger than a fraction of the peak surface brightness.
 
+        Parameters
+        ----------
+        fraction: float
+            The fraction to use when determining the radius
+        '''
         log.info("Finding radius containing %g%s of the flux" % (fraction * 100., '%'))
 
-        sigma = np.zeros(self.flux.shape)
-        sigma[:, 0] = self.flux[:, 0] / self.apertures[0] ** 2
-        sigma[:, 1:] = (self.flux[:, 1:] - self.flux[:, :-1]) / \
-                       (self.apertures[1:] ** 2 - self.apertures[:-1] ** 2)
+        sigma = np.zeros(self._flux.shape)
+        sigma[:, 0] = self._flux[:, 0] / self._apertures[0] ** 2
+        sigma[:, 1:] = (self._flux[:, 1:] - self._flux[:, :-1]) / \
+                       (self._apertures[1:] ** 2 - self._apertures[:-1] ** 2)
 
         maximum = np.max(sigma, axis=1)
 
         radius = np.zeros(self.n_models)
 
         # Linear interpolation - need to loop over apertures backwards for vectorization
-        for ia in range(len(self.apertures) - 2, -1, -1):
+        for ia in range(len(self._apertures) - 2, -1, -1):
             calc = (sigma[:, ia] > fraction * maximum) & (radius == 0.)
             radius[calc] = (sigma[calc, ia] - fraction * maximum[calc]) / \
                            (sigma[calc, ia] - sigma[calc, ia + 1]) * \
-                           (self.apertures[ia + 1] - self.apertures[ia]) + \
-                           self.apertures[ia]
+                           (self._apertures[ia + 1] - self._apertures[ia]) + \
+                           self._apertures[ia]
 
         calc = sigma[:, -1] > fraction * maximum
-        radius[calc] = self.apertures[-1]
+        radius[calc] = self._apertures[-1]
 
         return radius

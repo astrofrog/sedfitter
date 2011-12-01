@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from convolved_fluxes import ConvolvedFluxes
+from .convolve import ConvolvedFluxes
 import fitting_routines as f
 import parfile
 

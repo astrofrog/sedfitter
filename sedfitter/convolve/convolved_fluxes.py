@@ -1,14 +1,49 @@
 from scipy.interpolate import interp1d
-# import atpy
+import atpy
 import pyfits
 import numpy as np
+
+from ..logger import log
+
+from hyperion.util.interpolate import interp1d_fast
 
 
 class ConvolvedFluxes(object):
 
-    def __init__(self, *args, **kwargs):
-        if args:
-            self.read(*args, **kwargs)
+    def __init__(self, n_models=None, n_ap=1, wavelength=None):
+
+        self.wavelength = wavelength
+        self.n_models = n_models
+        self.n_ap = n_ap
+
+        if n_models is not None:
+
+            self.model_names = np.zeros(n_models, dtype='S30')
+            self.radius_sigma_50 = np.zeros(n_models, dtype=float)
+            self.radius_cumul_99 = np.zeros(n_models, dtype=float)
+            self._apertures = np.zeros(n_ap)
+
+            if n_ap == 1:
+                self._flux = np.zeros(n_models, dtype=float)
+                self._flux_errors = np.zeros(n_models, dtype=float)
+            else:
+                self._flux = np.zeros((n_models, n_ap), dtype=float)
+                self._flux_errors = np.zeros((n_models, n_ap), dtype=float)
+
+            if self._flux.ndim > 1:
+                self._flux_interp = interp1d(self._apertures, self._flux[:])
+
+            # Make the default fluxes and apertures public - this is then
+            # overwritten when the user interpolates to custom apertures.
+            self.flux = self._flux
+            self.flux_err = self._flux_errors
+            self.apertures = self._apertures
+
+        else:
+
+            self.flux = None
+            self.flux_err = None
+            self.apertures = None
 
     def read(self, filename):
         '''
@@ -77,6 +112,7 @@ class ConvolvedFluxes(object):
         # Make the default fluxes and apertures public - this is then
         # overwritten when the user interpolates to custom apertures.
         self.flux = self._flux
+        self.flux_err = self._flux_errors
         self.apertures = self._apertures
 
         return
@@ -97,7 +133,7 @@ class ConvolvedFluxes(object):
         ts[0].add_column('TOTAL_FLUX', self.flux)
         ts[0].add_column('TOTAL_FLUX_ERR', self.flux_err)
         ts[0].add_column('RADIUS_SIGMA_50', self.radius_sigma_50)
-        ts[0].add_column('RADIUS_CUMUL_99', self.radius_cumul_50)
+        ts[0].add_column('RADIUS_CUMUL_99', self.radius_cumul_99)
 
         ts.append(atpy.Table(name='APERTURES'))
         ts[1].add_column("APERTURE", self.apertures)
@@ -124,3 +160,59 @@ class ConvolvedFluxes(object):
 
         # Save the apertures
         self.apertures = apertures
+
+    def find_radius_cumul(self, fraction):
+
+        log.info("Finding radius containing %g%s of the flux" % (fraction * 100., '%'))
+
+        radius = np.zeros(self.n_models)
+
+        if self.apertures is None:
+
+            return radius
+
+        else:
+
+            required = fraction * self.flux[:, -1]
+
+            # Linear interpolation - need to loop over apertures for vectorization
+            for ia in range(len(self.apertures) - 1):
+                calc = (required >= self.flux[:, ia]) & (required < self.flux[:, ia + 1])
+                radius[calc] = (required[calc] - self.flux[calc, ia]) / \
+                               (self.flux[calc, ia + 1] - self.flux[calc, ia]) * \
+                               (self.apertures[ia + 1] - self.apertures[ia]) + \
+                               self.apertures[ia]
+
+            calc = (required < self.flux[:, 0])
+            radius[calc] = self.apertures[0]
+
+            calc = (required >= self.flux[:, -1])
+            radius[calc] = self.apertures[-1]
+
+            return radius
+
+    def find_radius_sigma(self, fraction):
+
+        log.info("Finding radius containing %g%s of the flux" % (fraction * 100., '%'))
+
+        sigma = np.zeros(self.flux.shape)
+        sigma[:, 0] = self.flux[:, 0] / self.apertures[0] ** 2
+        sigma[:, 1:] = (self.flux[:, 1:] - self.flux[:, :-1]) / \
+                       (self.apertures[1:] ** 2 - self.apertures[:-1] ** 2)
+
+        maximum = np.max(sigma, axis=1)
+
+        radius = np.zeros(self.n_models)
+
+        # Linear interpolation - need to loop over apertures backwards for vectorization
+        for ia in range(len(self.apertures) - 2, -1, -1):
+            calc = (sigma[:, ia] > fraction * maximum) & (radius == 0.)
+            radius[calc] = (sigma[calc, ia] - fraction * maximum[calc]) / \
+                           (sigma[calc, ia] - sigma[calc, ia + 1]) * \
+                           (self.apertures[ia + 1] - self.apertures[ia]) + \
+                           self.apertures[ia]
+
+        calc = sigma[:, -1] > fraction * maximum
+        radius[calc] = self.apertures[-1]
+
+        return radius

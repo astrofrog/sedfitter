@@ -18,9 +18,7 @@
 
 import cPickle as pickle
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as mpl
+import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
 import matplotlib.ticker as ticker
@@ -33,14 +31,14 @@ from sed import SED
 import util
 import parfile
 
-mpl.rc('text', usetex=True)
-mpl.rc('axes', titlesize='small')
-mpl.rc('axes', labelsize='small')
-mpl.rc('xtick', labelsize='x-small')
-mpl.rc('ytick', labelsize='x-small')
-mpl.rc('font', family='serif')
-mpl.rc('axes', linewidth=0.5)
-mpl.rc('patch', linewidth=0.5)
+plt.rc('text', usetex=True)
+plt.rc('axes', titlesize='small')
+plt.rc('axes', labelsize='small')
+plt.rc('xtick', labelsize='x-small')
+plt.rc('ytick', labelsize='x-small')
+plt.rc('font', family='serif')
+plt.rc('axes', linewidth=0.5)
+plt.rc('patch', linewidth=0.5)
 
 fp = FontProperties(size='x-small')
 
@@ -207,7 +205,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None, plo
         for i in range(info.n_fits - 1, -1, -1):
 
             if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
-                fig = mpl.figure()
+                fig = plt.figure()
                 ax = get_axes(fig)
 
             # Initalize lines and colors list

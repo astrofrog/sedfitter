@@ -32,15 +32,15 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
 
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
-    
+
     info = FitInfo()
 
     # First header line
     fout.write("%30s " % "")
-    
+
     fout.write("%10s " % "")
     fout.write("%10s " % "")
-    
+
     fout.write('chi2'.center(32) + ' ')
     fout.write('av'.center(32) + ' ')
     fout.write('scale'.center(32) + ' ')
@@ -56,7 +56,7 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
     fout.write("source_name".center(30) + ' ')
     fout.write("n_data".center(10) + ' ')
     fout.write("n_fits".center(10) + ' ')
-    
+
     fout.write("min".center(10) + " " + "best".center(10) + " " + "max".center(10) + " ")
     fout.write("min".center(10) + " " + "best".center(10) + " " + "max".center(10) + " ")
     fout.write("min".center(10) + " " + "best".center(10) + " " + "max".center(10) + " ")
@@ -67,7 +67,6 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
         fout.write("min".center(10) + " " + "best".center(10) + " " + "max".center(10) + " ")
 
     fout.write('\n')
-
 
     # Third header line
     fout.write('-' * 30 + ' ')
@@ -85,7 +84,6 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
 
     fout.write('\n')
 
-
     while True:
 
         # Read in next fit
@@ -93,17 +91,17 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
             info.read_binary(fin)
         except:
             break
-            
+
         # Filter fits
         info.keep(select_format[0], select_format[1])
-        
+
         subset = np.in1d(t['MODEL_NAME'], info.model_name)
         tsub = t.where(subset)
         index = np.argsort(np.argsort(info.model_name))
         tsorted = tsub.rows(index)
         if not np.all(info.model_name == tsorted['MODEL_NAME']):
             raise Exception("Parameter file sorting failed")
-            
+
         # Add additional parameter columns if necessary
         for parameter in additional:
             if parameter in tsorted.columns:
@@ -124,7 +122,7 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
             if par == 'MODEL_NAME':
                 continue
             fout.write('%10.3e %10.3e %10.3e ' % (tsorted[par].min(), tsorted[par][0], tsorted[par].max()))
-            
+
         fout.write('\n')
 
     # Close input and output files

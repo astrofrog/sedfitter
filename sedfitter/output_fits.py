@@ -27,8 +27,8 @@ class OutputFile(object):
         # Source table
 
         first = [1]
-        for i in range(len(self.fitinfo)-1):
-            first.append(first[i] + self.fitinfo[i+1].n_fits)
+        for i in range(len(self.fitinfo) - 1):
+            first.append(first[i] + self.fitinfo[i + 1].n_fits)
 
         number = [f.n_fits for f in self.fitinfo]
 
@@ -37,14 +37,14 @@ class OutputFile(object):
         ts[0].add_keyword('NWAV', n_wav)
 
         for j in range(n_wav):
-            ts[0].add_keyword("FILT%i" % (j+1), filters[j]['name'])
-            ts[0].add_keyword("WAV%i" % (j+1), filters[j]['wav'])
-            ts[0].add_keyword("AP%i" % (j+1), filters[j]['ap'])
+            ts[0].add_keyword("FILT%i" % (j + 1), filters[j]['name'])
+            ts[0].add_keyword("WAV%i" % (j + 1), filters[j]['wav'])
+            ts[0].add_keyword("AP%i" % (j + 1), filters[j]['ap'])
 
         ts[0].add_column('SOURCE_NAME', [f.source.name for f in self.fitinfo])
         ts[0].add_column('X', [f.source.x for f in self.fitinfo], unit='deg')
         ts[0].add_column('Y', [f.source.y for f in self.fitinfo], unit='deg')
-        ts[0].add_column('SOURCE_ID', range(1, len(self.fitinfo)+1))
+        ts[0].add_column('SOURCE_ID', range(1, len(self.fitinfo) + 1))
         ts[0].add_column('FIRST_ROW', first)
         ts[0].add_column('NUMBER_FITS', number)
         ts[0].add_column('VALID', np.vstack([f.source.valid for f in self.fitinfo]))
@@ -59,14 +59,14 @@ class OutputFile(object):
         source_id = []
 
         for i, f in enumerate(self.fitinfo):
-            source_id.append(np.ones(f.n_fits)*(i+1))
-            fit_id.append(range(1, f.n_fits+1))
+            source_id.append(np.ones(f.n_fits) * (i + 1))
+            fit_id.append(range(1, f.n_fits + 1))
         source_id = np.hstack(source_id)
         fit_id = np.hstack(fit_id)
 
         model_id = np.hstack([f.order for f in self.fitinfo])
 
-        model_name = model_name[model_id-1]
+        model_name = model_name[model_id - 1]
 
         ts.append(atpy.Table(name='FITS'))
 

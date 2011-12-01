@@ -4,3 +4,5 @@ from filter_output import filter_output
 from extract_parameters import extract_parameters
 from write_parameters import write_parameters
 from write_parameter_ranges import write_parameter_ranges
+
+__version__ = '0.1.0'

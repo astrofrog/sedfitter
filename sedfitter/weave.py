@@ -1,5 +1,7 @@
 from scipy import weave
 from scipy.weave import converters
+
+
 def chi_squared_weave(valid, data, error, weight, model):
 
     nx = valid.shape[0]

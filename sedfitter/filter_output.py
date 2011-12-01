@@ -10,7 +10,7 @@ from sedfitter.extinction import Extinction
 def filter_output(input=None, output_good='auto', output_bad='auto', chi=None,
                   cpd=None):
 
-    if input[-8:] <> '.fitinfo':
+    if input[-8:] != '.fitinfo':
         raise Exception("Extension of input file should be .fitinfo")
 
     fin = file(input, 'rb')

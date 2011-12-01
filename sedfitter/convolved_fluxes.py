@@ -3,6 +3,7 @@ from scipy.interpolate import interp1d
 import pyfits
 import numpy as np
 
+
 class ConvolvedFluxes(object):
 
     def __init__(self, *args, **kwargs):

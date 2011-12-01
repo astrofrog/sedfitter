@@ -64,12 +64,12 @@ class Models(object):
             filename = '%s/convolved/%s.fits' % (directory, filt['name'])
 
             if not os.path.exists(filename):
-                if os.path.exists(filename+'.gz'):
+                if os.path.exists(filename + '.gz'):
                     filename += '.gz'
                 else:
-                    raise Exception("File not found: "+filename)
+                    raise Exception("File not found: " + filename)
 
-            print "   Reading "+filename
+            print "   Reading " + filename
 
             conv = ConvolvedFluxes(filename)
 
@@ -78,10 +78,10 @@ class Models(object):
             if self.n_distances:
                 apertures_au = filt['aperture_arcsec'] * self.distances * 1.e3
                 conv.interpolate(apertures_au)
-                conv.flux = conv.flux / self.distances**2
+                conv.flux = conv.flux / self.distances ** 2
                 self.logd = np.log10(self.distances)
                 if remove_resolved:
-                    self.extended.append(apertures_au[np.newaxis,:] < conv.radius_sigma_50[:,np.newaxis])
+                    self.extended.append(apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis])
 
             model_fluxes.append(conv.flux)
 
@@ -97,11 +97,11 @@ class Models(object):
         try:
             self.names = np.char.strip(conv.model_names)
         except:
-            self.names = np.array([x.strip() for x in conv.model_names],dtype=conv.model_names.dtype)
+            self.names = np.array([x.strip() for x in conv.model_names], dtype=conv.model_names.dtype)
 
         self.n_models = conv.n_models
 
-        self.valid = self.fluxes <> 0
+        self.valid = self.fluxes != 0
 
         self.fluxes[~self.valid] = -np.inf
         self.fluxes[self.valid] = np.log10(self.fluxes[self.valid])
@@ -110,7 +110,7 @@ class Models(object):
 
     def fit(self, source, av_law, sc_law, av_min, av_max):
 
-        if self.fluxes.ndim == 2: # Aperture-independent fitting
+        if self.fluxes.ndim == 2:  # Aperture-independent fitting
 
             # Use 2-parameter linear regression to find the best-fit av and scale for each model
             residual = source.logflux - self.fluxes
@@ -130,7 +130,7 @@ class Models(object):
             # Calculate the chi-squared value
             ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
 
-        elif self.fluxes.ndim == 3: # Aperture dependent fitting
+        elif self.fluxes.ndim == 3:  # Aperture dependent fitting
 
             # Use optimal scaling to fit the Av
             residual = source.logflux - self.fluxes

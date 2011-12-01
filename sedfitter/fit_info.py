@@ -2,6 +2,7 @@ import numpy as np
 import cPickle as pickle
 from source import Source
 
+
 class FitInfo(object):
 
     def __init__(self, source=None):
@@ -28,17 +29,17 @@ class FitInfo(object):
 
     def keep(self, form, number):
 
-        if form=='A':
+        if form == 'A':
             n_fits = len(self.chi2)
-        elif form=='N' or not form: # Form N is parsed as boolean
+        elif form == 'N' or not form:  # Form N is parsed as boolean
             n_fits = int(number)
-        elif form=='C':
+        elif form == 'C':
             n_fits = np.sum(self.chi2 <= number)
-        elif form=='D':
+        elif form == 'D':
             n_fits = np.sum(self.chi2 - self.chi2[0] <= number)
-        elif form=='E':
+        elif form == 'E':
             n_fits = np.sum((self.chi2 / self.source.n_wav) <= number)
-        elif form=='F':
+        elif form == 'F':
             n_fits = np.sum((self.chi2 - self.chi2[0]) / self.source.n_wav <= number)
         else:
             raise Exception("Unknown format: %s" % form)
@@ -71,9 +72,9 @@ class FitInfo(object):
         self.source = Source()
         self.source.read_binary(file_handle)
         n_fits = pickle.load(file_handle)
-        self.av = np.fromstring(file_handle.read(n_fits*4), dtype=np.float32)
-        self.sc = np.fromstring(file_handle.read(n_fits*4), dtype=np.float32)
-        self.chi2 = np.fromstring(file_handle.read(n_fits*4), dtype=np.float32)
-        self.model_id = np.fromstring(file_handle.read(n_fits*4), dtype=np.int32)
+        self.av = np.fromstring(file_handle.read(n_fits * 4), dtype=np.float32)
+        self.sc = np.fromstring(file_handle.read(n_fits * 4), dtype=np.float32)
+        self.chi2 = np.fromstring(file_handle.read(n_fits * 4), dtype=np.float32)
+        self.model_id = np.fromstring(file_handle.read(n_fits * 4), dtype=np.int32)
         itemsize = pickle.load(file_handle)
-        self.model_name = np.fromstring(file_handle.read(n_fits*itemsize), dtype='|S%i' % itemsize)
+        self.model_name = np.fromstring(file_handle.read(n_fits * itemsize), dtype='|S%i' % itemsize)

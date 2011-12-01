@@ -59,7 +59,7 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
 
     fout.write('-' * (75 + 11 * (len(t.columns.keys + additional.keys()))))
     fout.write('\n')
-    
+
     while True:
 
         # Read in next fit

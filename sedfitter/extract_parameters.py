@@ -8,9 +8,10 @@ from sedfitter.fit_info import FitInfo
 from sedfitter.extinction import Extinction
 
 
-def extract_parameters(input=None, output_prefix=None, output_suffix=None, parameters='all', select_format=("N", 1), header=True):
+def extract_parameters(input=None, output_prefix=None, output_suffix=None,
+                       parameters='all', select_format=("N", 1), header=True):
 
-    if input[-8:] <> '.fitinfo':
+    if input[-8:] != '.fitinfo':
         raise Exception("Extension of input file should be .fitinfo")
 
     fin = file(input, 'rb')
@@ -26,12 +27,13 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None, param
     try:
         par_model_names = np.char.strip(tpar.MODEL_NAME)
     except:
-        par_model_names = np.array([x.strip() for x in tpar.MODEL_NAME],dtype=tpar.MODEL_NAME.dtype)
+        par_model_names = np.array([x.strip() for x in tpar.MODEL_NAME],
+                                   dtype=tpar.MODEL_NAME.dtype)
     tpar.MODEL_NAME = np.char.strip(tpar.MODEL_NAME)
 
     format = {}
     for par in tpar.names:
-        if par=='MODEL_NAME':
+        if par == 'MODEL_NAME':
             format[par] = "%11s"
         else:
             format[par] = "%11.3e"
@@ -63,7 +65,7 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None, param
 
         if header:
             fout.write("%11s %11s %11s " % ("CHI2", "AV", "SC"))
-            fout.write(string.join([("%11s" % par) for par in parameters]," "))
+            fout.write(string.join([("%11s" % par) for par in parameters], " "))
             fout.write("\n")
 
         for i in range(info.n_fits):
@@ -71,7 +73,7 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None, param
             row = tpar.where(info.model_name[i] == par_model_names).row(0)
 
             basic = "%11.3e %11.3e %11.3e " % (info.chi2[i], info.av[i], info.sc[i])
-            pars = string.join([(format[par] % row[par]) for par in parameters]," ")
+            pars = string.join([(format[par] % row[par]) for par in parameters], " ")
 
             fout.write(basic + pars + "\n")
 

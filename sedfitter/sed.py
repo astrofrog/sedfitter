@@ -8,6 +8,7 @@ import pyfits
 from copy import copy
 import numpy as np
 
+
 class SED(object):
 
     def __init__(self):
@@ -25,9 +26,9 @@ class SED(object):
     def _update_sed(self):
         self.flux = copy(self._flux)
         if 'distance' in self.__dict__:
-            self.flux /= self.distance**2
+            self.flux /= self.distance ** 2
         if 'law' in self.__dict__:
-            self.flux *= 10.**(self.av * self.law(self._wav))
+            self.flux *= 10. ** (self.av * self.law(self._wav))
 
     def read(self, filename, unit_wav='microns', unit_flux='ergs/cm^2/s'):
 
@@ -75,7 +76,7 @@ class SED(object):
 
         if unit_flux == 'ergs/cm^2/s':
             if curr_unit_flux.lower() == 'ergs/s':
-                self._flux /= 3.086e21**2.
+                self._flux /= 3.086e21 ** 2.
             elif curr_unit_flux.lower() == 'mjy':
                 self._flux *= 3.e8 / (self._wav * 1.e-6) * 1.e-26
             elif curr_unit_flux.lower() == 'ergs/cm^2/s':
@@ -97,11 +98,11 @@ class SED(object):
         Interpolate the SED to different apertures
         '''
 
-        if self.n_ap==1:
-            return np.repeat(self.flux[0,:],len(apertures)).reshape(self.n_wav, len(apertures))
+        if self.n_ap == 1:
+            return np.repeat(self.flux[0, :], len(apertures)).reshape(self.n_wav, len(apertures))
 
         # Create interpolating function
-        flux_interp = interp1d(self.ap, self.flux.swapaxes(0,1))
+        flux_interp = interp1d(self.ap, self.flux.swapaxes(0, 1))
 
         # If any apertures are larger than the defined max, reset to max
         apertures[apertures > self.ap.max()] = self.ap.max()
@@ -127,7 +128,7 @@ class SED(object):
             raise Exception("Aperture(s) requested too small")
 
         if self.n_ap == 1:
-            return self.flux[0,:]
+            return self.flux[0, :]
 
         # Find wavelength order
         order = np.argsort(wavelengths)
@@ -136,14 +137,14 @@ class SED(object):
         log10_ap_interp = interp1d(np.log10(wavelengths[order]), np.log10(apertures[order]), bounds_error=False, fill_value=np.nan)
 
         # Create interpolating function
-        flux_interp = interp1d(self.ap, self.flux.swapaxes(0,1))
+        flux_interp = interp1d(self.ap, self.flux.swapaxes(0, 1))
 
         # Interpolate the apertures
-        apertures = 10.**log10_ap_interp(np.log10(self.wav))
+        apertures = 10. ** log10_ap_interp(np.log10(self.wav))
 
         # Extrapolate on either side
-        apertures[np.log10(self.wav) < log10_ap_interp.x[0]] = 10.**log10_ap_interp.y[0]
-        apertures[np.log10(self.wav) > log10_ap_interp.x[-1]] = 10.**log10_ap_interp.y[-1]
+        apertures[np.log10(self.wav) < log10_ap_interp.x[0]] = 10. ** log10_ap_interp.y[0]
+        apertures[np.log10(self.wav) > log10_ap_interp.x[-1]] = 10. ** log10_ap_interp.y[-1]
 
         # Interpolate and return only diagonal elements
         return flux_interp(apertures).diagonal()

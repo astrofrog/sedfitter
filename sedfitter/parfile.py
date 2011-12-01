@@ -8,7 +8,7 @@ def read(filename, format):
     f = file(filename, 'rb')
 
     for line in f.readlines():
-        if '=' in line and line[0] <> "#" and line.strip() <> "":
+        if '=' in line and line[0] != "#" and line.strip() != "":
             cols = line.split('=')
             if format == 'par':
                 value, key = cols[0].strip(), cols[1].strip()
@@ -22,9 +22,9 @@ def read(filename, format):
                 try:
                     value = float(value)
                 except:
-                    if value.lower() in ['y','yes']:
+                    if value.lower() in ['y', 'yes']:
                         value = True
-                    elif value.lower() in ['n','no']:
+                    elif value.lower() in ['n', 'no']:
                         value = False
             parameters[key] = value
 

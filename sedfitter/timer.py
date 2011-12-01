@@ -15,9 +15,9 @@ class Timer(object):
         self.n += 1
         if np.mod(self.n, self.step) == 0:
             self.time2 = time.time()
-            if self.time2-self.time1 < 1.:
+            if self.time2 - self.time1 < 1.:
                 self.step *= 10
             else:
-                print "    %7i       %10.1f        %7.2f" % (self.n, self.time2-self.time1, self.n/(self.time2-self.time1))
+                print "    %7i       %10.1f        %7.2f" % (self.n, self.time2 - self.time1, self.n / (self.time2 - self.time1))
         elif force:
-            print "    %7i       %10.1f        %7.2f" % (self.n, self.time2-self.time1, self.n/(self.time2-self.time1))
+            print "    %7i       %10.1f        %7.2f" % (self.n, self.time2 - self.time1, self.n / (self.time2 - self.time1))

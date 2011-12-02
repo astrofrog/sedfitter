@@ -9,7 +9,7 @@ from ..sed import SED
 from ..logger import log
 
 
-def convolve_model_dir(model_dir, filters):
+def convolve_model_dir(model_dir, filters, overwrite=False):
     '''
     Convolve all the model SEDs in a model directory
 
@@ -19,6 +19,8 @@ def convolve_model_dir(model_dir, filters):
         The path to the model directory
     filters: list
         A list of Filter objects to use for the convolution
+    overwrite: bool, optional
+        Whether to overwrite the output files
     '''
 
     for f in filters:
@@ -60,8 +62,10 @@ def convolve_model_dir(model_dir, filters):
             fluxes[i].model_names[im] = s.name
             if n_ap == 1:
                 fluxes[i].flux[im] = np.sum(s.flux * f.r)
+                fluxes[i].err[im] = np.sqrt(np.sum((s.err * f.r) ** 2))
             else:
                 raise NotImplemented()
 
     for i, f in enumerate(binned_filters):
-        fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits')
+        fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits',
+                        overwrite=overwrite)

@@ -62,7 +62,7 @@ class SED(object):
         nu = hdulist[1].data.field('FREQUENCY')
         ap = hdulist[2].data.field('APERTURE')
         flux = hdulist[3].data.field('TOTAL_FLUX')
-        error = hdulist[3].data.field('TOTAL_FLUX_ERR')
+        err = hdulist[3].data.field('TOTAL_FLUX_ERR')
 
         self.n_wav = len(wav)
         self.n_ap = len(ap)
@@ -118,19 +118,25 @@ class SED(object):
         # Convert flux to ergs/cm^2/s
         if curr_unit_flux == 'ergs/s':
             flux_cgs = flux / 3.086e21 ** 2.
+            err_cgs = err / 3.086e21 ** 2.
         elif curr_unit_flux == 'mjy':
             flux_cgs = flux * c / (wav_microns * 1.e-6) * 1.e-26
+            err_cgs = err * c / (wav_microns * 1.e-6) * 1.e-26
         elif curr_unit_flux == 'ergs/cm^2/s':
             flux_cgs = flux
+            err_cgs = err
         else:
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
         if unit_flux == 'ergs/s':
             self.flux = flux_cgs * 3.086e21 ** 2.
+            self.err = err_cgs * 3.086e21 ** 2.
         elif unit_flux == 'mjy':
             self.flux = flux_cgs / c * (wav_microns * 1.e-6) / 1.e-26
+            self.err = err_cgs / c * (wav_microns * 1.e-6) / 1.e-26
         elif unit_flux == 'ergs/cm^2/s':
             self.flux = flux_cgs
+            self.err = err_cgs
         else:
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
@@ -140,6 +146,7 @@ class SED(object):
             self.wav = self.wav[::-1]
             self.nu = self.nu[::-1]
             self.flux = self.flux[::-1]
+            self.err = self.err[::-1]
 
         # Initialize distance and Av
         self.distance = 1.

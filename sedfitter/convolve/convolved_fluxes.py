@@ -23,11 +23,11 @@ class ConvolvedFluxes(object):
 
             if n_ap == 1:
                 self.flux = np.zeros(n_models, dtype=float)
-                self.flux_err = np.zeros(n_models, dtype=float)
+                self.err = np.zeros(n_models, dtype=float)
                 self.flux_interp = None
             else:
                 self.flux = np.zeros((n_models, n_ap), dtype=float)
-                self.flux_err = np.zeros((n_models, n_ap), dtype=float)
+                self.err = np.zeros((n_models, n_ap), dtype=float)
                 self.flux_interp = interp1d(self.apertures, self.flux[:])
 
         else:
@@ -35,7 +35,7 @@ class ConvolvedFluxes(object):
             self.model_names = None
             self.apertures = None
             self.flux = None
-            self.flux_err = None
+            self.err = None
             self.flux_interp = None
 
     def read(self, filename):
@@ -65,11 +65,12 @@ class ConvolvedFluxes(object):
 
         # Read in flux and flux errors
         self.flux = tc['TOTAL_FLUX']
-        self.flux_errors = tc['TOTAL_FLUX_ERR']
+        self.errors = tc['TOTAL_FLUX_ERR']
 
         # Read in 99% cumulative and 50% surface brightness radii
-        self.radius_sigma_50 = tc['RADIUS_SIGMA_50']
-        self.radius_cumul_99 = tc['RADIUS_CUMUL_99']
+        if 'RADIUS_SIGMA_50' in tc.columns:
+            self.radius_sigma_50 = tc['RADIUS_SIGMA_50']
+            self.radius_cumul_99 = tc['RADIUS_CUMUL_99']
 
         # Read in apertures
         self.apertures = ta['APERTURE']
@@ -78,7 +79,7 @@ class ConvolvedFluxes(object):
         if self.flux.ndim > 1:
             self.flux_interp = interp1d(self.apertures, self.flux[:])
 
-    def write(self, filename):
+    def write(self, filename, overwrite=False):
         '''
         Write convolved flux to a FITS file.
 
@@ -86,6 +87,8 @@ class ConvolvedFluxes(object):
         ----------
         filename: str
             The name of the file to output the convolved fluxes to.
+        overwrite: bool, optional
+            Whether to overwrite the output file
         '''
 
         ts = atpy.TableSet()
@@ -97,14 +100,16 @@ class ConvolvedFluxes(object):
         ts.append(atpy.Table(name='CONVOLVED flux'))
         ts[0].add_column('MODEL_NAME', self.model_names)
         ts[0].add_column('TOTAL_FLUX', self.flux)
-        ts[0].add_column('TOTAL_FLUX_ERR', self.flux_err)
-        ts[0].add_column('RADIUS_SIGMA_50', self.find_radius_sigma(0.50))
-        ts[0].add_column('RADIUS_CUMUL_99', self.find_radius_cumul(0.99))
+        ts[0].add_column('TOTAL_FLUX_ERR', self.err)
+
+        if self.n_ap > 1:
+            ts[0].add_column('RADIUS_SIGMA_50', self.find_radius_sigma(0.50))
+            ts[0].add_column('RADIUS_CUMUL_99', self.find_radius_cumul(0.99))
 
         ts.append(atpy.Table(name='APERTURES'))
         ts[1].add_column("APERTURE", self.apertures)
 
-        ts.write(filename, verbose=False)
+        ts.write(filename, verbose=False, overwrite=overwrite)
 
     def interpolate(self, apertures):
         '''

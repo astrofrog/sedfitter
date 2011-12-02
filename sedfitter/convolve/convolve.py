@@ -29,7 +29,14 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
     # Find all SED files to convolve
     sed_files = glob.glob(model_dir + '/seds/*.fits.gz') + \
-                glob.glob(model_dir + '/seds/*.fits')
+                glob.glob(model_dir + '/seds/*/*.fits.gz') + \
+                glob.glob(model_dir + '/seds/*.fits') + \
+                glob.glob(model_dir + '/seds/*/*.fits')
+
+    if len(sed_files) == 0:
+        raise Exception("No SEDs found in %s" % model_dir)
+    else:
+        log.info("{0} SEDs found in {1}".format(len(sed_files), model_dir))
 
     # Find out number of apertures
     n_ap = pyfits.getheader(sed_files[0], memmap=False)['NAP']
@@ -64,7 +71,8 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
                 fluxes[i].flux[im] = np.sum(s.flux * f.r)
                 fluxes[i].err[im] = np.sqrt(np.sum((s.err * f.r) ** 2))
             else:
-                raise NotImplemented()
+                fluxes[i].flux[im, :] = np.sum(s.flux * f.r, axis=1)
+                fluxes[i].err[im] = np.sqrt(np.sum((s.err * f.r) ** 2, axis=1))
 
     for i, f in enumerate(binned_filters):
         fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits',

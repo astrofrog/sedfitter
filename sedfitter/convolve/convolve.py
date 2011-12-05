@@ -41,6 +41,9 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     # Find out number of apertures
     n_ap = pyfits.getheader(sed_files[0], memmap=False)['NAP']
 
+    # Find out apertures
+    apertures = pyfits.open(sed_files[0], memmap=False)[2].data['APERTURE']
+
     # Set up convolved fluxes
     fluxes = [ConvolvedFluxes(n_models=len(sed_files), n_ap=n_ap) \
                 for i in range(len(filters))]
@@ -66,6 +69,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
         # Convolve
         for i, f in enumerate(binned_filters):
+            fluxes[i].apertures = apertures
             fluxes[i].model_names[im] = s.name
             if n_ap == 1:
                 fluxes[i].flux[im] = np.sum(s.flux * f.r)

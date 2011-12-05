@@ -10,7 +10,7 @@ from hyperion.util.interpolate import interp1d_fast
 
 class ConvolvedFluxes(object):
 
-    def __init__(self, n_models=None, n_ap=1, wavelength=None):
+    def __init__(self, n_models=None, n_ap=1, wavelength=None, dtype=np.float32):
 
         self.wavelength = wavelength
         self.n_models = n_models
@@ -19,15 +19,15 @@ class ConvolvedFluxes(object):
         if n_models is not None:
 
             self.model_names = np.zeros(n_models, dtype='S30')
-            self.apertures = np.zeros(n_ap)
+            self.apertures = np.zeros(n_ap, dtype=dtype)
 
             if n_ap == 1:
-                self.flux = np.zeros(n_models, dtype=float)
-                self.err = np.zeros(n_models, dtype=float)
+                self.flux = np.zeros(n_models, dtype=dtype)
+                self.err = np.zeros(n_models, dtype=dtype)
                 self.flux_interp = None
             else:
-                self.flux = np.zeros((n_models, n_ap), dtype=float)
-                self.err = np.zeros((n_models, n_ap), dtype=float)
+                self.flux = np.zeros((n_models, n_ap), dtype=dtype)
+                self.err = np.zeros((n_models, n_ap), dtype=dtype)
                 self.flux_interp = interp1d(self.apertures, self.flux[:])
 
         else:
@@ -151,7 +151,7 @@ class ConvolvedFluxes(object):
 
         log.info("Calculating radii containing %g%s of the flux" % (fraction * 100., '%'))
 
-        radius = np.zeros(self.n_models)
+        radius = np.zeros(self.n_models, dtype=self.flux.dtype)
 
         if self.apertures is None:
 
@@ -192,14 +192,14 @@ class ConvolvedFluxes(object):
 
         log.info("Calculating %g%s peak surface brightness radii" % (fraction * 100., '%'))
 
-        sigma = np.zeros(self.flux.shape)
+        sigma = np.zeros(self.flux.shape, dtype=self.flux.dtype)
         sigma[:, 0] = self.flux[:, 0] / self.apertures[0] ** 2
         sigma[:, 1:] = (self.flux[:, 1:] - self.flux[:, :-1]) / \
                        (self.apertures[1:] ** 2 - self.apertures[:-1] ** 2)
 
         maximum = np.max(sigma, axis=1)
 
-        radius = np.zeros(self.n_models)
+        radius = np.zeros(self.n_models, dtype=self.flux.dtype)
 
         # Linear interpolation - need to loop over apertures backwards for vectorization
         for ia in range(len(self.apertures) - 2, -1, -1):

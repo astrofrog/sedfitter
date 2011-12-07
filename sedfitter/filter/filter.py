@@ -2,6 +2,8 @@
 This file defines the base Filter class
 '''
 
+import os
+
 import numpy as np
 
 from hyperion.util.integrate import integrate_subset
@@ -11,12 +13,14 @@ c = 299792458
 
 class Filter(object):
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.name = None
         self.wavelength = None
         self.wav = None
         self.nu = None
         self.r = None
+        if len(args) > 0:
+            self.read(*args, **kwargs)
 
     def read(self, filename):
         '''
@@ -34,6 +38,10 @@ class Filter(object):
 
         # Compute frequency
         self.nu = c / (self.wav * 1.e-6)
+
+        # Set name
+        if self.name is None:
+            self.name = os.path.basename(filename).split('.')[0]
 
     def rebin(self, nu_new):
         '''

@@ -12,7 +12,7 @@ import timer
 
 from models import Models
 from fit_info import FitInfo
-from source import Source
+from .source import Source
 import util
 
 

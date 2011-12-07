@@ -1,6 +1,6 @@
 import numpy as np
 import cPickle as pickle
-from source import Source
+from .source import Source
 
 
 class FitInfo(object):

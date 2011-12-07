@@ -9,6 +9,6 @@ setup(name='sedfitter',
       description='SED Fitter in python',
       author='Thomas Robitaille',
       author_email='trobitaille@cfa.harvard.edu',
-      packages=['sedfitter'],
+      packages=['sedfitter', 'sedfitter.convolve', 'sedfitter.filter', 'sedfitter.sed'],
       scripts=['scripts/' + x for x in scripts]
      )

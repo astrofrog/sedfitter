@@ -80,7 +80,10 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print ""
 
     # Open datafile
-    data_file = file(data, 'rb')
+    if isinstance(data, basestring):
+        data_file = file(data, 'rb')
+    else:
+        data_file = data
 
     # Construct filters dictionary
     filters = []

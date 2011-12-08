@@ -69,8 +69,11 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
         # Convolve
         for i, f in enumerate(binned_filters):
+
+            fluxes[i].wavelength = f.wavelength
             fluxes[i].apertures = apertures
             fluxes[i].model_names[im] = s.name
+
             if n_ap == 1:
                 fluxes[i].flux[im] = np.sum(s.flux * f.r)
                 fluxes[i].err[im] = np.sqrt(np.sum((s.err * f.r) ** 2))

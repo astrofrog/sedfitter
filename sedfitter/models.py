@@ -71,13 +71,14 @@ class Models(object):
 
             print "   Reading " + filename
 
-            conv = ConvolvedFluxes(filename)
+            conv = ConvolvedFluxes()
+            conv.read(filename)
 
             self.wavelengths.append(conv.wavelength)
 
-            if self.n_distances:
+            if self.n_distances is not None:
                 apertures_au = filt['aperture_arcsec'] * self.distances * 1.e3
-                conv.interpolate(apertures_au)
+                conv = conv.interpolate(apertures_au)
                 conv.flux = conv.flux / self.distances ** 2
                 self.logd = np.log10(self.distances)
                 if remove_resolved:
@@ -85,7 +86,7 @@ class Models(object):
 
             model_fluxes.append(conv.flux)
 
-        if self.n_distances:
+        if self.n_distances is not None:
             self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), self.n_distances)
             self.fluxes = self.fluxes.swapaxes(1, 2)
             if remove_resolved:

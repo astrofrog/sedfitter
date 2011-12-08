@@ -32,6 +32,9 @@ class Filter(object):
             The name of the file containing the filter
         '''
 
+        # Read in central wavelength
+        self.wavelength = float(open(filename, 'rb').readline().split('=')[1])
+
         # Read in spectral response curve
         self.wav = np.loadtxt(filename, usecols=[0], dtype=float)
         self.r = np.loadtxt(filename, usecols=[1], dtype=float)

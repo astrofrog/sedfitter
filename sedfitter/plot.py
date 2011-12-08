@@ -31,7 +31,7 @@ from sed import SED
 import util
 import parfile
 
-plt.rc('text', usetex=True)
+plt.rc('text', usetex=False)
 plt.rc('axes', titlesize='small')
 plt.rc('axes', labelsize='small')
 plt.rc('xtick', labelsize='x-small')
@@ -276,6 +276,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None, plo
                     else:
                         filename = "%s/%s_%05i.%s" % (output_dir, info.source.name, i + 1, format)
                     fig.savefig(filename, bbox_inches='tight')
+                    plt.close(fig)
                 else:
                     figures[info.source.name] = {'source': info.source, 'filters': filters, 'lines': LineCollection(lines, colors=colors)}
 

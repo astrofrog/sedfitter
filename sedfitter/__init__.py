@@ -7,5 +7,6 @@ from write_parameter_ranges import write_parameter_ranges
 
 from . import convolve
 from . import filter
+from . import utils
 
 __version__ = '0.1.0'

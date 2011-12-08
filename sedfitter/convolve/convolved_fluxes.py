@@ -97,7 +97,7 @@ class ConvolvedFluxes(object):
         ts.add_keyword('NMODELS', self.n_models)
         ts.add_keyword('NAP', self.n_ap)
 
-        ts.append(atpy.Table(name='CONVOLVED flux'))
+        ts.append(atpy.Table(name='CONVOLVED FLUXES'))
         ts[0].add_column('MODEL_NAME', self.model_names)
         ts[0].add_column('TOTAL_FLUX', self.flux)
         ts[0].add_column('TOTAL_FLUX_ERR', self.err)
@@ -124,8 +124,11 @@ class ConvolvedFluxes(object):
         # Save requested apertures
         c.apertures = apertures[:]
 
+        # Transfer model names
+        c.model_names = self.model_names
+
         # If any apertures are larger than the defined max, reset to max
-        apertures[apertures > self.apertures.max()] = self._apertures.max()
+        apertures[apertures > self.apertures.max()] = self.apertures.max()
 
         # If any apertures are smaller than the defined min, raise Exception
         if np.any(apertures < self.apertures.min()):

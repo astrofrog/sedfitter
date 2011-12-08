@@ -27,10 +27,13 @@ class SED(object):
 
     def _update_sed(self):
         self.flux = copy(self._flux)
+        self.err = copy(self._err)
         if 'distance' in self.__dict__:
             self.flux /= self.distance ** 2
+            self.err /= self.distance ** 2
         if 'law' in self.__dict__:
-            self.flux *= 10. ** (self.av * self.law(self._wav))
+            self.flux *= 10. ** (self.av * self.law(self.wav))
+            self.err *= 10. ** (self.av * self.law(self.wav))
 
     def read(self, filename, unit_wav='microns', unit_freq='Hz', unit_flux='ergs/cm^2/s', order='freq'):
         '''
@@ -129,14 +132,14 @@ class SED(object):
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
         if unit_flux == 'ergs/s':
-            self.flux = flux_cgs * 3.086e21 ** 2.
-            self.err = err_cgs * 3.086e21 ** 2.
+            self._flux = flux_cgs * 3.086e21 ** 2.
+            self._err = err_cgs * 3.086e21 ** 2.
         elif unit_flux == 'mjy':
-            self.flux = flux_cgs / c * (wav_microns * 1.e-6) / 1.e-26
-            self.err = err_cgs / c * (wav_microns * 1.e-6) / 1.e-26
+            self._flux = flux_cgs / c * (wav_microns * 1.e-6) / 1.e-26
+            self._err = err_cgs / c * (wav_microns * 1.e-6) / 1.e-26
         elif unit_flux == 'ergs/cm^2/s':
-            self.flux = flux_cgs
-            self.err = err_cgs
+            self._flux = flux_cgs
+            self._err = err_cgs
         else:
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
@@ -145,12 +148,15 @@ class SED(object):
            order == 'wav' and self.wav[0] > self.wav[-1]:
             self.wav = self.wav[::-1]
             self.nu = self.nu[::-1]
-            self.flux = self.flux[::-1]
-            self.err = self.err[::-1]
+            self._flux = self._flux[::-1]
+            self._err = self._err[::-1]
 
         # Initialize distance and Av
         self.distance = 1.
         self.av = 0.
+        self.ap = ap
+        self.flux = copy(self._flux)
+        self.err = copy(self._err)
 
     def interpolate(self, apertures):
         '''

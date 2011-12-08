@@ -18,9 +18,9 @@ def list2data(file_in, file_out, models_dir=None, source_name='source'):
 
     Parameters
     ----------
-    file_in: str
+    file_in: str or file
         The input file.
-    file_out: str
+    file_out: str or file
         The output file.
     models_dir: str, optional
         The models directory that will be used to fit the source. This can be
@@ -74,7 +74,10 @@ def list2data(file_in, file_out, models_dir=None, source_name='source'):
     s.valid = datafile['valid']
     s.flux = datafile['flux']
     s.error = datafile['err']
-    s.write_ascii(open(file_out, 'wb'))
+    if isinstance(file_out, basestring):
+        s.write_ascii(open(file_out, 'wb'))
+    else:
+        s.write_ascii(file_out)
 
     # Determine filter names
     for i in range(len(datafile)):

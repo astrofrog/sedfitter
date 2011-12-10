@@ -31,7 +31,7 @@ from sed import SED
 import util
 import parfile
 
-plt.rc('text', usetex=False)
+plt.rc('text', usetex=True)
 plt.rc('axes', titlesize='small')
 plt.rc('axes', labelsize='small')
 plt.rc('xtick', labelsize='x-small')
@@ -163,7 +163,58 @@ def get_axes(fig):
     return fig.add_axes(rect)
 
 
-def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None, plot_mode="A", sed_type="interp", x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.), plot_name=True, plot_info=True, format='eps'):
+def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
+         plot_mode="A", sed_type="interp",
+         x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
+         plot_name=True, plot_info=True, format='eps'):
+    '''
+    Make SED plots
+
+    Parameters
+    ----------
+    input_file: str
+        File containing the fit information
+    output_dir: str, optional
+        If specified, plots are written to that directory
+    select_format: tuple, optional
+        Tuple specifying which fits should be plotted. See the documentation
+        for a description of the tuple syntax.
+    plot_max: int, optional
+        Maximum number of fits to plot
+    plot_mode: str, optional
+        Whether to plot all fits in a single plot ('A') or one fit per plot
+        ('I')
+    sed_type: str, optional
+        Which SED should be shown:
+            * `largest`: show the SED for the largest aperture specified.
+            * `smallest`: show the SED for the smallest aperture specified.
+            * `largest+smallest`: show the SEDs for the largest and smallest
+              apertures specified.
+            * `all`: show the SEDs for all apertures specified.
+            * `interp`: interpolate the SEDs to the correct aperture at each
+              wavelength (and interpolated apertures in between), so that a
+              single composite SED is shown.
+    x_mode: str, optional
+        Whether to automatically select the wavelength range ('A'), or whether
+        to use manually set values ('M').
+    x_range: tuple, optional
+        If x_mode is set to 'M', this is the range of wavelengths to show. If
+        x_mode is set to 'A', this is the marging to add around the wavelength
+        range (in dex).
+    y_mode: str, optional
+        Whether to automatically select the flux range ('A'), or whether to
+        use manually set values ('M').
+    y_range: tuple, optional
+        If y_mode is set to 'M', this is the range of fluxes to show. If
+        y_mode is set to 'A', this is the marging to add around the flux
+        range (in dex).
+    plot_name: bool, optional
+        Whether to show the source name on the plot(s).
+    plot_info: bool, optional
+        Whether to show the fit information on the plot(s).
+    format: str, optional
+        The file format to use for the plot, if output_dir is specified.
+    '''
 
     if output_dir:
         util.create_dir(output_dir)

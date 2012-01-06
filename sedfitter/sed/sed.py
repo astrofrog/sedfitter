@@ -144,12 +144,18 @@ class SED(object):
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
         # Sort SED
-        if order == 'freq' and self.nu[0] > self.nu[-1] or \
-           order == 'wav' and self.wav[0] > self.wav[-1]:
+        if (order == 'freq' and self.nu[0] > self.nu[-1]) or \
+           (order == 'wav' and self.wav[0] > self.wav[-1]):
             self.wav = self.wav[::-1]
             self.nu = self.nu[::-1]
-            self._flux = self._flux[::-1]
-            self._err = self._err[::-1]
+            if self._flux.ndim == 1:
+                self._flux = self._flux[::-1]
+                self._err = self._err[::-1]
+            elif self._flux.ndim == 2:
+                self._flux = self._flux[:, ::-1]
+                self._err = self._err[:, ::-1]
+            else:
+                raise Exception("Unexpected number of dimensions for SED flux (%i)" % self._flux.ndim)
 
         # Initialize distance and Av
         self.distance = 1.

@@ -131,6 +131,9 @@ class Models(object):
             # Calculate the chi-squared value
             ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
 
+            # Extract convolved model fluxes for best-fit
+            model_fluxes = model + self.fluxes
+
         elif self.fluxes.ndim == 3:  # Aperture dependent fitting
 
             # Use optimal scaling to fit the Av
@@ -160,8 +163,11 @@ class Models(object):
             ch_best = ch_best[np.arange(self.n_models), best]
             av_best = av_best[np.arange(self.n_models), best]
 
+            # Extract convolved model fluxes for best-fit
+            model_fluxes = (model + self.fluxes)[np.arange(self.n_models), best, :]
+
         else:
 
             raise Exception("Unexpected number of dimensions in flux array")
 
-        return av_best, sc_best, ch_best, self.names
+        return av_best, sc_best, ch_best, self.names, model_fluxes

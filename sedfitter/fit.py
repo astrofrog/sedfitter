@@ -135,7 +135,10 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         if s.n_data >= n_data_min:
 
             info = FitInfo(source=s)
-            info.av, info.sc, info.chi2, info.model_name = models.fit(s, av_law, sc_law, av_range[0], av_range[1])
+            info.av, info.sc, info.chi2, info.model_name, model_fluxes = models.fit(s, av_law, sc_law, av_range[0], av_range[1])
+
+            if output_convolved:
+                info.model_fluxes = model_fluxes
 
             info.sort()
             info.keep(output_format[0], output_format[1])

@@ -13,8 +13,7 @@ class FitInfo(object):
         self.chi2 = None
         self.model_id = None
         self.model_name = None
-
-        return
+        self.model_fluxes = None
 
     def sort(self):
 
@@ -23,9 +22,9 @@ class FitInfo(object):
         self.sc = self.sc[order]
         self.chi2 = self.chi2[order]
         self.model_name = self.model_name[order]
+        if self.model_fluxes is not None:
+            self.model_fluxes = self.model_fluxes[order, :]
         self.model_id = order
-
-        return
 
     def keep(self, form, number):
 
@@ -48,9 +47,9 @@ class FitInfo(object):
         self.sc = self.sc[:n_fits]
         self.chi2 = self.chi2[:n_fits]
         self.model_name = self.model_name[:n_fits]
+        if self.model_fluxes is not None:
+            self.model_fluxes = self.model_fluxes[:n_fits]
         self.model_id = self.model_id[:n_fits]
-
-        return
 
     def __getattr__(self, attribute):
         if attribute == 'n_fits':
@@ -67,6 +66,11 @@ class FitInfo(object):
         file_handle.write(self.model_id.astype(np.int32).tostring())
         pickle.dump(self.model_name.itemsize, file_handle, 2)
         file_handle.write(self.model_name.tostring())
+        if self.model_fluxes is not None:
+            pickle.dump(True, file_handle, 2)
+            file_handle.write(self.model_fluxes.astype(np.float32).tostring())
+        else:
+            pickle.dump(False, file_handle, 2)
 
     def read_binary(self, file_handle):
         self.source = Source()
@@ -78,3 +82,8 @@ class FitInfo(object):
         self.model_id = np.fromstring(file_handle.read(n_fits * 4), dtype=np.int32)
         itemsize = pickle.load(file_handle)
         self.model_name = np.fromstring(file_handle.read(n_fits * itemsize), dtype='|S%i' % itemsize)
+        model_fluxes_present = pickle.load(file_handle)
+        if model_fluxes_present:
+            self.model_fluxes = np.fromstring(file_handle.read(n_fits * 4 * self.source.n_wav), dtype=np.float32).reshape(n_fits, self.source.n_wav)
+        else:
+            self.model_fluxes = None

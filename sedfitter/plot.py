@@ -164,7 +164,7 @@ def get_axes(fig):
 
 
 def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
-         plot_mode="A", sed_type="interp",
+         plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
          plot_name=True, plot_info=True, format='eps'):
     '''
@@ -194,6 +194,10 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
             * `interp`: interpolate the SEDs to the correct aperture at each
               wavelength (and interpolated apertures in between), so that a
               single composite SED is shown.
+    show_sed: bool, optional
+        Show the SEDs
+    show_convolved: bool, optional
+        Show convolved model fluxes
     x_mode: str, optional
         Whether to automatically select the wavelength range ('A'), or whether
         to use manually set values ('M').
@@ -253,6 +257,9 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
         if plot_max:
             info.keep('N', plot_max)
 
+        if show_convolved and info.model_fluxes is None:
+            raise Exception("Cannot plot convolved fluxes as these are not included in the input file")
+
         for i in range(info.n_fits - 1, -1, -1):
 
             if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
@@ -263,6 +270,8 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
             if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
                 lines = []
                 colors = []
+                if show_convolved:
+                    conv = []
 
             if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
                 if sed_type in ['interp', 'largest']:
@@ -305,9 +314,17 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
                 lines.append(np.column_stack([s.wav, flux]))
                 colors.append(color[color_type])
 
+            if show_convolved:
+                conv.append(10. ** (info.model_fluxes[i, :] - 26. + np.log10(3.e8 / (wav * 1.e-6))))
+
             if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
 
-                ax.add_collection(LineCollection(lines, colors=colors))
+                if show_sed:
+                    ax.add_collection(LineCollection(lines, colors=colors))
+
+                if show_convolved:
+                    for j in range(len(conv)):
+                        ax.plot(wav, conv[j], color=colors[j], linestyle='solid', marker='o', markerfacecolor='none', markeredgecolor=colors[j])
 
                 ax = plot_source_data(ax, info.source, filters)
 

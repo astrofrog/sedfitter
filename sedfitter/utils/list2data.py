@@ -38,7 +38,7 @@ def list2data(file_in, file_out, models_dir=None, source_name='source'):
     '''
 
     # Load datafile
-    datafile = np.loadtxt(file_in, dtype=[('flux_type', int), ('name', 'S10'),
+    datafile = np.loadtxt(file_in, dtype=[('flux_type', int), ('name', 'S30'),
                                           ('valid', int),
                                           ('flux', float), ('err', float),
                                           ('aperture', float)])
@@ -51,14 +51,14 @@ def list2data(file_in, file_out, models_dir=None, source_name='source'):
         filter_files = glob.glob(os.path.join(models_dir, 'convolved/MO*'))
 
         mono_wav = np.zeros(len(filter_files), dtype=float)
-        mono_filter = np.zeros(len(filter_files), dtype='S10')
+        mono_filter = np.zeros(len(filter_files), dtype='S30')
 
         for i, filter_file in enumerate(filter_files):
 
             log.debug('Reading {}'.format(filter_file))
 
             mono_wav[i] = pyfits.getheader(filter_file)['FILTWAV']
-            mono_filter[i] = os.path.basename(filter_file).split('.')[0]
+            mono_filter[i] = os.path.basename(filter_file).replace('.fits', '').replace('.gz', '')
 
     elif np.any(datafile['flux_type'] == 2):
 

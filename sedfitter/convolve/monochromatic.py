@@ -10,7 +10,8 @@ from ..sed import SED
 from ..logger import log
 
 
-def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8):
+def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
+                                     wav_min=-np.inf, wav_max=np.inf):
     '''
     Convolve all the model SEDs in a model directory
 
@@ -22,6 +23,12 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8):
         Whether to overwrite the output files
     max_ram: float, optional
         The maximum amount of RAM that can be used (in Gb)
+    wav_min: float, optional
+        The minimum wavelength to consider. Only wavelengths above this value
+        will be output.
+    wav_max: float, optional
+        The maximum wavelength to consider. Only wavelengths below this value
+        will be output.
     '''
 
     # Find all SED files to convolve
@@ -63,11 +70,17 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8):
     filters.add_column('wav', wavelengths)
     filters.add_empty_column('filter', dtype='S10')
 
+    # Figure out range of wavelength indices to use
+    # (wavelengths array is sorted in reverse order)
+    jlo = n_wav - wavelengths[::-1].searchsorted(wav_max)
+    jhi = n_wav - wavelengths[::-1].searchsorted(wav_min)
+    chunk_size = min(chunk_size, jhi - jlo + 1)
+
     # Loop over wavelength chunks
-    for jmin in range(0, n_wav, chunk_size):
+    for jmin in range(jlo, jhi, chunk_size):
 
         # Find upper wavelength to compute
-        jmax = min(jmin + chunk_size - 1, n_wav)
+        jmax = min(jmin + chunk_size - 1, jhi)
 
         print 'Processing wavelengths {0} to {1}'.format(jmin, jmax)
 

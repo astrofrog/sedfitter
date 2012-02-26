@@ -31,6 +31,10 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         will be output.
     '''
 
+    # Create 'convolved' sub-directory if needed
+    if not os.path.exists(model_dir + '/convolved'):
+        os.mkdir(model_dir + '/convolved')
+
     # Find all SED files to convolve
     sed_files = glob.glob(model_dir + '/seds/*.fits.gz') + \
                 glob.glob(model_dir + '/seds/*/*.fits.gz') + \

@@ -6,7 +6,7 @@ import os
 
 import numpy as np
 
-from hyperion.util.integrate import integrate_subset
+from ..utils.integrate import integrate_subset
 
 c = 299792458
 

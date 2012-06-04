@@ -5,7 +5,7 @@ import numpy as np
 np.seterr(all='ignore')
 from ..logger import log
 
-from hyperion.util.interpolate import interp1d_fast
+from ..utils.interpolate import interp1d_fast
 
 
 class ConvolvedFluxes(object):

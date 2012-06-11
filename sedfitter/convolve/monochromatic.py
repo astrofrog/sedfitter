@@ -63,7 +63,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
 
     # For model grids that are very large, it is not possible to compute all
     # fluxes in one go, so we need to process in chunks in wavelength space.
-    chunk_size = min(n_wav, np.floor(max_ram * 1024. ** 3 / (4. * 2. * n_models * n_ap)))
+    chunk_size = min(n_wav, int(np.floor(max_ram * 1024. ** 3 / (4. * 2. * n_models * n_ap))))
 
     if chunk_size == n_wav:
         print "Producing all monochromatic files in one go"

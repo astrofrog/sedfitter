@@ -1,22 +1,18 @@
-#!/usr/bin/env python
-
 import os
 import cPickle as pickle
 
-import numpy as np
-
 import atpy
+import numpy as np
 
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Polygon
-
-from fit_info import FitInfo
-from extinction import Extinction
-
 from matplotlib.ticker import LogFormatterMathtext
 
-import util
+from .fit_info import FitInfo
+from .extinction import Extinction
+from . import util
+
 
 class LogFormatterMathtextAuto(LogFormatterMathtext):
 
@@ -38,7 +34,7 @@ plt.rc('font', family='serif')
 plt.rc('axes', linewidth=0.5)
 plt.rc('patch', linewidth=0.5)
 
-fp = FontProperties(size='x-small')
+fp = FontProperties(size='small')
 
 
 def get_axes(fig):
@@ -135,7 +131,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     p = []
     for i in range(len(hist_all)):
         p.append((edges[i], max(hist_all[i], 0.01)))
-        p.append((edges[i+1], max(hist_all[i], 0.01)))
+        p.append((edges[i + 1], max(hist_all[i], 0.01)))
     p.append((edges[-1], 0.01))
     p.append((edges[0], 0.01))
 
@@ -157,6 +153,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     ax.set_autoscale_on(False)
 
     pfits = None
+    source_label = None
 
     while True:  # Loop over the fits
 
@@ -169,6 +166,8 @@ def plot_params_1d(input_file, parameter, output_dir=None,
         # Remove previous histogram
         if pfits is not None:
             pfits.remove()
+        if source_label is not None:
+            source_label.remove()
 
         # Filter fits
         info.keep(select_format[0], select_format[1])
@@ -199,11 +198,18 @@ def plot_params_1d(input_file, parameter, output_dir=None,
         p = []
         for i in range(len(hist)):
             p.append((edges[i], max(hist[i], 0.01)))
-            p.append((edges[i+1], max(hist[i], 0.01)))
+            p.append((edges[i + 1], max(hist[i], 0.01)))
         p.append((edges[-1], 0.01))
         p.append((edges[0], 0.01))
         pfits = Polygon(p, hatch='/', edgecolor='black', facecolor='none')
         ax.add_patch(pfits)
+
+        if plot_name:
+            source_label = ax.text(0.5, 0.95, info.source.name,
+                                   horizontalalignment='center',
+                                   verticalalignment='center',
+                                   transform=ax.transAxes,
+                                   fontproperties=fp, zorder=200)
 
         # Save to file
         filename = "%s/%s.%s" % (output_dir, info.source.name, format)

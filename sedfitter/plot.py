@@ -18,18 +18,18 @@
 
 import cPickle as pickle
 
+import numpy as np
+
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
 import matplotlib.ticker as ticker
 
-import numpy as np
-
-from extinction import Extinction
-from fit_info import FitInfo
-from sed import SED
-import util
-import parfile
+from .extinction import Extinction
+from .fit_info import FitInfo
+from .sed import SED
+from . import util
+from . import parfile
 
 plt.rc('text', usetex=True)
 plt.rc('axes', titlesize='small')

@@ -1,5 +1,7 @@
-import numpy as np
 import cPickle as pickle
+
+import numpy as np
+
 from .source import Source
 
 

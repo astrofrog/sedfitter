@@ -4,8 +4,8 @@ import string
 import numpy as np
 import atpy
 
-from sedfitter.fit_info import FitInfo
-from sedfitter.extinction import Extinction
+from .fit_info import FitInfo
+from .extinction import Extinction
 
 
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,

@@ -8,12 +8,12 @@ import cPickle as pickle
 
 import numpy as np
 
-import timer
+from . import timer
 
-from models import Models
-from fit_info import FitInfo
+from .models import Models
+from .fit_info import FitInfo
 from .source import Source
-import util
+from . import util
 
 
 def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,

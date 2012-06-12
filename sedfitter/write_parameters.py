@@ -1,14 +1,11 @@
-#!/usr/bin/env python
-
 import os
 import cPickle as pickle
 
+import atpy
 import numpy as np
 
-import atpy
-
-from fit_info import FitInfo
-from extinction import Extinction
+from .fit_info import FitInfo
+from .extinction import Extinction
 
 
 def write_parameters(input_file, output_file, select_format=("N", 1), additional={}):

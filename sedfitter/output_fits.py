@@ -1,5 +1,5 @@
-import numpy as np
 import atpy
+import numpy as np
 
 
 class OutputFile(object):

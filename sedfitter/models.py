@@ -3,8 +3,8 @@ import os
 import numpy as np
 
 from .convolve import ConvolvedFluxes
-import fitting_routines as f
-import parfile
+from . import fitting_routines as f
+from . import parfile
 
 
 class Models(object):

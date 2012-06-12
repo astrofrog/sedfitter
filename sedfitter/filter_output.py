@@ -1,10 +1,7 @@
-# Still to implement:
-# - Everything
-
 import cPickle as pickle
 
-from sedfitter.fit_info import FitInfo
-from sedfitter.extinction import Extinction
+from .fit_info import FitInfo
+from .extinction import Extinction
 
 
 def filter_output(input=None, output_good='auto', output_bad='auto', chi=None,

@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from scipy import weave
 from scipy.weave import converters
 

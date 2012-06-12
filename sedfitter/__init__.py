@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 from fit import fit
 from plot import plot, plot_source_data
 from plot_params_1d import plot_params_1d

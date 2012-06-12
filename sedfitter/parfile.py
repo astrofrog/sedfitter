@@ -1,3 +1,6 @@
+from __future__ import print_function, division
+
+
 def read(filename, format):
     '''
     Read a parameter file and return a dictionary

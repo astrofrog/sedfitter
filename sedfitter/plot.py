@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 # Still to implement:
 # - Axis numbers - done
 # - Interpolation of SEDs (stype) - done - needs testing

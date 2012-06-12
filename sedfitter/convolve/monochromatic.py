@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import os
 import glob
 
@@ -66,9 +68,9 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
     chunk_size = min(n_wav, int(np.floor(max_ram * 1024. ** 3 / (4. * 2. * n_models * n_ap))))
 
     if chunk_size == n_wav:
-        print "Producing all monochromatic files in one go"
+        log.info("Producing all monochromatic files in one go")
     else:
-        print "Producing monochromatic files in chunks of {0}".format(chunk_size)
+        log.info("Producing monochromatic files in chunks of {0}".format(chunk_size))
 
     filters = atpy.Table()
     filters.add_column('wav', wavelengths)
@@ -86,7 +88,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         # Find upper wavelength to compute
         jmax = min(jmin + chunk_size - 1, jhi)
 
-        print 'Processing wavelengths {0} to {1}'.format(jmin, jmax)
+        log.info('Processing wavelengths {0} to {1}'.format(jmin, jmax))
 
         # Set up convolved fluxes
         fluxes = [ConvolvedFluxes(n_models=n_models, n_ap=n_ap) \

@@ -1,12 +1,11 @@
+from __future__ import print_function, division
+
 import os
-
-from scipy.interpolate import interp1d
-
-# import atpy
-import pyfits
-
 from copy import copy
+
+import pyfits
 import numpy as np
+from scipy.interpolate import interp1d
 
 c = 299792458
 

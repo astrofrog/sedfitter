@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 # Still to implement:
 # - Performance monitoring
 # - Remove resolved models
@@ -55,29 +57,29 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
 
     '''
 
-    print " ------------------------------------------------------------"
-    print "  => Fitting parameters"
-    print " ------------------------------------------------------------"
-    print ""
-    print "   Minimum A_V      : %9.3f mag" % av_range[0]
-    print "   Maximum A_V      : %9.3f mag" % av_range[1]
-    print "   Minimum distance : %9.3f kpc" % distance_range[0]
-    print "   Maximum distance : %9.3f kpc" % distance_range[1]
-    print ""
-    print " ------------------------------------------------------------"
-    print "  => Output parameters"
-    print " ------------------------------------------------------------"
-    print ""
-    print "   File   : %s" % output
-    print "   Format : %s" % output_format[0]
-    print "   Number : %g" % output_format[1]
-    print ""
-    print " ------------------------------------------------------------"
-    print "  => Data format parameters"
-    print " ------------------------------------------------------------"
-    print ""
-    print "   Number of filters :  %i" % len(filter_names)
-    print ""
+    print(" ------------------------------------------------------------")
+    print("  => Fitting parameters")
+    print(" ------------------------------------------------------------")
+    print("")
+    print("   Minimum A_V      : %9.3f mag" % av_range[0])
+    print("   Maximum A_V      : %9.3f mag" % av_range[1])
+    print("   Minimum distance : %9.3f kpc" % distance_range[0])
+    print("   Maximum distance : %9.3f kpc" % distance_range[1])
+    print("")
+    print(" ------------------------------------------------------------")
+    print("  => Output parameters")
+    print(" ------------------------------------------------------------")
+    print("")
+    print("   File   : %s" % output)
+    print("   Format : %s" % output_format[0])
+    print("   Number : %g" % output_format[1])
+    print("")
+    print(" ------------------------------------------------------------")
+    print("  => Data format parameters")
+    print(" ------------------------------------------------------------")
+    print("")
+    print("   Number of filters :  %i" % len(filter_names))
+    print("")
 
     # Open datafile
     if isinstance(data, basestring):
@@ -97,12 +99,12 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     for i, f in enumerate(filters):
         f['wav'] = models.wavelengths[i]
 
-    print ''
-    print '     Filter    Wavelength    Aperture (")   '
-    print '    ----------------------------------------'
+    print('')
+    print('     Filter    Wavelength    Aperture (")   ')
+    print('    ----------------------------------------')
     for f in filters:
-        print '       %5s   %9.2f  %9.2f        ' % (f['name'], f['aperture_arcsec'], f['wav'])
-    print ''
+        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['aperture_arcsec'], f['wav']))
+    print('')
 
     # Set Av law
     av_law = extinction_law.av(models.wavelengths)

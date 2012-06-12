@@ -1,5 +1,8 @@
-import numpy as np
+from __future__ import print_function, division
+
 import cPickle as pickle
+
+import numpy as np
 
 
 def log_fluxes(valid, flux, error):

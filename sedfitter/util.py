@@ -1,3 +1,5 @@
+from __future__ import print_function, division
+
 import os
 import sys
 import shutil
@@ -15,9 +17,9 @@ def delete_dir(dir_name):
         if reply == 'y':
             shutil.rmtree(dir_name)
         else:
-            print "Aborting..."
+            print("Aborting...")
             sys.exit()
-        print ""
+        print("")
 
 
 def delete_file(file_name):
@@ -27,6 +29,6 @@ def delete_file(file_name):
         if reply == 'y':
             os.remove(file_name)
         else:
-            print "Aborting..."
+            print("Aborting...")
             sys.exit()
-        print ""
+        print("")

@@ -1,6 +1,4 @@
-'''
-This file defines the base Filter class
-'''
+from __future__ import print_function, division
 
 import os
 
@@ -8,7 +6,7 @@ import numpy as np
 
 from ..utils.integrate import integrate_subset
 
-c = 299792458
+c = 299792458.
 
 
 class Filter(object):

@@ -1,5 +1,7 @@
 from fit import fit
 from plot import plot, plot_source_data
+from plot_params_1d import plot_params_1d
+from plot_params_2d import plot_params_2d
 from filter_output import filter_output
 from extract_parameters import extract_parameters
 from write_parameters import write_parameters

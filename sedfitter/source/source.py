@@ -5,6 +5,22 @@ import cPickle as pickle
 import numpy as np
 
 
+def is_numpy_array(variable):
+    return type(variable) in [np.ndarray,
+                              np.core.records.recarray,
+                              np.ma.core.MaskedArray]
+
+
+def validate_1d_array(name, value):
+
+    if type(value) in [list, tuple]:
+        value = np.array(value)
+    if not is_numpy_array(value) or value.ndim != 1:
+        raise ValueError(name + " should be a 1-D sequence")
+
+    return value
+
+
 def log_fluxes(valid, flux, error):
 
     # Initialize arrays
@@ -41,19 +57,129 @@ class Source(object):
 
     def __init__(self):
 
-        # self.name = name
-        # self.x = x
-        # self.y = y
-        # self.valid = valid
-        # self.flux = flux
-        # self.error = error
-        #
+        self.name = ""
+        self.x = 0.
+        self.y = 0.
+        self.valid = None
+        self.flux = None
+        self.error = None
+
         # self._update_log_fluxes()
-        #
-        # self.n_wav = len(self.valid)
-        # self.n_data = len(np.where((self.valid==1) | (self.valid==4))[0])
 
         return
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        if value is None:
+            self._name = value
+        elif isinstance(value, basestring):
+            self._name = value
+        else:
+            raise TypeError("name should be a string")
+
+    @property
+    def x(self):
+        return self._x
+
+    @x.setter
+    def x(self, value):
+        if value is None:
+            self._x = value
+        elif np.isscalar(value) and np.isreal(value):
+            self._x = value
+        else:
+            raise TypeError("x should be a scalar floating point value")
+
+    @property
+    def y(self):
+        return self._y
+
+    @y.setter
+    def y(self, value):
+        if value is None:
+            self._y = value
+        elif np.isscalar(value) and np.isreal(value):
+            self._y = value
+        else:
+            raise TypeError("y should be a scalar floating point value")
+
+    @property
+    def valid(self):
+        return self._valid
+
+    @valid.setter
+    def valid(self, value):
+        if type(value) in [list, tuple]:
+            value = np.array(value)
+        if value is None:
+            self._valid = value
+        elif isinstance(value, np.ndarray) and value.ndim == 1:
+            if self.n_wav is not None and len(value) != self.n_wav:
+                raise ValueError("valid has incorrect length (expected {0} but found {1})".format(self.n_wav, len(value)))
+            else:
+                if np.any(value.astype(int) != value):
+                    raise ValueError("valid values should be integers")
+                elif np.any(value < 0) or np.any(value > 4):
+                    raise ValueError("valid values should be in the range [0,4]")
+                else:
+                    self._valid = value
+        else:
+            raise TypeError("valid should be a 1-d sequence")
+
+    @property
+    def flux(self):
+        return self._flux
+
+    @flux.setter
+    def flux(self, value):
+        if type(value) in [list, tuple]:
+            value = np.array(value)
+        if value is None:
+            self._flux = value
+        elif isinstance(value, np.ndarray) and value.ndim == 1:
+            if self.n_wav is not None and len(value) != self.n_wav:
+                raise ValueError("flux has incorrect length (expected {0} but found {1})".format(self.n_wav, len(value)))
+            else:
+                self._flux = value
+        else:
+            raise TypeError("flux should be a 1-d sequence")
+
+    @property
+    def error(self):
+        return self._error
+
+    @error.setter
+    def error(self, value):
+        if type(value) in [list, tuple]:
+            value = np.array(value)
+        if value is None:
+            self._error = value
+        elif isinstance(value, np.ndarray) and value.ndim == 1:
+            if self.n_wav is not None and len(value) != self.n_wav:
+                raise ValueError("error has incorrect length (expected {0} but found {1})".format(self.n_wav, len(value)))
+            else:
+                self._error = value
+        else:
+            raise TypeError("error should be a 1-d sequence")
+
+    @property
+    def n_wav(self):
+        if self.valid is not None:
+            return len(self.valid)
+        elif self.flux is not None:
+            return len(self.flux)
+        elif self.error is not None:
+            return len(self.error)
+        else:
+            return None
+
+    @property
+    def n_data(self):
+        return np.sum((self.valid == 1) | (self.valid == 4))
 
     def _update_log_fluxes(self):
         self.weight, self.logflux, self.logerror = log_fluxes(self.valid, self.flux, self.error)
@@ -116,6 +242,16 @@ class Source(object):
         for j in range(self.n_wav):
             file_handle.write("%11.3e %11.3e " % (self.flux[j], self.error[j]))
         file_handle.write("\n")
+
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'x': self.x,
+            'y': self.y,
+            'valid': self.valid,
+            'flux': self.flux,
+            'error': self.error
+        }
 
 
 def read_sources(filename, n_min_valid=0):

@@ -77,7 +77,8 @@ color['faded'].append((0.50, 0.90, 0.50))
 
 
 def tex_friendly(string):
-    return string.replace('_', '\_').replace('%', '\%')
+    return string
+    # return string.replace('_', '\_').replace('%', '\%')
 
 
 def plot_source_info(ax, i, info, plot_name, plot_info):
@@ -93,7 +94,7 @@ def plot_source_info(ax, i, info, plot_name, plot_info):
             labels.append("Best fit")
         else:
             labels.append("Fit: %i" % (i + 1))
-        labels.append("$\chi^2$ = %10.3f\, \, \, \, A$_{\\rm V}$ = %5.1f\, \, \, \, Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
+        labels.append("$\chi^2$ = %10.3f    A$_{\\rm V}$ = %5.1f    Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
 
     pos = 0.95
     for label in labels:

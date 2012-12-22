@@ -70,9 +70,11 @@ class ConvolvedFluxes(object):
         self.errors = tc['TOTAL_FLUX_ERR']
 
         # Read in 99% cumulative and 50% surface brightness radii
-        if 'RADIUS_SIGMA_50' in tc.columns:
+        try:
             self.radius_sigma_50 = tc['RADIUS_SIGMA_50']
             self.radius_cumul_99 = tc['RADIUS_CUMUL_99']
+        except KeyError:
+            pass
 
         # Read in apertures
         self.apertures = ta['APERTURE']
@@ -141,6 +143,12 @@ class ConvolvedFluxes(object):
             c.flux = self.flux_interp(apertures)
         else:
             c.flux = np.repeat(self.flux, len(apertures)).reshape(len(c.flux), len(apertures))
+
+        try:
+            c.radius_sigma_50 = self.radius_sigma_50[:]
+            c.radius_cumul_99 = self.radius_cumul_99[:]
+        except AttributeError:
+            pass
 
         return c
 

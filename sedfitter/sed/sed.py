@@ -191,7 +191,7 @@ class SED(object):
         '''
 
         # If any apertures are larger than the defined max, reset to max
-        apertures[apertures > self.ap.max()] = self.ap.max()
+        apertures[apertures > self.ap.max()] = self.ap.max() * 0.999
 
         # If any apertures are smaller than the defined min, raise Exception
         if np.any(apertures < self.ap.min()):

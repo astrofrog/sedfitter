@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 import os
 import cPickle as pickle
+from copy import deepcopy
 
 import atpy
 import numpy as np
@@ -136,7 +137,12 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
-
+    tpos = deepcopy(t)
+    if log_x:
+        tpos = tpos.where(tpos[parameter_x] > 0.)
+    if log_y:
+        tpos = tpos.where(tpos[parameter_y] > 0.)
+    
     info = FitInfo()
 
     # Initialize figure
@@ -144,31 +150,31 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     ax = get_axes(fig)
 
     # Find range of values
-    xmin, xmax = t[parameter_x].min(), t[parameter_x].max()
-    ymin, ymax = t[parameter_y].min(), t[parameter_y].max()
+    xmin, xmax = tpos[parameter_x].min(), tpos[parameter_x].max()
+    ymin, ymax = tpos[parameter_y].min(), tpos[parameter_y].max()
 
     # Compute histogram
     if log_x and log_y:
-        gray_all, ex, ey = np.histogram2d(np.log10(t[parameter_x]),
-                                          np.log10(t[parameter_y]), bins=npix,
+        gray_all, ex, ey = np.histogram2d(np.log10(tpos[parameter_x]),
+                                          np.log10(tpos[parameter_y]), bins=npix,
                                           range=[[np.log10(xmin), np.log10(xmax)],
                                                  [np.log10(ymin), np.log10(ymax)]])
         ex, ey = 10. ** ex, 10. ** ey
     elif log_x:
-        gray_all, ex, ey = np.histogram2d(np.log10(t[parameter_x]),
-                                          t[parameter_y], bins=npix,
+        gray_all, ex, ey = np.histogram2d(np.log10(tpos[parameter_x]),
+                                          tpos[parameter_y], bins=npix,
                                           range=[[np.log10(xmin), np.log10(xmax)],
                                                  [ymin, ymax]])
         ex = 10. ** ex
     elif log_y:
-        gray_all, ex, ey = np.histogram2d(t[parameter_x],
-                                  np.log10(t[parameter_y]), bins=npix,
+        gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
+                                  np.log10(tpos[parameter_y]), bins=npix,
                                   range=[[xmin, xmax],
                                          [np.log10(ymin), np.log10(ymax)]])
         ey = 10. ** ey
     else:
-        gray_all, ex, ey = np.histogram2d(t[parameter_x],
-                                          t[parameter_y], bins=npix,
+        gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
+                                          tpos[parameter_y], bins=npix,
                                          range=[[xmin, xmax],
                                                 [ymin, ymax]])
 
@@ -176,7 +182,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     gray_all = np.clip(gray_all, 0., 13.)
 
     # Grayscale showing all models
-    ax.pcolormesh(ex, ey, gray_all, cmap='binary', vmin=0, vmax=40.)
+    ax.pcolormesh(ex, ey, gray_all.transpose(), cmap='binary', vmin=0, vmax=40.)
 
     ax.set_xlabel(parameter_x if label_x is None else label_x)
     ax.set_ylabel(parameter_y if label_y is None else label_y)
@@ -239,7 +245,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
                                    fontproperties=fp, zorder=200)
         # Save to file
         filename = "%s/%s.%s" % (output_dir, info.source.name, format)
-        fig.savefig(filename, bbox_inches='tight')
+        fig.savefig(filename, bbox_inches='tight', facecolor='none', dpi=300)
 
     # Close input and output files
     fin.close()

@@ -39,9 +39,9 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
 
     # Find all SED files to convolve
     sed_files = glob.glob(model_dir + '/seds/*.fits.gz') + \
-                glob.glob(model_dir + '/seds/*/*.fits.gz') + \
-                glob.glob(model_dir + '/seds/*.fits') + \
-                glob.glob(model_dir + '/seds/*/*.fits')
+        glob.glob(model_dir + '/seds/*/*.fits.gz') + \
+        glob.glob(model_dir + '/seds/*.fits') + \
+        glob.glob(model_dir + '/seds/*/*.fits')
 
     # Find number of models
     n_models = len(sed_files)
@@ -91,8 +91,8 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         log.info('Processing wavelengths {0} to {1}'.format(jmin, jmax))
 
         # Set up convolved fluxes
-        fluxes = [ConvolvedFluxes(n_models=n_models, n_ap=n_ap) \
-                    for j in range(chunk_size)]
+        fluxes = [ConvolvedFluxes(n_models=n_models, n_ap=n_ap)
+                  for j in range(chunk_size)]
 
         # Loop over SEDs
         for im, sed_file in enumerate(sed_files):

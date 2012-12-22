@@ -35,9 +35,9 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
     # Find all SED files to convolve
     sed_files = glob.glob(model_dir + '/seds/*.fits.gz') + \
-                glob.glob(model_dir + '/seds/*/*.fits.gz') + \
-                glob.glob(model_dir + '/seds/*.fits') + \
-                glob.glob(model_dir + '/seds/*/*.fits')
+        glob.glob(model_dir + '/seds/*/*.fits.gz') + \
+        glob.glob(model_dir + '/seds/*.fits') + \
+        glob.glob(model_dir + '/seds/*/*.fits')
 
     if len(sed_files) == 0:
         raise Exception("No SEDs found in %s" % model_dir)
@@ -51,8 +51,8 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     apertures = pyfits.open(sed_files[0], memmap=False)[2].data['APERTURE']
 
     # Set up convolved fluxes
-    fluxes = [ConvolvedFluxes(n_models=len(sed_files), n_ap=n_ap) \
-                for i in range(len(filters))]
+    fluxes = [ConvolvedFluxes(n_models=len(sed_files), n_ap=n_ap)
+              for i in range(len(filters))]
 
     # Set up list of binned filters
     binned_filters = []

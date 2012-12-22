@@ -147,7 +147,7 @@ def read_sources(filename, n_min_valid=0):
 
     return sources
 
-#def write(self, filename, mask=None):
+# def write(self, filename, mask=None):
 #
 #    f = file(filename, 'w')
 #

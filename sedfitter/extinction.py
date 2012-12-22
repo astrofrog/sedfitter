@@ -25,7 +25,7 @@ class Extinction(object):
 
     def _update_interp(self):
         self.kappa = interp1d(self._wav, self._kappa, bounds_error=False,
-                               fill_value=0)
+                              fill_value=0)
 
     def av(self, wavelengths):
         '''

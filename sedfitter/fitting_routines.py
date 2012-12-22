@@ -21,7 +21,7 @@ def linear_regression(data, weights, pattern1, pattern2):
 
 def optimal_scaling(data, weights, pattern1):
     return np.sum(data * pattern1 * weights, axis=data.ndim - 1) / \
-           np.sum(pattern1 * pattern1 * weights)
+        np.sum(pattern1 * pattern1 * weights)
 
 
 def chi_squared(valid, data, error, weight, model):

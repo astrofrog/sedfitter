@@ -99,7 +99,7 @@ def plot_source_info(ax, i, info, plot_name, plot_info):
     pos = 0.95
     for label in labels:
         ax.text(0.5, pos, label, horizontalalignment='center',
-                                  verticalalignment='center',
+                verticalalignment='center',
                                   transform=ax.transAxes,
                                   fontproperties=fp)
         pos -= 0.06

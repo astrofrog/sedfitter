@@ -142,7 +142,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
         tpos = tpos.where(tpos[parameter_x] > 0.)
     if log_y:
         tpos = tpos.where(tpos[parameter_y] > 0.)
-    
+
     info = FitInfo()
 
     # Initialize figure
@@ -168,14 +168,14 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
         ex = 10. ** ex
     elif log_y:
         gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
-                                  np.log10(tpos[parameter_y]), bins=npix,
-                                  range=[[xmin, xmax],
-                                         [np.log10(ymin), np.log10(ymax)]])
+                                          np.log10(tpos[parameter_y]), bins=npix,
+                                          range=[[xmin, xmax],
+                                                 [np.log10(ymin), np.log10(ymax)]])
         ey = 10. ** ey
     else:
         gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
                                           tpos[parameter_y], bins=npix,
-                                         range=[[xmin, xmax],
+                                          range=[[xmin, xmax],
                                                 [ymin, ymax]])
 
     gray_all = convolve(gray_all, KERNEL)

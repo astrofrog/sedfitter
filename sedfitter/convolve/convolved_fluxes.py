@@ -180,7 +180,7 @@ class ConvolvedFluxes(object):
                 radius[calc] = (required[calc] - self.flux[calc, ia]) / \
                                (self.flux[calc, ia + 1] - self.flux[calc, ia]) * \
                                (self.apertures[ia + 1] - self.apertures[ia]) + \
-                               self.apertures[ia]
+                    self.apertures[ia]
 
             calc = (required < self.flux[:, 0])
             radius[calc] = self.apertures[0]
@@ -220,7 +220,7 @@ class ConvolvedFluxes(object):
             radius[calc] = (sigma[calc, ia] - fraction * maximum[calc]) / \
                            (sigma[calc, ia] - sigma[calc, ia + 1]) * \
                            (self.apertures[ia + 1] - self.apertures[ia]) + \
-                           self.apertures[ia]
+                self.apertures[ia]
 
         calc = sigma[:, -1] > fraction * maximum
         radius[calc] = self.apertures[-1]

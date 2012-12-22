@@ -3,10 +3,10 @@ from __future__ import print_function, division
 import os
 import glob
 
-import pyfits
 import numpy as np
+from astropy.io import fits
+from astropy.logger import log
 
-from ..logger import log
 from ..source import Source
 
 
@@ -59,7 +59,7 @@ def list2data(file_in, file_out, models_dir=None, source_name='source'):
 
             log.debug('Reading {}'.format(filter_file))
 
-            mono_wav[i] = pyfits.getheader(filter_file)['FILTWAV']
+            mono_wav[i] = fits.getheader(filter_file)['FILTWAV']
             mono_filter[i] = os.path.basename(filter_file).replace('.fits', '').replace('.gz', '')
 
     elif np.any(datafile['flux_type'] == 2):

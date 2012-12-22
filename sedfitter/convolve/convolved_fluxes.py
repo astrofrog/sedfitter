@@ -2,11 +2,11 @@ from __future__ import print_function, division
 
 from scipy.interpolate import interp1d
 import atpy
-import pyfits
+
 import numpy as np
 np.seterr(all='ignore')
 
-from ..logger import log
+from astropy.logger import log
 from ..utils.interpolate import interp1d_fast
 
 

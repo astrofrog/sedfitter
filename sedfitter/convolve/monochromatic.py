@@ -4,12 +4,12 @@ import os
 import glob
 
 import atpy
-import pyfits
 import numpy as np
+from astropy.io import fits
+from astropy.logger import log
 
 from .convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
-from ..logger import log
 
 
 def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
@@ -52,16 +52,16 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         log.info("{0} SEDs found in {1}".format(n_models, model_dir))
 
     # Find out number of apertures
-    n_ap = pyfits.getheader(sed_files[0], memmap=False)['NAP']
+    n_ap = fits.getheader(sed_files[0], memmap=False)['NAP']
 
     # Find out apertures
-    apertures = pyfits.open(sed_files[0], memmap=False)[2].data['APERTURE']
+    apertures = fits.open(sed_files[0], memmap=False)[2].data['APERTURE']
 
     # Find out number of wavelengths
-    n_wav = pyfits.getheader(sed_files[0], memmap=False)['NWAV']
+    n_wav = fits.getheader(sed_files[0], memmap=False)['NWAV']
 
     # Find out wavelengths
-    wavelengths = pyfits.open(sed_files[0], memmap=False)[1].data['WAVELENGTH']
+    wavelengths = fits.open(sed_files[0], memmap=False)[1].data['WAVELENGTH']
 
     # For model grids that are very large, it is not possible to compute all
     # fluxes in one go, so we need to process in chunks in wavelength space.

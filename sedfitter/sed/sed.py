@@ -3,8 +3,9 @@ from __future__ import print_function, division
 import os
 from copy import copy
 
-import pyfits
 import numpy as np
+from astropy.io import fits
+
 from scipy.interpolate import interp1d
 
 c = 299792458
@@ -56,7 +57,7 @@ class SED(object):
         if not os.path.exists(filename) and os.path.exists(filename + '.gz'):
             filename += ".gz"
 
-        hdulist = pyfits.open(filename, memmap=False)
+        hdulist = fits.open(filename, memmap=False)
 
         self.name = hdulist[0].header['MODEL']
 

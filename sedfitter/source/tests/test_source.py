@@ -92,3 +92,27 @@ def test_dimensions_match(attribute):
             with pytest.raises(ValueError) as exc:
                 setattr(s, other, [1, 2, 3, 4])
             assert exc.value.args[0] == "{0} has incorrect length (expected 3 but found 4)".format(other)
+
+
+def test_dict():
+
+    # Populate source object
+    s = Source()
+    s.name = "Source name"
+    s.x = 1.
+    s.y = 2.
+    s.valid = [1, 0, 1]
+    s.flux = [3., 4.4, 5.5]
+    s.error = [0.1, 0.4, 0.3]
+    d = s.to_dict()
+
+    # Make sure the dictionary has the values we expect
+    assert d['name'] == "Source name"
+    assert d['x'] == 1.
+    assert d['y'] == 2.
+    assert np.all(d['valid'] == np.array([1, 0, 1]))
+    assert np.all(d['flux'] == np.array([3., 4.4, 5.5]))
+    assert np.all(d['error'] == np.array([0.1, 0.4, 0.3]))
+
+    # Make sure that to_dict/from_dict round-trip
+    assert Source.from_dict(d) == s

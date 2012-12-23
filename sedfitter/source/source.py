@@ -243,6 +243,17 @@ class Source(object):
             file_handle.write("%11.3e %11.3e " % (self.flux[j], self.error[j]))
         file_handle.write("\n")
 
+    @classmethod
+    def from_dict(cls, source_dict):
+        s = cls()
+        s.name = source_dict['name']
+        s.x = source_dict['x']
+        s.y = source_dict['y']
+        s.valid = source_dict['valid']
+        s.flux = source_dict['flux']
+        s.error = source_dict['error']
+        return s
+
     def to_dict(self):
         return {
             'name': self.name,
@@ -252,6 +263,14 @@ class Source(object):
             'flux': self.flux,
             'error': self.error
         }
+
+    def __eq__(self, other):
+        return self.name == other.name and \
+            self.x == other.x and \
+            self.y == other.y and \
+            np.all(self.valid == other.valid) and \
+            np.all(self.flux == other.flux) and \
+            np.all(self.error == other.error)
 
 
 def read_sources(filename, n_min_valid=0):

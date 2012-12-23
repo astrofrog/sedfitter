@@ -1,7 +1,5 @@
 from __future__ import print_function, division
 
-import cPickle as pickle
-
 import numpy as np
 
 
@@ -239,33 +237,3 @@ class Source(object):
             np.all(self.valid == other.valid) and \
             np.all(self.flux == other.flux) and \
             np.all(self.error == other.error)
-
-
-def read_sources(filename, n_min_valid=0):
-
-    result = []
-
-    data = np.loadtxt(filename, dtype=str)
-
-    try:
-        n_sources = np.shape(data)[0]
-        n_wav = (np.shape(data)[1] - 3) / 3
-    except:
-        n_sources = 1
-        n_wav = (len(data) - 3) / 3
-
-    n = n_wav
-
-    name = np.loadtxt(filename, usecols=[0], dtype=str)
-    x = np.loadtxt(filename, usecols=[1], dtype=np.float32)
-    y = np.loadtxt(filename, usecols=[2], dtype=np.float32)
-    valid = np.loadtxt(filename, usecols=range(3, 3 + n), dtype=np.int32)
-    flux = np.loadtxt(filename, usecols=range(3 + n, 3 + 3 * n - 1, 2), dtype=np.float32)
-    error = np.loadtxt(filename, usecols=range(3 + n + 1, 3 + 3 * n, 2), dtype=np.float32)
-
-    sources = []
-    for i in range(n_sources):
-        if np.sum((valid[i, :] == 1) | (valid[i, :] == 4)) > n_min_valid:
-            sources.append(Source(name[i], x[i], y[i], valid[i, :], flux[i, :], error[i, :]))
-
-    return sources

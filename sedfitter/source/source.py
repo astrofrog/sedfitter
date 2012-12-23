@@ -176,12 +176,14 @@ class Source(object):
 
     def __str__(self):
 
+        weight, log_flux, log_error = self.get_log_fluxes()
+
         string = "Source name : %s\n" % self.name
-        string += "RA   / l    : %9.5f\n" % self.x
-        string += "Decl / b    : %9.5f\n" % self.y
+        string += "x           : %9.5f\n" % self.x
+        string += "y           : %9.5f\n" % self.y
         for j in range(self.n_wav):
             string += "F = %12.4e + / - %12.4e mJy (%1i)  Log[F] = %8.5f+ / -%8.5f\n" % \
-                      (self.flux[j], self.error[j], self.valid[j], self.logflux[j], self.logerror[j])
+                      (self.flux[j], self.error[j], self.valid[j], log_flux[j], log_error[j])
 
         return string
 
@@ -202,13 +204,14 @@ class Source(object):
 
         return s
 
-    def write_ascii(self, file_handle):
-        file_handle.write("% - 30s " % self.name)
-        file_handle.write("%9.5f %9.5f " % (self.x, self.y))
-        file_handle.write("%1i " * self.n_wav % tuple(self.valid.tolist()))
+    def to_ascii(self):
+        line = ""
+        line += "{0:30s} {1:9.5f} {2:9.5f} ".format(self.name, self.x, self.y)
+        for v in self.valid:
+            line += "{0:1d} ".format(v)
         for j in range(self.n_wav):
-            file_handle.write("%11.3e %11.3e " % (self.flux[j], self.error[j]))
-        file_handle.write("\n")
+            line += "{0:11.3e} {1:11.3e} ".format(self.flux[j], self.error[j])
+        return line
 
     @classmethod
     def from_dict(cls, source_dict):

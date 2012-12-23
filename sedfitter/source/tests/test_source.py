@@ -152,7 +152,9 @@ def test_get_log_fluxes():
 
 def test_source_from_ascii():
 
-    s = Source.from_ascii("a 1. 2. 0 1 1 2 0 1. 0.1 2. 0.2 3. 0.3 4. 0.4 5. 0.5")
+    line = "a 1. 2. 0 1 1 2 0 1. 0.1 2. 0.2 3. 0.3 4. 0.4 5. 0.5"
+
+    s = Source.from_ascii(line)
 
     assert s.name == "a"
     assert s.x == 1.
@@ -160,3 +162,11 @@ def test_source_from_ascii():
     assert np.all(s.valid == np.array([0, 1, 1, 2, 0]))
     assert np.all(s.flux == np.array([1., 2., 3., 4., 5.]))
     assert np.all(s.error == np.array([0.1, 0.2, 0.3, 0.4, 0.5]))
+
+def test_source_ascii_roundtrip():
+
+    line = "a 1. 2. 0 1 1 2 0 1. 0.1 2. 0.2 3. 0.3 4. 0.4 5. 0.5"
+
+    # Check that round-tripping works
+    s2 = s.from_ascii(s.to_ascii())
+    assert s == s2

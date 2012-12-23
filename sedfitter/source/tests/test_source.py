@@ -116,3 +116,35 @@ def test_dict():
 
     # Make sure that to_dict/from_dict round-trip
     assert Source.from_dict(d) == s
+
+
+def test_get_log_fluxes():
+
+    # Populate source object
+    s = Source()
+    s.name = "Source name"
+    s.x = 1.
+    s.y = 2.
+    s.valid = [0, 1, 2, 3, 4]
+    s.flux = [10., 10., 10., 10., 10.]
+    s.error = [1., 1., 1., 1., 1.]
+
+    weight, log_flux, log_error = s.get_log_fluxes()
+
+    assert log_flux[0] == 0.
+    assert log_flux[1] == 1. - 5.e-3 / np.log(10.)
+    assert log_flux[2] == 1.
+    assert log_flux[3] == 1.
+    assert log_flux[4] == 10.
+
+    assert log_error[0] == 0.
+    assert log_error[1] == 0.1 / np.log(10.)
+    assert log_error[2] == 1.
+    assert log_error[3] == 1.
+    assert log_error[4] == 1.
+
+    assert weight[0] == 0.
+    assert weight[1] == 1. / log_error[1] ** 2
+    assert weight[2] == 0.
+    assert weight[3] == 0.
+    assert weight[4] == 1. / log_error[4] ** 2

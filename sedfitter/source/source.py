@@ -148,31 +148,31 @@ class Source(object):
     def get_log_fluxes(self):
 
         # Initialize arrays
-        log_flux = np.zeros(flux.shape, dtype=np.float32)
-        log_error = np.zeros(error.shape, dtype=np.float32)
-        weight = np.zeros(valid.shape, dtype=np.float32)
+        log_flux = np.zeros(self.flux.shape, dtype=np.float64)
+        log_error = np.zeros(self.error.shape, dtype=np.float64)
+        weight = np.zeros(self.valid.shape, dtype=np.float64)
 
         # Fluxes
-        r = valid == 1
-        log_flux[r] = np.log10(flux[r]) - 0.5 * (error[r] / flux[r]) ** 2. / np.log(10.)
-        log_error[r] = np.abs(error[r] / flux[r]) / np.log(10.)
+        r = self.valid == 1
+        log_flux[r] = np.log10(self.flux[r]) - 0.5 * (self.error[r] / self.flux[r]) ** 2. / np.log(10.)
+        log_error[r] = np.abs(self.error[r] / self.flux[r]) / np.log(10.)
         weight[r] = 1. / log_error[r] ** 2.
 
         # Lower and upper limits
-        r = (valid == 2) | (valid == 3)
-        log_flux[r] = np.log10(flux[r])
-        log_error[r] = error[r]
+        r = (self.valid == 2) | (self.valid == 3)
+        log_flux[r] = np.log10(self.flux[r])
+        log_error[r] = self.error[r]
 
         # Log10[Fluxes]
-        r = valid == 4
-        log_flux[r] = flux[r]
-        log_error[r] = error[r]
+        r = self.valid == 4
+        log_flux[r] = self.flux[r]
+        log_error[r] = self.error[r]
         weight[r] = 1. / log_error[r] ** 2.
 
         # Ignored points
-        r = valid == 9
-        log_flux[r] = np.log10(flux[r]) - 0.5 * (error[r] / flux[r]) ** 2. / np.log(10.)
-        log_error[r] = np.abs(error[r] / flux[r]) / np.log(10.)
+        r = self.valid == 9
+        log_flux[r] = np.log10(self.flux[r]) - 0.5 * (self.error[r] / self.flux[r]) ** 2. / np.log(10.)
+        log_error[r] = np.abs(self.error[r] / self.flux[r]) / np.log(10.)
 
         return weight, log_flux, log_error
 

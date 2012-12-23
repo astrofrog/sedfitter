@@ -185,21 +185,22 @@ class Source(object):
 
         return string
 
-    def read_ascii(self, file_handle):
-        line = file_handle.readline().strip()
-        if line:
-            cols = line.split()
-            self.name = cols[0]
-            self.x = np.float64(cols[1])
-            self.y = np.float64(cols[2])
-            self.n_wav = np.int32((len(cols) - 3) / 3)
-            self.valid = np.array(cols[3:3 + self.n_wav], dtype=np.int32)
-            flux_and_error = np.array(cols[3 + self.n_wav:], dtype=np.float32)
-            self.flux = flux_and_error[::2]
-            self.error = flux_and_error[1::2]
-            self._update_log_fluxes()
-        else:
-            raise IOError("End of file")
+    @classmethod
+    def from_ascii(cls, line):
+
+        s = cls()
+
+        cols = line.split()
+        s.name = cols[0]
+        s.x = np.float64(cols[1])
+        s.y = np.float64(cols[2])
+        n_wav = np.int32((len(cols) - 3) / 3)
+        s.valid = np.array(cols[3:3 + n_wav], dtype=int)
+        flux_and_error = np.array(cols[3 + n_wav:], dtype=float)
+        s.flux = flux_and_error[::2]
+        s.error = flux_and_error[1::2]
+
+        return s
 
     def write_ascii(self, file_handle):
         file_handle.write("% - 30s " % self.name)

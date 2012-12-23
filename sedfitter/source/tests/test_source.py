@@ -148,3 +148,15 @@ def test_get_log_fluxes():
     assert weight[2] == 0.
     assert weight[3] == 0.
     assert weight[4] == 1. / log_error[4] ** 2
+
+
+def test_source_from_ascii():
+
+    s = Source.from_ascii("a 1. 2. 0 1 1 2 0 1. 0.1 2. 0.2 3. 0.3 4. 0.4 5. 0.5")
+
+    assert s.name == "a"
+    assert s.x == 1.
+    assert s.y == 2.
+    assert np.all(s.valid == np.array([0, 1, 1, 2, 0]))
+    assert np.all(s.flux == np.array([1., 2., 3., 4., 5.]))
+    assert np.all(s.error == np.array([0.1, 0.2, 0.3, 0.4, 0.5]))

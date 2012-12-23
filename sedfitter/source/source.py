@@ -21,38 +21,6 @@ def validate_1d_array(name, value):
     return value
 
 
-def log_fluxes(valid, flux, error):
-
-    # Initialize arrays
-    logflux = np.zeros(flux.shape, dtype=np.float32)
-    logerror = np.zeros(error.shape, dtype=np.float32)
-    weight = np.zeros(valid.shape, dtype=np.float32)
-
-    # Fluxes
-    r = valid == 1
-    logflux[r] = np.log10(flux[r]) - 0.5 * (error[r] / flux[r]) ** 2. / np.log(10.)
-    logerror[r] = np.abs(error[r] / flux[r]) / np.log(10.)
-    weight[r] = 1. / logerror[r] ** 2.
-
-    # Lower and upper limits
-    r = (valid == 2) | (valid == 3)
-    logflux[r] = np.log10(flux[r])
-    logerror[r] = error[r]
-
-    # Log10[Fluxes]
-    r = valid == 4
-    logflux[r] = flux[r]
-    logerror[r] = error[r]
-    weight[r] = 1. / logerror[r] ** 2.
-
-    # Ignored points
-    r = valid == 9
-    logflux[r] = np.log10(flux[r]) - 0.5 * (error[r] / flux[r]) ** 2. / np.log(10.)
-    logerror[r] = np.abs(error[r] / flux[r]) / np.log(10.)
-
-    return weight, logflux, logerror
-
-
 class Source(object):
 
     def __init__(self):
@@ -63,10 +31,6 @@ class Source(object):
         self.valid = None
         self.flux = None
         self.error = None
-
-        # self._update_log_fluxes()
-
-        return
 
     @property
     def name(self):
@@ -181,9 +145,36 @@ class Source(object):
     def n_data(self):
         return np.sum((self.valid == 1) | (self.valid == 4))
 
-    def _update_log_fluxes(self):
-        self.weight, self.logflux, self.logerror = log_fluxes(self.valid, self.flux, self.error)
-        self.n_data = len(np.where((self.valid == 1) | (self.valid == 4))[0])
+    def get_log_fluxes(self):
+
+        # Initialize arrays
+        log_flux = np.zeros(flux.shape, dtype=np.float32)
+        log_error = np.zeros(error.shape, dtype=np.float32)
+        weight = np.zeros(valid.shape, dtype=np.float32)
+
+        # Fluxes
+        r = valid == 1
+        log_flux[r] = np.log10(flux[r]) - 0.5 * (error[r] / flux[r]) ** 2. / np.log(10.)
+        log_error[r] = np.abs(error[r] / flux[r]) / np.log(10.)
+        weight[r] = 1. / log_error[r] ** 2.
+
+        # Lower and upper limits
+        r = (valid == 2) | (valid == 3)
+        log_flux[r] = np.log10(flux[r])
+        log_error[r] = error[r]
+
+        # Log10[Fluxes]
+        r = valid == 4
+        log_flux[r] = flux[r]
+        log_error[r] = error[r]
+        weight[r] = 1. / log_error[r] ** 2.
+
+        # Ignored points
+        r = valid == 9
+        log_flux[r] = np.log10(flux[r]) - 0.5 * (error[r] / flux[r]) ** 2. / np.log(10.)
+        log_error[r] = np.abs(error[r] / flux[r]) / np.log(10.)
+
+        return weight, log_flux, log_error
 
     def __str__(self):
 
@@ -195,29 +186,6 @@ class Source(object):
                       (self.flux[j], self.error[j], self.valid[j], self.logflux[j], self.logerror[j])
 
         return string
-
-    def write_binary(self, file_handle):
-        pickle.dump(self.name, file_handle, 2)
-        pickle.dump(self.x, file_handle, 2)
-        pickle.dump(self.y, file_handle, 2)
-        pickle.dump(self.n_wav, file_handle, 2)
-        file_handle.write(self.valid.tostring())
-        file_handle.write(self.flux.tostring())
-        file_handle.write(self.error.tostring())
-        file_handle.write(self.logflux.tostring())
-        file_handle.write(self.logerror.tostring())
-
-    def read_binary(self, file_handle):
-        self.name = pickle.load(file_handle)
-        self.x = pickle.load(file_handle)
-        self.y = pickle.load(file_handle)
-        self.n_wav = pickle.load(file_handle)
-        self.valid = np.fromstring(file_handle.read(self.n_wav * 4), dtype=np.int32)
-        self.flux = np.fromstring(file_handle.read(self.n_wav * 4), dtype=np.float32)
-        self.error = np.fromstring(file_handle.read(self.n_wav * 4), dtype=np.float32)
-        self.logflux = np.fromstring(file_handle.read(self.n_wav * 4), dtype=np.float32)
-        self.logerror = np.fromstring(file_handle.read(self.n_wav * 4), dtype=np.float32)
-        self._update_log_fluxes()
 
     def read_ascii(self, file_handle):
         line = file_handle.readline().strip()
@@ -233,7 +201,7 @@ class Source(object):
             self.error = flux_and_error[1::2]
             self._update_log_fluxes()
         else:
-            raise Exception("End of file")
+            raise IOError("End of file")
 
     def write_ascii(self, file_handle):
         file_handle.write("% - 30s " % self.name)
@@ -301,23 +269,3 @@ def read_sources(filename, n_min_valid=0):
             sources.append(Source(name[i], x[i], y[i], valid[i, :], flux[i, :], error[i, :]))
 
     return sources
-
-# def write(self, filename, mask=None):
-#
-#    f = file(filename, 'w')
-#
-#    if mask==None:
-#        mask = np.ones((self.n_sources), bool)
-#
-#    for i in range(self.n_sources):
-#        if mask[i]:
-#            f.write("%30s " % self.name[i])
-#            f.write("%9.5f %9.5f " % (self.x[i], self.y[i]))
-#            f.write("%1i "*self.n_wav % tuple(self.valid[i, :].tolist()))
-#            for j in range(self.n_wav):
-#                f.write("%11.3e %11.3e "% (self.flux[i, j], self.error[i, j]))
-#            f.write("\n")
-#
-#    f.close()
-#
-#    return

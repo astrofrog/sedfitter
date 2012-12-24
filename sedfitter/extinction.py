@@ -1,47 +1,79 @@
 from __future__ import print_function, division
 
-import cPickle as pickle
-
 import numpy as np
-from scipy.interpolate import interp1d
 
 
 class Extinction(object):
 
-    def __init__(self, filename=None):
-        '''
-        Initialize an extinction object from a file
-        '''
+    def __init__(self):
+        self.wav = None
+        self.chi = None
 
-        if filename:
+    @property
+    def wav(self):
+        return self._wav
 
-            f = np.loadtxt(filename, dtype=[('wav', float), ('kappa', float)],
-                           usecols=[0, 3])
+    @wav.setter
+    def wav(self, value):
+        if type(value) in [list, tuple]:
+            value = np.array(value)
+        if value is None:
+            self._wav = value
+        elif isinstance(value, np.ndarray) and value.ndim == 1:
+            if self.chi is not None and len(value) != len(self.chi):
+                raise ValueError("wav has incorrect length (expected {0} but found {1})".format(len(self.chi), len(value)))
+            else:
+                self._wav = value
+        else:
+            raise TypeError("wav should be a 1-d sequence")
 
-            self._wav = f['wav']
-            self._kappa = f['kappa']
+    @property
+    def chi(self):
+        return self._chi
 
-            self._update_interp()
+    @chi.setter
+    def chi(self, value):
+        if type(value) in [list, tuple]:
+            value = np.array(value)
+        if value is None:
+            self._chi = value
+        elif isinstance(value, np.ndarray) and value.ndim == 1:
+            if self.wav is not None and len(value) != len(self.wav):
+                raise ValueError("chi has incorrect length (expected {0} but found {1})".format(len(self.wav), len(value)))
+            else:
+                self._chi = value
+        else:
+            raise TypeError("chi should be a 1-d sequence")
 
-    def _update_interp(self):
-        self.kappa = interp1d(self._wav, self._kappa, bounds_error=False,
-                              fill_value=0)
+    @classmethod
+    def from_file(self, filename, columns=[0, 1]):
 
-    def av(self, wavelengths):
+        f = np.loadtxt(filename, dtype=[('wav', float), ('chi', float)],
+                       usecols=columns)
+
+        self.wav = f['wav']
+        self.chi = f['chi']
+
+    def get_av(self, wav):
         '''
         Interpolate the Av at given wavelengths
+
+        Parameters
+        ----------
+        wav : sequence
+            The wavelengths at which to interpolate the visual extinction
         '''
-        return -0.4 * self.kappa(wavelengths) / self.kappa(0.55000)
+        return -0.4 * np.interp(wav, self.wav, self.chi, left=0., right=0.) \
+            / np.interp(0.55, self.wav, self.chi)
 
-    def write_binary(self, file_handle):
-        pickle.dump(len(self._wav), file_handle)
-        file_handle.write(self._wav.astype(np.float32).tostring())
-        file_handle.write(self._kappa.astype(np.float32).tostring())
+    def from_table(self, table):
+        self.wav = table['wav']
+        self.chi = table['chi']
 
-    def read_binary(self, file_handle):
-        n_wav = pickle.load(file_handle)
-        self._wav = np.fromstring(file_handle.read(n_wav * 4),
-                                  dtype=np.float32)
-        self._kappa = np.fromstring(file_handle.read(n_wav * 4),
-                                    dtype=np.float32)
-        self._update_interp()
+    def to_table(self):
+        from astropy.table import Table, Column
+        from astropy import units as u
+        t = Table()
+        t.add_column(Column('wav', self.wav, units=u.micron))
+        t.add_column(Column('chi', self.chi, units=u.cm ** 2 / u.g))
+        return t

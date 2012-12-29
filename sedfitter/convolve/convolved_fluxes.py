@@ -1,22 +1,19 @@
 from __future__ import print_function, division
 
-from scipy.interpolate import interp1d
-import atpy
-
 import numpy as np
 np.seterr(all='ignore')
 
-from astropy.logger import log
-from ..utils.interpolate import interp1d_fast
+from scipy.interpolate import interp1d
 
+from astropy.logger import log
+
+# TODO: get rid of use of interp1d
 
 class ConvolvedFluxes(object):
 
     def __init__(self, n_models=None, n_ap=1, wavelength=None, dtype=np.float32):
 
         self.wavelength = wavelength
-        self.n_models = n_models
-        self.n_ap = n_ap
 
         if n_models is not None:
 
@@ -40,48 +37,78 @@ class ConvolvedFluxes(object):
             self.err = None
             self.flux_interp = None
 
-    def read(self, filename):
+    @property
+    def n_models(self):
+        if self.model_names is None:
+            return None
+        else:
+            return self.model_names.shape[0]
+
+    @property
+    def n_ap(self):
+        if self.model_names is None:
+            return None
+        elif self.flux.ndim == 1:
+            return 1
+        else:
+            return self.flux.shape
+
+    @classmethod
+    def read(cls, filename):
         '''
         Read convolved flux from a FITS file
+
+        Parameters
+        ----------
+        filename : str
+            The name of the FITS file to read the convolved fluxes from
         '''
 
+        from astropy.io import fits
+        from astropy.table import Table
+
+        conv = cls()
+
         # Open the convolved flux FITS file
-        ts = atpy.TableSet(filename, verbose=False)
+        convolved = fits.open(filename)
+        keywords = convolved[0].header
 
         # Try and read in the wavelength of the filter
-        if 'FILTWAV' in ts.keywords:
-            self.wavelength = ts.keywords['FILTWAV']
+        if 'FILTWAV' in keywords:
+            conv.wavelength = keywords['FILTWAV']
         else:
-            self.wavelength = None
+            conv.wavelength = None
 
         # Read in number of models and apertures
-        self.n_models = ts.keywords['NMODELS']
-        self.n_ap = ts.keywords['NAP']
+        conv.n_models = keywords['NMODELS']
+        conv.n_ap = keywords['NAP']
 
         # Create shortcuts to tables
-        tc = ts['CONVOLVED FLUXES']
-        ta = ts['APERTURES']
+        tc = Table(convolved['CONVOLVED FLUXES'].data)
+        ta = Table(convolved['APERTURES'].data)
 
         # Read in model names
-        self.model_names = tc['MODEL_NAME']
+        conv.model_names = tc['MODEL_NAME']
 
         # Read in flux and flux errors
-        self.flux = tc['TOTAL_FLUX']
-        self.errors = tc['TOTAL_FLUX_ERR']
+        conv.flux = tc['TOTAL_FLUX']
+        conv.err = tc['TOTAL_FLUX_ERR']
 
         # Read in 99% cumulative and 50% surface brightness radii
         try:
-            self.radius_sigma_50 = tc['RADIUS_SIGMA_50']
-            self.radius_cumul_99 = tc['RADIUS_CUMUL_99']
+            conv.radius_sigma_50 = tc['RADIUS_SIGMA_50']
+            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99']
         except KeyError:
             pass
 
         # Read in apertures
-        self.apertures = ta['APERTURE']
+        conv.apertures = ta['APERTURE']
 
         # Create an interpolating function for the flux vs aperture
-        if self.flux.ndim > 1:
-            self.flux_interp = interp1d(self.apertures, self.flux[:])
+        if conv.flux.ndim > 1:
+            conv.flux_interp = interp1d(conv.apertures, conv.flux[:])
+
+        return conv
 
     def write(self, filename, overwrite=False):
         '''
@@ -95,25 +122,32 @@ class ConvolvedFluxes(object):
             Whether to overwrite the output file
         '''
 
-        ts = atpy.TableSet()
+        from astropy.io import fits
+        from astropy.table import Table, Column
 
-        ts.add_keyword('FILTWAV', self.wavelength)
-        ts.add_keyword('NMODELS', self.n_models)
-        ts.add_keyword('NAP', self.n_ap)
+        keywords = {}
+        keywords['FILTWAV'] = self.wavelength
+        keywords['NMODELS'] = self.n_models
+        keywords['NAP'] = self.n_ap
 
-        ts.append(atpy.Table(name='CONVOLVED FLUXES'))
-        ts[0].add_column('MODEL_NAME', self.model_names)
-        ts[0].add_column('TOTAL_FLUX', self.flux)
-        ts[0].add_column('TOTAL_FLUX_ERR', self.err)
+        tc = Table()
+        tc.add_column(Column('MODEL_NAME', self.model_names))
+        tc.add_column(Column('TOTAL_FLUX', self.flux))
+        tc.add_column(Column('TOTAL_FLUX_ERR', self.err))
 
         if self.n_ap > 1:
-            ts[0].add_column('RADIUS_SIGMA_50', self.find_radius_sigma(0.50))
-            ts[0].add_column('RADIUS_CUMUL_99', self.find_radius_cumul(0.99))
+            tc.add_column(Column('RADIUS_SIGMA_50', self.find_radius_sigma(0.50)))
+            tc.add_column(Column('RADIUS_CUMUL_99', self.find_radius_cumul(0.99)))
 
-        ts.append(atpy.Table(name='APERTURES'))
-        ts[1].add_column("APERTURE", self.apertures)
+        ta = Table()
+        ta.add_column(Column("APERTURE", self.apertures))
 
-        ts.write(filename, verbose=False, overwrite=overwrite)
+        # Convert to FITS
+        hdulist = fits.HDUList()
+        hdulist.append(fits.PrimaryHDU(header=fits.Header(keywords)))
+        hdulist.append(fits.BinTableHDU(np.array(tc), name='CONVOLVED FLUXES'))
+        hdulist.append(fits.BinTableHDU(np.array(ta), name='APERTURES'))
+        hdulist.writeto(filename, clobber=overwrite)
 
     def interpolate(self, apertures):
         '''

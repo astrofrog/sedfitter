@@ -163,10 +163,17 @@ def test_source_from_ascii():
     assert np.all(s.flux == np.array([1., 2., 3., 4., 5.]))
     assert np.all(s.error == np.array([0.1, 0.2, 0.3, 0.4, 0.5]))
 
+
 def test_source_ascii_roundtrip():
 
-    line = "a 1. 2. 0 1 1 2 0 1. 0.1 2. 0.2 3. 0.3 4. 0.4 5. 0.5"
+    s = Source()
+    s.name = "a"
+    s.x = 1.
+    s.y = 2.
+    s.valid = [0, 1, 2, 3, 4]
+    s.flux = [10., 20., 30., 40., 50.]
+    s.error = [1., 0.4, 1.2, 1.3, 1.1]
 
     # Check that round-tripping works
-    s2 = s.from_ascii(s.to_ascii())
+    s2 = Source.from_ascii(s.to_ascii())
     assert s == s2

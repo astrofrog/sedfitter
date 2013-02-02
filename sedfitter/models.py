@@ -25,7 +25,10 @@ class Models(object):
 
         return
 
-    def read(self, directory, filters, distance_range=None, remove_resolved=False):
+    @classmethod
+    def read(cls, directory, filters, distance_range=None, remove_resolved=False):
+
+        m = cls()
 
         # Read in model parameters
         modpar = parfile.read("%s/models.conf" % directory, 'conf')
@@ -40,17 +43,17 @@ class Models(object):
         if modpar['aperture_dependent']:
             if distance_range:
                 if distance_range[0] == distance_range[1]:
-                    self.n_distances = 1
-                    self.distances = np.array([distance_range[0]])
+                    m.n_distances = 1
+                    m.distances = np.array([distance_range[0]])
                 else:
-                    self.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
-                    self.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), self.n_distances)
-                print("   Number of distances :  %i" % self.n_distances)
+                    m.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
+                    m.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), m.n_distances)
+                print("   Number of distances :  %i" % m.n_distances)
             else:
                 raise Exception("For aperture-dependent models, a distange range is required")
         else:
-            self.n_distances = None
-            self.distances = None
+            m.n_distances = None
+            m.distances = None
 
         print("")
         print(" ------------------------------------------------------------")
@@ -59,7 +62,7 @@ class Models(object):
         print("")
 
         model_fluxes = []
-        self.wavelengths = []
+        m.wavelengths = []
 
         for filt in filters:
 
@@ -76,40 +79,38 @@ class Models(object):
             conv = ConvolvedFluxes()
             conv.read(filename)
 
-            self.wavelengths.append(conv.wavelength)
+            m.wavelengths.append(conv.wavelength)
 
-            if self.n_distances is not None:
-                apertures_au = filt['aperture_arcsec'] * self.distances * 1.e3
+            if m.n_distances is not None:
+                apertures_au = filt['aperture_arcsec'] * m.distances * 1.e3
                 conv = conv.interpolate(apertures_au)
-                conv.flux = conv.flux / self.distances ** 2
-                self.logd = np.log10(self.distances)
+                conv.flux = conv.flux / m.distances ** 2
+                m.logd = np.log10(m.distances)
                 if remove_resolved:
-                    self.extended.append(apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis])
+                    m.extended.append(apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis])
 
             model_fluxes.append(conv.flux)
 
-        if self.n_distances is not None:
-            self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), self.n_distances)
-            self.fluxes = self.fluxes.swapaxes(1, 2)
+        if m.n_distances is not None:
+            m.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), m.n_distances)
+            m.fluxes = m.fluxes.swapaxes(1, 2)
             if remove_resolved:
-                self.extended = np.column_stack(self.extended).reshape(conv.n_models, len(filters), self.n_distances)
-                self.extended = self.extended.swapaxes(1, 2)
+                m.extended = np.column_stack(m.extended).reshape(conv.n_models, len(filters), m.n_distances)
+                m.extended = m.extended.swapaxes(1, 2)
         else:
-            self.fluxes = np.column_stack(model_fluxes)
+            m.fluxes = np.column_stack(model_fluxes)
 
         try:
-            self.names = np.char.strip(conv.model_names)
+            m.names = np.char.strip(conv.model_names)
         except:
-            self.names = np.array([x.strip() for x in conv.model_names], dtype=conv.model_names.dtype)
+            m.names = np.array([x.strip() for x in conv.model_names], dtype=conv.model_names.dtype)
 
-        self.n_models = conv.n_models
+        m.n_models = conv.n_models
 
-        self.valid = self.fluxes != 0
+        m.valid = m.fluxes != 0
 
-        self.fluxes[~self.valid] = -np.inf
-        self.fluxes[self.valid] = np.log10(self.fluxes[self.valid])
-
-        return
+        m.fluxes[~m.valid] = -np.inf
+        m.fluxes[m.valid] = np.log10(m.fluxes[m.valid])
 
     def fit(self, source, av_law, sc_law, av_min, av_max):
 

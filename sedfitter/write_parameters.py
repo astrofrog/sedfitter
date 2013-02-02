@@ -1,7 +1,10 @@
 from __future__ import print_function, division
 
 import os
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 import atpy
 import numpy as np

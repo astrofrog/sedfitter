@@ -1,6 +1,9 @@
 from __future__ import print_function, division
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 from atpy import Table, TableSet
 

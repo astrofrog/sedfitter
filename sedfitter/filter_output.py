@@ -1,6 +1,9 @@
 from __future__ import print_function, division
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 from .fit_info import FitInfo
 from .extinction import Extinction

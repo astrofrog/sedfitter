@@ -18,7 +18,10 @@ from __future__ import print_function, division
 # Optimization:
 # - Compute interpolating functions as little as possible
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 import numpy as np
 

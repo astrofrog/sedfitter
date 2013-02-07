@@ -1,6 +1,4 @@
 import pytest
-
-import pytest
 import numpy as np
 
 from .. import Extinction

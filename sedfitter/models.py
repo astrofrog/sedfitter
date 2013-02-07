@@ -4,7 +4,7 @@ import os
 
 import numpy as np
 
-from .convolve import ConvolvedFluxes
+from .convolved_fluxes import ConvolvedFluxes
 from . import fitting_routines as f
 from . import parfile
 

@@ -8,7 +8,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.logger import log
 
-from .convolved_fluxes import ConvolvedFluxes
+from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
 
 

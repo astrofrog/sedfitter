@@ -1,67 +1,105 @@
 import pytest
 import numpy as np
+from numpy.testing import assert_array_almost_equal_nulp
 
 from .. import ConvolvedFluxes
 
 
-def test_fluxes_init():
+def test_init():
     ConvolvedFluxes()
 
 
-def test_fluxes_wavelength():
+def test_wavelength():
     c = ConvolvedFluxes()
     c.wavelength = 3.14
 
 
 @pytest.mark.parametrize('value', ['string', object(), np.array([1, 2, 3])])
-def test_fluxes_wavelength_invalid(value):
+def test_wavelength_invalid(value):
     c = ConvolvedFluxes()
     with pytest.raises(TypeError) as exc:
         c.wavelength = value
     assert exc.value.args[0] == 'wavelength should be a scalar floating point value'
 
 
-def test_fluxes_single_aperture():
-    c = ConvolvedFluxes(n_models=5)
-    c.model_names = ['a', 'b', 'c', 'd', 'e']
-    c.apertures = [1.]
-    c.flux = [1., 2., 3., 4., 5.]
-    c.error = [0.1, 0.2, 0.3, 0.4, 0.5]
+def test_aperture_none():
+    c = ConvolvedFluxes()
+    c.apertures = None
 
 
-def test_fluxes_single_aperture_invalid_lengths():
-
-    c = ConvolvedFluxes(n_models=5)
-
-    with pytest.raises(ValueError) as exc:
-        c.apertures = [1., 2.]
-    assert exc.value.args[0] == 'Expected 1 apertures, but got 2'
-
-    with pytest.raises(ValueError) as exc:
-        c.model_names = ['a', 'b', 'c', 'd']
-    assert exc.value.args[0] == 'Expected 5 model names, but got 4'
-
-    with pytest.raises(ValueError) as exc:
-        c.flux = [1., 2., 3.]
-    assert exc.value.args[0] == 'Expected 5 model fluxes, but got 3'
-
-    with pytest.raises(ValueError) as exc:
-        c.error = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    assert exc.value.args[0] == 'Expected 5 model flux errors, but got 6'
+def test_aperture_list():
+    c = ConvolvedFluxes()
+    c.apertures = [1., 2., 3.]
 
 
 @pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
-def test_fluxes_single_aperture_invalid_types(value):
+def test_aperture_invalid_type(value):
 
-    c = ConvolvedFluxes(n_models=5)
+    c = ConvolvedFluxes()
 
     with pytest.raises(ValueError) as exc:
         c.apertures = value
-    assert exc.value.args[0] == 'apertures should be a 1-d sequence'
+    assert exc.value.args[0] == 'apertures should be None or a 1-d sequence'
+
+
+def test_model_name_list():
+    c = ConvolvedFluxes()
+    c.model_names = ['a', 'b', 'c']
+
+
+@pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
+def test_model_name_invalid_type(value):
+
+    c = ConvolvedFluxes()
 
     with pytest.raises(ValueError) as exc:
         c.model_names = value
     assert exc.value.args[0] == 'model_names should be a 1-d sequence'
+
+
+def test_model_name_unset():
+
+    c = ConvolvedFluxes()
+
+    with pytest.raises(ValueError) as exc:
+        c.flux = [1., 2., 3.]
+    assert exc.value.args[0] == "model_names has not been set"
+
+    with pytest.raises(ValueError) as exc:
+        c.error = [1., 2., 3.]
+    assert exc.value.args[0] == "model_names has not been set"
+
+
+def test_single():
+    c = ConvolvedFluxes()
+    c.model_names = ['a', 'b', 'c', 'd', 'e']  # this sets the number of models
+    c.apertures = None  # this sets the number of apertures
+    c.flux = [1., 2., 3., 4., 5.]
+    c.error = [0.1, 0.2, 0.3, 0.4, 0.5]
+
+
+def test_single_invalid_lengths():
+
+    c = ConvolvedFluxes()
+    c.apertures = None
+    c.model_names = ['a', 'b', 'c', 'd']
+
+    with pytest.raises(ValueError) as exc:
+        c.flux = [1., 2., 3.]
+    assert exc.value.args[0] == 'Expected 4 model fluxes, but got 3'
+
+    with pytest.raises(ValueError) as exc:
+        c.error = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+    assert exc.value.args[0] == 'Expected 4 model flux errors, but got 6'
+
+
+@pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
+def test_single_invalid_types(value):
+
+    c = ConvolvedFluxes()
+
+    c.apertures = None
+    c.model_names = ['a', 'b', 'c', 'd']
 
     with pytest.raises(ValueError) as exc:
         c.flux = value
@@ -72,11 +110,11 @@ def test_fluxes_single_aperture_invalid_types(value):
     assert exc.value.args[0] == 'error should be a 1-d sequence'
 
 
-def test_fluxes_single_aperture_io_roundtrip(tmpdir):
+def test_single_io_roundtrip(tmpdir):
 
-    c1 = ConvolvedFluxes(n_models=5)
+    c1 = ConvolvedFluxes()
     c1.model_names = ['a', 'b', 'c', 'd', 'e']
-    c1.apertures = [1.]
+    c1.apertures = None
     c1.flux = [1., 2., 3., 4., 5.]
     c1.error = [0.1, 0.2, 0.3, 0.4, 0.5]
 
@@ -88,11 +126,11 @@ def test_fluxes_single_aperture_io_roundtrip(tmpdir):
     assert c1 == c2
 
 
-def test_fluxes_single_aperture_interpolate(tmpdir):
+def test_single_interpolate(tmpdir):
 
-    c1 = ConvolvedFluxes(n_models=5)
+    c1 = ConvolvedFluxes()
     c1.model_names = ['a', 'b', 'c', 'd', 'e']
-    c1.apertures = [1.]
+    c1.apertures = None
     c1.flux = [1., 2., 3., 4., 5.]
     c1.error = [0.1, 0.2, 0.3, 0.4, 0.5]
 
@@ -111,29 +149,24 @@ def test_fluxes_single_aperture_interpolate(tmpdir):
     assert np.all(c2.error[:, 2] == c1.error[:])
 
 
-def test_fluxes_multiple_apertures():
-    c = ConvolvedFluxes(n_models=3, n_ap=2)
+def test_multiple():
+    c = ConvolvedFluxes()
     c.model_names = ['a', 'b', 'c']
     c.apertures = [1., 2.]
     c.flux = [[1., 2.], [3., 4.], [5., 6.]]
     c.error = [[0.1, 0.2], [0.1, 0.2], [0.1, 0.2]]
 
 
-def test_fluxes_multiple_apertures_invalid_lengths():
+def test_multiple_invalid_lengths():
 
-    c = ConvolvedFluxes(n_models=3, n_ap=2)
+    c = ConvolvedFluxes()
 
-    with pytest.raises(ValueError) as exc:
-        c.apertures = [1.]
-    assert exc.value.args[0] == 'Expected 2 apertures, but got 1'
-
-    with pytest.raises(ValueError) as exc:
-        c.model_names = ['a', 'b']
-    assert exc.value.args[0] == 'Expected 3 model names, but got 2'
+    c.apertures = [1., 2.]
+    c.model_names = ['a', 'b', 'c']
 
     with pytest.raises(ValueError) as exc:
-        c.flux = np.ones((2, 2, 2))
-    assert exc.value.args[0] == 'Expected (3, 2) model fluxes, but got (2, 2, 2)'
+        c.flux = np.ones((5, 2))
+    assert exc.value.args[0] == 'Expected (3, 2) model fluxes, but got (5, 2)'
 
     with pytest.raises(ValueError) as exc:
         c.error = np.ones((3, 3))
@@ -141,17 +174,12 @@ def test_fluxes_multiple_apertures_invalid_lengths():
 
 
 @pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
-def test_fluxes_multiple_apertures_invalid_types(value):
+def test_multiple_invalid_types(value):
 
-    c = ConvolvedFluxes(n_models=3, n_ap=2)
+    c = ConvolvedFluxes()
 
-    with pytest.raises(ValueError) as exc:
-        c.apertures = value
-    assert exc.value.args[0] == 'apertures should be a 1-d sequence'
-
-    with pytest.raises(ValueError) as exc:
-        c.model_names = value
-    assert exc.value.args[0] == 'model_names should be a 2-d array'
+    c.apertures = [1., 2.]
+    c.model_names = ['a', 'b', 'c']
 
     with pytest.raises(ValueError) as exc:
         c.flux = value
@@ -162,9 +190,9 @@ def test_fluxes_multiple_apertures_invalid_types(value):
     assert exc.value.args[0] == 'error should be a 2-d array'
 
 
-def test_fluxes_multiple_apertures_roundtrip():
+def test_multiple_roundtrip(tmpdir):
 
-    c1 = ConvolvedFluxes(n_models=3, n_ap=2)
+    c1 = ConvolvedFluxes()
     c1.model_names = ['a', 'b', 'c']
     c1.apertures = [1., 2.]
     c1.flux = [[1., 2.], [3., 4.], [5., 6.]]
@@ -178,10 +206,10 @@ def test_fluxes_multiple_apertures_roundtrip():
     assert c1 == c2
 
 
-def test_fluxes_multiple_apertures_interpolate():
+def test_multiple_interpolate():
 
-    c1 = ConvolvedFluxes(n_models=3, n_ap=2)
-    c1.model_names = ['a', 'b', 'c']
+    c1 = ConvolvedFluxes()
+    c1.model_names = ['a', 'b']
     c1.apertures = [1., 2., 3.]
     c1.flux = [[1., 2., 3.], [4., 5., 6.]]
     c1.error = [[0.1, 0.2, 0.4], [0.5, 0.3, 0.1]]
@@ -190,10 +218,10 @@ def test_fluxes_multiple_apertures_interpolate():
 
     assert np.all(c1.model_names == c2.model_names)
 
-    assert np.all(c2.apertures == [1.5, 2.5])
+    assert_array_almost_equal_nulp(c2.apertures, [1.5, 2.5], 10)
 
-    assert np.all(c2.flux[:, 0] == np.array([1.5, 4.5]))
-    assert np.all(c2.flux[:, 1] == np.array([2.5, 5.5]))
+    assert_array_almost_equal_nulp(c2.flux[:, 0], np.array([1.5, 4.5]), 10)
+    assert_array_almost_equal_nulp(c2.flux[:, 1], np.array([2.5, 5.5]), 10)
 
-    assert np.all(c2.error[:, 0] == np.array([0.15, 0.4]))
-    assert np.all(c2.error[:, 1] == np.array([0.3, 0.2]))
+    assert_array_almost_equal_nulp(c2.error[:, 0], np.array([0.15, 0.4]), 10)
+    assert_array_almost_equal_nulp(c2.error[:, 1], np.array([0.3, 0.2]), 10)

@@ -41,8 +41,6 @@ class ConvolvedFluxes(object):
             if np.isscalar(value) and np.isreal(value):
                 self._wavelength = value
             else:
-                print(type(value))
-                print(value)
                 raise TypeError("wavelength should be a scalar floating point value")
 
     @property
@@ -97,8 +95,7 @@ class ConvolvedFluxes(object):
                 raise ValueError("model_names has not been set")
             if isinstance(value, (tuple, list)):
                 value = np.array(value)
-            print(self.n_ap)
-            if self.n_ap > 1:
+            if self.n_ap is not None:
                 if not is_numpy_array(value) or value.ndim != 2:
                     raise ValueError("flux should be a 2-d array")
                 if value.shape != (len(self.model_names), len(self.apertures)):
@@ -126,7 +123,7 @@ class ConvolvedFluxes(object):
                 raise ValueError("model_names has not been set")
             if isinstance(value, (tuple, list)):
                 value = np.array(value)
-            if self.n_ap > 1:
+            if self.n_ap is not None:
                 if not is_numpy_array(value) or value.ndim != 2:
                     raise ValueError("error should be a 2-d array")
                 if value.shape != (len(self.model_names), len(self.apertures)):
@@ -147,20 +144,12 @@ class ConvolvedFluxes(object):
 
     @property
     def n_ap(self):
-        if self.model_names is None:
+        if self.apertures is None:
             return None
-        elif self.apertures is None or len(self.apertures) == 1:
-            return 1
         else:
             return len(self.apertures)
 
     def __eq__(self, other):
-        print("HERE")
-        print(self.wavelength, other.wavelength)
-        print(self.model_names, other.model_names)
-        print(self.apertures, other.apertures)
-        print(self.flux, other.flux)
-        print(self.error, other.error)
         return self.wavelength == other.wavelength \
             and np.all(self.model_names == other.model_names) \
             and np.all(self.apertures == other.apertures) \
@@ -249,11 +238,10 @@ class ConvolvedFluxes(object):
         tc.add_column(Column('TOTAL_FLUX', self.flux))
         tc.add_column(Column('TOTAL_FLUX_ERR', self.error))
 
-        if self.n_ap > 1:
+        if self.apertures is not None:
             tc.add_column(Column('RADIUS_SIGMA_50', self.find_radius_sigma(0.50)))
             tc.add_column(Column('RADIUS_CUMUL_99', self.find_radius_cumul(0.99)))
 
-        print(self.apertures)
         if self.apertures is not None:
             ta = Table()
             ta.add_column(Column("APERTURE", self.apertures))
@@ -284,7 +272,7 @@ class ConvolvedFluxes(object):
         c.model_names = self.model_names
 
         # Interpolate to requested apertures
-        if self.n_ap > 1:
+        if self.n_ap is not None:
 
             # If any apertures are larger than the defined max, reset to max
             if np.any(apertures > self.apertures.max()):
@@ -302,8 +290,6 @@ class ConvolvedFluxes(object):
             c.error = error_interp(apertures)
 
         else:
-
-            print(apertures)
 
             c.flux = np.repeat(self.flux, len(apertures)).reshape(c.n_models, len(apertures))
             c.error = np.repeat(self.error, len(apertures)).reshape(c.n_models, len(apertures))

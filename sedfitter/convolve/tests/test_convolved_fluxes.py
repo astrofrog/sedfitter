@@ -5,7 +5,7 @@ from .. import ConvolvedFluxes
 
 
 def test_fluxes_init():
-    c = ConvolvedFluxes()
+    ConvolvedFluxes()
 
 
 def test_fluxes_wavelength():
@@ -34,12 +34,12 @@ def test_fluxes_single_aperture_invalid_lengths():
     c = ConvolvedFluxes(n_models=5)
 
     with pytest.raises(ValueError) as exc:
-        c.model_names = ['a', 'b', 'c', 'd']
-    assert exc.value.args[0] == 'Expected 5 model names, but got 4'
+        c.apertures = [1., 2.]
+    assert exc.value.args[0] == 'Expected 1 apertures, but got 2'
 
     with pytest.raises(ValueError) as exc:
-        c.apertures = [1., 2.]
-    assert exc.value.args[0] == 'Expected 2 apertures, but got 4'
+        c.model_names = ['a', 'b', 'c', 'd']
+    assert exc.value.args[0] == 'Expected 5 model names, but got 4'
 
     with pytest.raises(ValueError) as exc:
         c.flux = [1., 2., 3.]
@@ -50,29 +50,29 @@ def test_fluxes_single_aperture_invalid_lengths():
     assert exc.value.args[0] == 'Expected 5 model flux errors, but got 6'
 
 
-@pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2,2))]
-def test_fluxes_single_aperture_invalid_types():
+@pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
+def test_fluxes_single_aperture_invalid_types(value):
 
     c = ConvolvedFluxes(n_models=5)
 
     with pytest.raises(ValueError) as exc:
-        c.model_names = ['a', 'b', 'c', 'd']
-    assert exc.value.args[0] == 'Expected 5 model names, but got 4'
+        c.apertures = value
+    assert exc.value.args[0] == 'apertures should be a 1-d sequence'
 
     with pytest.raises(ValueError) as exc:
-        c.apertures = [1., 2.]
-    assert exc.value.args[0] == 'Expected 2 apertures, but got 4'
+        c.model_names = value
+    assert exc.value.args[0] == 'model_names should be a 1-d sequence'
 
     with pytest.raises(ValueError) as exc:
-        c.flux = [1., 2., 3.]
-    assert exc.value.args[0] == 'Expected 5 model fluxes, but got 3'
+        c.flux = value
+    assert exc.value.args[0] == 'flux should be a 1-d sequence'
 
     with pytest.raises(ValueError) as exc:
-        c.error = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    assert exc.value.args[0] == 'Expected 5 model flux errors, but got 6'
+        c.error = value
+    assert exc.value.args[0] == 'error should be a 1-d sequence'
 
 
-def test_fluxes_single_aperture_roundtrip(tmpdir):
+def test_fluxes_single_aperture_io_roundtrip(tmpdir):
 
     c1 = ConvolvedFluxes(n_models=5)
     c1.model_names = ['a', 'b', 'c', 'd', 'e']
@@ -85,7 +85,7 @@ def test_fluxes_single_aperture_roundtrip(tmpdir):
     c1.write(filename)
     c2 = ConvolvedFluxes.read(filename)
 
-    assert c == c2
+    assert c1 == c2
 
 
 def test_fluxes_single_aperture_interpolate(tmpdir):
@@ -119,17 +119,17 @@ def test_fluxes_multiple_apertures():
     c.error = [[0.1, 0.2], [0.1, 0.2], [0.1, 0.2]]
 
 
-def test_fluxes_multiple_apertures_invalid():
+def test_fluxes_multiple_apertures_invalid_lengths():
 
     c = ConvolvedFluxes(n_models=3, n_ap=2)
 
     with pytest.raises(ValueError) as exc:
-        c.model_names = ['a', 'b']
-    assert exc.value.args[0] == 'Expected 3 model names, but got 2'
-
-    with pytest.raises(ValueError) as exc:
         c.apertures = [1.]
     assert exc.value.args[0] == 'Expected 2 apertures, but got 1'
+
+    with pytest.raises(ValueError) as exc:
+        c.model_names = ['a', 'b']
+    assert exc.value.args[0] == 'Expected 3 model names, but got 2'
 
     with pytest.raises(ValueError) as exc:
         c.flux = np.ones((2, 2, 2))
@@ -138,6 +138,28 @@ def test_fluxes_multiple_apertures_invalid():
     with pytest.raises(ValueError) as exc:
         c.error = np.ones((3, 3))
     assert exc.value.args[0] == 'Expected (3, 2) model flux errors, but got (3, 3)'
+
+
+@pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
+def test_fluxes_multiple_apertures_invalid_types(value):
+
+    c = ConvolvedFluxes(n_models=3, n_ap=2)
+
+    with pytest.raises(ValueError) as exc:
+        c.apertures = value
+    assert exc.value.args[0] == 'apertures should be a 1-d sequence'
+
+    with pytest.raises(ValueError) as exc:
+        c.model_names = value
+    assert exc.value.args[0] == 'model_names should be a 2-d array'
+
+    with pytest.raises(ValueError) as exc:
+        c.flux = value
+    assert exc.value.args[0] == 'flux should be a 2-d array'
+
+    with pytest.raises(ValueError) as exc:
+        c.error = value
+    assert exc.value.args[0] == 'error should be a 2-d array'
 
 
 def test_fluxes_multiple_apertures_roundtrip():
@@ -153,7 +175,7 @@ def test_fluxes_multiple_apertures_roundtrip():
     c1.write(filename)
     c2 = ConvolvedFluxes.read(filename)
 
-    assert c == c2
+    assert c1 == c2
 
 
 def test_fluxes_multiple_apertures_interpolate():

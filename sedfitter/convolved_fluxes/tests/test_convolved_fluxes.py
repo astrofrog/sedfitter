@@ -37,7 +37,7 @@ def test_aperture_invalid_type(value):
 
     c = ConvolvedFluxes()
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(TypeError) as exc:
         c.apertures = value
     assert exc.value.args[0] == 'apertures should be a 1-d sequence'
 
@@ -52,7 +52,7 @@ def test_model_name_invalid_type(value):
 
     c = ConvolvedFluxes()
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(TypeError) as exc:
         c.model_names = value
     assert exc.value.args[0] == 'model_names should be a 1-d sequence'
 
@@ -101,11 +101,11 @@ def test_single_invalid_types(value):
     c.apertures = None
     c.model_names = ['a', 'b', 'c', 'd']
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(TypeError) as exc:
         c.flux = value
     assert exc.value.args[0] == 'flux should be a 1-d sequence'
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(TypeError) as exc:
         c.error = value
     assert exc.value.args[0] == 'error should be a 1-d sequence'
 
@@ -181,11 +181,11 @@ def test_multiple_invalid_types(value):
     c.apertures = [1., 2.]
     c.model_names = ['a', 'b', 'c']
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(TypeError) as exc:
         c.flux = value
     assert exc.value.args[0] == 'flux should be a 2-d array'
 
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(TypeError) as exc:
         c.error = value
     assert exc.value.args[0] == 'error should be a 2-d array'
 

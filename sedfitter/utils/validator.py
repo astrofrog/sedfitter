@@ -32,9 +32,9 @@ def validate_array(name, value, domain=None, ndim=1, shape=None):
     # Check the value is an array with the right number of dimensions 
     if not isinstance(value, np.ndarray) or value.ndim != ndim:
         if ndim == 1:
-            raise ValueError("{0} should be a 1-d sequence".format(name))
+            raise TypeError("{0} should be a 1-d sequence".format(name))
         else:
-            raise ValueError("{0} should be a {1:d}-d array".format(name, ndim))
+            raise TypeError("{0} should be a {1:d}-d array".format(name, ndim))
 
     # Check that the shape matches that expected
     if shape is not None and value.shape != shape:

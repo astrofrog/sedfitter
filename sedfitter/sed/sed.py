@@ -3,15 +3,15 @@ from __future__ import print_function, division
 import os
 
 import numpy as np
-from astropy.io import fits
 from astropy import log
-
+from astropy.io import fits
 from scipy.interpolate import interp1d
 
 from ..utils.validator import validate_array
 
 C = 299792458
 KPC = 3.086e21
+
 
 class SED(object):
 
@@ -235,26 +235,26 @@ class SED(object):
         # Convert flux to ergs/cm^2/s
         if curr_unit_flux == 'ergs/s':
             flux_cgs = flux / sed.distance ** 2.
-            err_cgs = err / sed.distance ** 2.
+            error_cgs = err / sed.distance ** 2.
         elif curr_unit_flux == 'mjy':
             flux_cgs = flux * C / (wav_microns * 1.e-6) * 1.e-26
-            err_cgs = err * C / (wav_microns * 1.e-6) * 1.e-26
+            error_cgs = err * C / (wav_microns * 1.e-6) * 1.e-26
         elif curr_unit_flux == 'ergs/cm^2/s':
             flux_cgs = flux
-            err_cgs = err
+            error_cgs = err
         else:
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
         # Convert flux from ergs/cm^2/s to requested units
         if unit_flux == 'ergs/s':
             sed.flux = flux_cgs * sed.distance ** 2.
-            sed.error = err_cgs * sed.distance ** 2.
+            sed.error = error_cgs * sed.distance ** 2.
         elif unit_flux == 'mjy':
             sed.flux = flux_cgs / C * (wav_microns * 1.e-6) / 1.e-26
-            sed.error = err_cgs / C * (wav_microns * 1.e-6) / 1.e-26
+            sed.error = error_cgs / C * (wav_microns * 1.e-6) / 1.e-26
         elif unit_flux == 'ergs/cm^2/s':
             sed.flux = flux_cgs
-            sed.error = err_cgs
+            sed.error = error_cgs
         else:
             raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
 
@@ -273,6 +273,7 @@ class SED(object):
         Interpolate the SED to different apertures
         '''
 
+        # If there is only one aperture, we can't interpolate, we can only repeat
         if self.n_ap == 1:
             return np.repeat(self.flux[0, :], len(apertures)).reshape(self.n_wav, len(apertures))
 

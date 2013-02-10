@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d
 
 from astropy.logger import log
 from astropy.utils.misc import isiterable
+from ..utils.validator import validate_scalar, validate_array
 
 # TODO: get rid of use of interp1d
 
@@ -36,12 +37,9 @@ class ConvolvedFluxes(object):
     @wavelength.setter
     def wavelength(self, value):
         if value is None:
-            self._wavelength = value
+            self._wavelength = None
         else:
-            if np.isscalar(value) and np.isreal(value):
-                self._wavelength = value
-            else:
-                raise TypeError("wavelength should be a scalar floating point value")
+            self._wavelength = validate_scalar('wavelength', value, domain='positive')
 
     @property
     def model_names(self):
@@ -55,11 +53,7 @@ class ConvolvedFluxes(object):
         if value is None:
             self._model_names = value
         else:
-            if isinstance(value, (tuple, list)):
-                value = np.array(value)
-            if not is_numpy_array(value) or value.ndim != 1:
-                raise ValueError("model_names should be a 1-d sequence")
-            self._model_names = value
+            self._model_names = validate_array('model_names', value, ndim=1)
 
     @property
     def apertures(self):
@@ -73,11 +67,7 @@ class ConvolvedFluxes(object):
         if value is None:
             self._apertures = value
         else:
-            if isinstance(value, (tuple, list)):
-                value = np.array(value)
-            if not is_numpy_array(value) or value.ndim != 1:
-                raise ValueError("apertures should be None or a 1-d sequence")
-            self._apertures = value
+            self._apertures = validate_array('apertures', value, ndim=1)
 
     @property
     def flux(self):
@@ -91,21 +81,14 @@ class ConvolvedFluxes(object):
         if value is None:
             self._flux = value
         else:
+
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
-            if isinstance(value, (tuple, list)):
-                value = np.array(value)
+
             if self.n_ap is not None:
-                if not is_numpy_array(value) or value.ndim != 2:
-                    raise ValueError("flux should be a 2-d array")
-                if value.shape != (len(self.model_names), len(self.apertures)):
-                    raise ValueError('Expected {expected} model fluxes, but got {found}'.format(expected=(len(self.model_names), len(self.apertures)), found=value.shape))
+                self._flux = validate_array('flux', value, ndim=2, shape=(self.n_models, self.n_ap))
             else:
-                if not is_numpy_array(value) or value.ndim != 1:
-                    raise ValueError("flux should be a 1-d sequence")
-                if len(value) != len(self.model_names):
-                    raise ValueError('Expected {expected} model fluxes, but got {found}'.format(expected=len(self.model_names), found=len(value)))
-            self._flux = value
+                self._flux = validate_array('flux', value, ndim=1, shape=(self.n_models, ))
 
     @property
     def error(self):
@@ -119,21 +102,15 @@ class ConvolvedFluxes(object):
         if value is None:
             self._error = value
         else:
+
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
-            if isinstance(value, (tuple, list)):
-                value = np.array(value)
+
             if self.n_ap is not None:
-                if not is_numpy_array(value) or value.ndim != 2:
-                    raise ValueError("error should be a 2-d array")
-                if value.shape != (len(self.model_names), len(self.apertures)):
-                    raise ValueError('Expected {expected} model flux errors, but got {found}'.format(expected=(len(self.model_names), len(self.apertures)), found=value.shape))
+                self._error = validate_array('error', value, ndim=2, shape=(self.n_models, self.n_ap))
             else:
-                if not is_numpy_array(value) or value.ndim != 1:
-                    raise ValueError("error should be a 1-d sequence")
-                if len(value) != len(self.model_names):
-                    raise ValueError('Expected {expected} model flux errors, but got {found}'.format(expected=len(self.model_names), found=len(value)))
-            self._error = value
+                self._error = validate_array('error', value, ndim=1, shape=(self.n_models, ))
+
 
     @property
     def n_models(self):

@@ -39,7 +39,7 @@ def test_aperture_invalid_type(value):
 
     with pytest.raises(ValueError) as exc:
         c.apertures = value
-    assert exc.value.args[0] == 'apertures should be None or a 1-d sequence'
+    assert exc.value.args[0] == 'apertures should be a 1-d sequence'
 
 
 def test_model_name_list():
@@ -86,11 +86,11 @@ def test_single_invalid_lengths():
 
     with pytest.raises(ValueError) as exc:
         c.flux = [1., 2., 3.]
-    assert exc.value.args[0] == 'Expected 4 model fluxes, but got 3'
+    assert exc.value.args[0] == 'flux has incorrect length (expected 4 but found 3)'
 
     with pytest.raises(ValueError) as exc:
         c.error = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    assert exc.value.args[0] == 'Expected 4 model flux errors, but got 6'
+    assert exc.value.args[0] == 'error has incorrect length (expected 4 but found 6)'
 
 
 @pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
@@ -166,11 +166,11 @@ def test_multiple_invalid_lengths():
 
     with pytest.raises(ValueError) as exc:
         c.flux = np.ones((5, 2))
-    assert exc.value.args[0] == 'Expected (3, 2) model fluxes, but got (5, 2)'
+    assert exc.value.args[0] == 'flux has incorrect shape (expected (3, 2) but found (5, 2))'
 
     with pytest.raises(ValueError) as exc:
         c.error = np.ones((3, 3))
-    assert exc.value.args[0] == 'Expected (3, 2) model flux errors, but got (3, 3)'
+    assert exc.value.args[0] == 'error has incorrect shape (expected (3, 2) but found (3, 3))'
 
 
 @pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])

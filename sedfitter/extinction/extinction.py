@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 
 import numpy as np
-
+from ..utils.validator import validate_array
 
 class Extinction(object):
 
@@ -15,17 +15,10 @@ class Extinction(object):
 
     @wav.setter
     def wav(self, value):
-        if type(value) in [list, tuple]:
-            value = np.array(value)
         if value is None:
-            self._wav = value
-        elif isinstance(value, np.ndarray) and value.ndim == 1:
-            if self.chi is not None and len(value) != len(self.chi):
-                raise ValueError("wav has incorrect length (expected {0} but found {1})".format(len(self.chi), len(value)))
-            else:
-                self._wav = value
+            self._wav = None
         else:
-            raise TypeError("wav should be a 1-d sequence")
+            self._wav = validate_array('wav', value, ndim=1, shape=None if self.chi is None else self.chi.shape)
 
     @property
     def chi(self):
@@ -33,17 +26,10 @@ class Extinction(object):
 
     @chi.setter
     def chi(self, value):
-        if type(value) in [list, tuple]:
-            value = np.array(value)
         if value is None:
-            self._chi = value
-        elif isinstance(value, np.ndarray) and value.ndim == 1:
-            if self.wav is not None and len(value) != len(self.wav):
-                raise ValueError("chi has incorrect length (expected {0} but found {1})".format(len(self.wav), len(value)))
-            else:
-                self._chi = value
+            self._chi = None
         else:
-            raise TypeError("chi should be a 1-d sequence")
+            self._chi = validate_array('chi', value, ndim=1, shape=None if self.wav is None else self.wav.shape)
 
     @classmethod
     def from_file(self, filename, columns=[0, 1]):

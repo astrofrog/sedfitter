@@ -22,6 +22,8 @@ def validate_scalar(name, value, domain=None):
         if value < domain[0] or value > domain[-1]:
             raise ValueError("{0} should be in the range [{1}:{2}]".format(name, domain[0], domain[-1]))
 
+    return value
+
 
 def validate_array(name, value, domain=None, ndim=1, shape=None):
     

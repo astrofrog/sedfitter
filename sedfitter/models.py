@@ -11,7 +11,7 @@ from .utils import parfile
 
 class Models(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
 
         self.names = None
         self.fluxes = None
@@ -19,11 +19,6 @@ class Models(object):
         self.apertures = None
         self.logd = None
         self.extended = []
-
-        if args:
-            self.read(*args, **kwargs)
-
-        return
 
     @classmethod
     def read(cls, directory, filters, distance_range=None, remove_resolved=False):
@@ -76,8 +71,7 @@ class Models(object):
 
             print("   Reading " + filename)
 
-            conv = ConvolvedFluxes()
-            conv.read(filename)
+            conv = ConvolvedFluxes.read(filename)
 
             m.wavelengths.append(conv.wavelength)
 
@@ -112,13 +106,17 @@ class Models(object):
         m.fluxes[~m.valid] = -np.inf
         m.fluxes[m.valid] = np.log10(m.fluxes[m.valid])
 
+        return m
+
     def fit(self, source, av_law, sc_law, av_min, av_max):
+
+        weight, log_flux, log_error = source.get_log_fluxes()
 
         if self.fluxes.ndim == 2:  # Aperture-independent fitting
 
             # Use 2-parameter linear regression to find the best-fit av and scale for each model
-            residual = source.logflux - self.fluxes
-            av_best, sc_best = f.linear_regression(residual, source.weight, av_law, sc_law)
+            residual = log_flux - self.fluxes
+            av_best, sc_best = f.linear_regression(residual, weight, av_law, sc_law)
 
             # Use optimal scaling for Avs that are outside range
             reset1 = (av_best < av_min)
@@ -126,13 +124,13 @@ class Models(object):
             av_best[reset1] = av_min
             av_best[reset2] = av_max
             reset = reset1 | reset2
-            sc_best[reset] = f.optimal_scaling(residual[reset] - av_best[reset][:, np.newaxis] * av_law[np.newaxis, :], source.weight, sc_law)
+            sc_best[reset] = f.optimal_scaling(residual[reset] - av_best[reset][:, np.newaxis] * av_law[np.newaxis, :], weight, sc_law)
 
             # Compute best-fit model in each case
             model = av_best[:, np.newaxis] * av_law[np.newaxis, :] + sc_best[:, np.newaxis] * sc_law[np.newaxis, :]
 
             # Calculate the chi-squared value
-            ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
+            ch_best = f.chi_squared(source.valid, residual, log_error, weight, model)
 
             # Extract convolved model fluxes for best-fit
             model_fluxes = model + self.fluxes
@@ -140,8 +138,8 @@ class Models(object):
         elif self.fluxes.ndim == 3:  # Aperture dependent fitting
 
             # Use optimal scaling to fit the Av
-            residual = source.logflux - self.fluxes
-            av_best = f.optimal_scaling(residual, source.weight, av_law)
+            residual = log_flux - self.fluxes
+            av_best = f.optimal_scaling(residual, weight, av_law)
 
             # Reset to valid range
             av_best[av_best < av_min] = av_min
@@ -151,7 +149,7 @@ class Models(object):
             model = av_best[:, :, np.newaxis] * av_law[np.newaxis, np.newaxis, :]
 
             # Calculate the chi-squared value
-            ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
+            ch_best = f.chi_squared(source.valid, residual, log_error, weight, model)
 
             # Remove extended objects
             if type(self.extended) == np.ndarray:

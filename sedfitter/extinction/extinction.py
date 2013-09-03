@@ -1,7 +1,13 @@
 from __future__ import print_function, division
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 import numpy as np
 from ..utils.validator import validate_array
+
 
 class Extinction(object):
 
@@ -32,13 +38,17 @@ class Extinction(object):
             self._chi = validate_array('chi', value, ndim=1, shape=None if self.wav is None else self.wav.shape)
 
     @classmethod
-    def from_file(self, filename, columns=[0, 1]):
+    def from_file(cls, filename, columns=[0, 1]):
+
+        e = cls()
 
         f = np.loadtxt(filename, dtype=[('wav', float), ('chi', float)],
                        usecols=columns)
 
-        self.wav = f['wav']
-        self.chi = f['chi']
+        e.wav = f['wav']
+        e.chi = f['chi']
+
+        return e
 
     def get_av(self, wav):
         '''
@@ -63,3 +73,14 @@ class Extinction(object):
         t.add_column(Column('wav', self.wav, units=u.micron))
         t.add_column(Column('chi', self.chi, units=u.cm ** 2 / u.g))
         return t
+
+    def __getstate__(self):
+        return {
+                'wav': self.wav,
+                'chi': self.chi,
+                }
+
+    def __setstate__(self, d):
+        self.__init__()
+        self.wav = d['wav']
+        self.chi = d['chi']

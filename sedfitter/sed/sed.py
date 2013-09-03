@@ -50,6 +50,7 @@ class SED(object):
         sed = self.copy()
         sed.flux *= 10. ** (av * law(sed.wav))
         sed.error *= 10. ** (av * law(sed.wav))
+        return sed
 
     @property
     def wav(self):
@@ -182,7 +183,7 @@ class SED(object):
             sed.distance = hdulist[0].header['DISTANCE']
         else:
             log.debug("No distance found in SED file, assuming 1kpc")
-            sed.distance = 3.086e21  # cm (=1kpc)
+            sed.distance = KPC  # cm (=1kpc)
 
         # Extract SED values
         wav = hdulist[1].data.field('WAVELENGTH')
@@ -278,13 +279,13 @@ class SED(object):
             return np.repeat(self.flux[0, :], len(apertures)).reshape(self.n_wav, len(apertures))
 
         # Create interpolating function
-        flux_interp = interp1d(self.ap, self.flux.swapaxes(0, 1))
+        flux_interp = interp1d(self.apertures, self.flux.swapaxes(0, 1))
 
         # If any apertures are larger than the defined max, reset to max
-        apertures[apertures > self.ap.max()] = self.ap.max()
+        apertures[apertures > self.apertures.max()] = self.apertures.max()
 
         # If any apertures are smaller than the defined min, raise Exception
-        if np.any(apertures < self.ap.min()):
+        if np.any(apertures < self.apertures.min()):
             raise Exception("Aperture(s) requested too small")
 
         return flux_interp(apertures)
@@ -297,10 +298,10 @@ class SED(object):
         '''
 
         # If any apertures are larger than the defined max, reset to max
-        apertures[apertures > self.ap.max()] = self.ap.max() * 0.999
+        apertures[apertures > self.apertures.max()] = self.apertures.max() * 0.999
 
         # If any apertures are smaller than the defined min, raise Exception
-        if np.any(apertures < self.ap.min()):
+        if np.any(apertures < self.apertures.min()):
             raise Exception("Aperture(s) requested too small")
 
         if self.n_ap == 1:
@@ -313,7 +314,7 @@ class SED(object):
         log10_ap_interp = interp1d(np.log10(wavelengths[order]), np.log10(apertures[order]), bounds_error=False, fill_value=np.nan)
 
         # Create interpolating function
-        flux_interp = interp1d(self.ap, self.flux.swapaxes(0, 1))
+        flux_interp = interp1d(self.apertures, self.flux.swapaxes(0, 1))
 
         # Interpolate the apertures
         apertures = 10. ** log10_ap_interp(np.log10(self.wav))

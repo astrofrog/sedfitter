@@ -31,6 +31,25 @@ class Source(object):
         self.flux = None
         self.error = None
 
+    def __getstate__(self):
+        return {
+                'name': self.name,
+                'x': self.x,
+                'y': self.y,
+                'valid':self.valid,
+                'flux':self.flux,
+                'error':self.error
+                }
+
+    def __setstate__(self, d):
+        self.__init__()
+        self.name = d['name']
+        self.x = d['x']
+        self.y = d['y']
+        self.valid = d['valid']
+        self.flux = d['flux']
+        self.error = d['error']
+
     @property
     def name(self):
         return self._name
@@ -194,6 +213,10 @@ class Source(object):
         s = cls()
 
         cols = line.split()
+
+        if len(cols) < 3:
+            raise EOFError()
+
         s.name = cols[0]
         s.x = np.float64(cols[1])
         s.y = np.float64(cols[2])

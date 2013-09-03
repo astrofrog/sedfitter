@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 try:
     import cPickle as pickle
-except:
+except ImportError:
     import pickle
 import string
 
@@ -19,13 +19,12 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     if input[-8:] != '.fitinfo':
         raise Exception("Extension of input file should be .fitinfo")
 
-    fin = file(input, 'rb')
+    fin = open(input, 'rb')
 
     # Read in header of output file
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
-    extinction_law = Extinction()
-    extinction_law.read_binary(fin)
+    extinction_law = pickle.load(fin)
 
     # Read in parameters file
     tpar = atpy.Table(model_dir + '/parameters.fits.gz')
@@ -46,14 +45,12 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     if parameters == 'all':
         parameters = tpar.names
 
-    info = FitInfo()
-
     while True:
 
         # Read in next fit
         try:
-            info.read_binary(fin)
-        except:
+            info = pickle.load(fin)
+        except EOFError:
             break
 
         # Filter fits
@@ -66,7 +63,7 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
         if output_suffix:
             output += output_suffix
 
-        fout = file(output, 'wb')
+        fout = open(output, 'wb')
 
         if header:
             fout.write("%11s %11s %11s " % ("CHI2", "AV", "SC"))

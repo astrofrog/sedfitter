@@ -181,7 +181,7 @@ class SED(object):
         if 'DISTANCE' in hdulist[0].header:
             sed.distance = hdulist[0].header['DISTANCE']
         else:
-            log.info("No distance found in SED file, assuming 1kpc")
+            log.debug("No distance found in SED file, assuming 1kpc")
             sed.distance = 3.086e21  # cm (=1kpc)
 
         # Extract SED values

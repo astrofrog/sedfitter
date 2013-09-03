@@ -1,0 +1,8 @@
+# Here are some parameters
+hello, world! = a
+
+# Bad formatting should not affect things
+1 = b
+2.3   = c
+1 + 2   =d
+

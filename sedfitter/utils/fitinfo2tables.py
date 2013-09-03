@@ -1,6 +1,9 @@
 from __future__ import print_function, division
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from atpy import Table, TableSet
 
@@ -16,21 +19,17 @@ def fitinfo2tables(file_in):
     # Read in header of input file
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
-    extinction = Extinction()
-    extinction.read_binary(fin)
+    extinction = pickle.load(fin)
 
     # Intialize TableSet
     ts = TableSet()
-
-    # Create FitInfo parser
-    info = FitInfo()
 
     while True:
 
         # Read in next fit
         try:
-            info.read_binary(fin)
-        except:
+            info = pickle.load(fin)
+        except EOFError:
             break
 
         # Create Table

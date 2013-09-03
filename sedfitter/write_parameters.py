@@ -1,7 +1,10 @@
 from __future__ import print_function, division
 
 import os
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 import atpy
 import numpy as np
@@ -13,14 +16,13 @@ from .extinction import Extinction
 def write_parameters(input_file, output_file, select_format=("N", 1), additional={}):
 
     # Open input and output file
-    fin = file(input_file, 'rb')
-    fout = file(output_file, 'wb')
+    fin = open(input_file, 'rb')
+    fout = open(output_file, 'wb')
 
     # Read in header of output file
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
-    extinction = Extinction()
-    extinction.read_binary(fin)
+    extinction = pickle.load(fin)
 
     if os.path.exists(model_dir + '/parameters.fits'):
         t = atpy.Table(model_dir + '/parameters.fits')
@@ -31,8 +33,6 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
 
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
-
-    info = FitInfo()
 
     # First header line
     fout.write("source_name".center(30) + ' ')
@@ -63,8 +63,8 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
 
         # Read in next fit
         try:
-            info.read_binary(fin)
-        except:
+            info = pickle.load(fin)
+        except EOFError:
             break
 
         # Filter fits

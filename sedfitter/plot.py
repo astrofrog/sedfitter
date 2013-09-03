@@ -18,7 +18,10 @@ from __future__ import print_function, division
 # Optimization:
 # - Compute interpolating functions as little as possible
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 import numpy as np
 
@@ -31,7 +34,9 @@ from .extinction import Extinction
 from .fit_info import FitInfo
 from .sed import SED
 from . import util
-from . import parfile
+from .utils import parfile
+
+KPC = 3.086e21
 
 plt.rc('text', usetex=True)
 plt.rc('axes', titlesize='small')
@@ -109,11 +114,13 @@ def plot_source_info(ax, i, info, plot_name, plot_info):
 
 def plot_source_data(ax, source, filters, size=20, capsize=3):
 
+    weight, log_flux, log_error = source.get_log_fluxes()
+
     wav = np.array([f['wav'] for f in filters])
     plot_wav = wav
-    plot_flux = source.logflux - 26. + np.log10(3.e8 / (wav * 1.e-6))
-    plot_flux_up = 10. ** (plot_flux + source.logerror)
-    plot_flux_down = 10. ** (plot_flux - source.logerror)
+    plot_flux = log_flux - 26. + np.log10(3.e8 / (wav * 1.e-6))
+    plot_flux_up = 10. ** (plot_flux + log_error)
+    plot_flux_down = 10. ** (plot_flux - log_error)
     plot_flux = 10. ** plot_flux
     plot_error = np.vstack([plot_flux - plot_flux_down, plot_flux_up - plot_flux])
 
@@ -228,12 +235,11 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
     else:
         figures = {}
 
-    fin = file(input_file, 'rb')
+    fin = open(input_file, 'rb')
 
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
-    extinction = Extinction()
-    extinction.read_binary(fin)
+    extinction = pickle.load(fin)
 
     wav = np.array([f['wav'] for f in filters])
     ap = np.array([f['aperture_arcsec'] for f in filters])
@@ -244,14 +250,12 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
     # Read in model parameters
     modpar = parfile.read("%s/models.conf" % model_dir, 'conf')
 
-    info = FitInfo()
-
     while True:
 
         # Read in next fit
         try:
-            info.read_binary(fin)
-        except:
+            info = pickle.load(fin)
+        except EOFError:
             break
 
         # Filter fits
@@ -287,14 +291,13 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
                 else:
                     color_type = 'faded'
 
-            s = SED()
             if modpar['length_subdir'] == 0:
-                s.read(model_dir + '/seds/' + info.model_name[i] + '_sed.fits')
+                s = SED.read(model_dir + '/seds/' + info.model_name[i] + '_sed.fits')
             else:
-                s.read(model_dir + '/seds/%s/%s_sed.fits' % (info.model_name[i][:modpar['length_subdir']], info.model_name[i]))
+                s = SED.read(model_dir + '/seds/%s/%s_sed.fits' % (info.model_name[i][:modpar['length_subdir']], info.model_name[i]))
 
-            s.scale_to_distance(10. ** info.sc[i])
-            s.scale_to_av(info.av[i], extinction.av)
+            s = s.scale_to_distance(10. ** info.sc[i] * KPC)
+            s = s.scale_to_av(info.av[i], extinction.get_av)
 
             if sed_type == 'interp':
                 apertures = ap * 10. ** info.sc[i] * 1000.

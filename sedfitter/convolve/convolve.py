@@ -3,12 +3,13 @@ from __future__ import print_function, division
 import os
 import glob
 
-import pyfits
 import numpy as np
 
-from .convolved_fluxes import ConvolvedFluxes
+from astropy.io import fits
+from astropy.logger import log
+
+from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
-from ..logger import log
 
 
 def convolve_model_dir(model_dir, filters, overwrite=False):
@@ -45,14 +46,13 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         log.info("{0} SEDs found in {1}".format(len(sed_files), model_dir))
 
     # Find out number of apertures
-    n_ap = pyfits.getheader(sed_files[0], memmap=False)['NAP']
+    n_ap = fits.getheader(sed_files[0], memmap=False)['NAP']
 
     # Find out apertures
-    apertures = pyfits.open(sed_files[0], memmap=False)[2].data['APERTURE']
+    apertures = fits.open(sed_files[0], memmap=False)[2].data['APERTURE']
 
     # Set up convolved fluxes
-    fluxes = [ConvolvedFluxes(n_models=len(sed_files), n_ap=n_ap)
-              for i in range(len(filters))]
+    fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='S30'), apertures=apertures) for i in range(len(filters))]
 
     # Set up list of binned filters
     binned_filters = []

@@ -1,14 +1,67 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup, Command
 
-scripts = ['sed_fit', 'sed_plot', 'sed_filter_output', 'sed_fitinfo2data', 'sed_fitinfo2ascii']
+from distutils.command.build_py import build_py
+
+class SEDFitterTest(Command):
+
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+
+        import os
+        import shutil
+        import tempfile
+
+        # First ensure that we build the package so that 2to3 gets executed
+        self.reinitialize_command('build', inplace=False)
+        self.run_command('build')
+        build_cmd = self.get_finalized_command('build')
+        new_path = os.path.abspath(build_cmd.build_lib)
+
+        # Copy the build to a temporary directory for the purposes of testing
+        # - this avoids creating pyc and __pycache__ directories inside the
+        # build directory
+        tmp_dir = tempfile.mkdtemp(prefix='sedfitter-test-')
+        testing_path = os.path.join(tmp_dir, os.path.basename(new_path))
+        shutil.copytree(new_path, testing_path)
+
+        import sys
+        import subprocess
+
+        errno = subprocess.call([sys.executable, os.path.abspath('runtests.py')], cwd=testing_path)
+        raise SystemExit(errno)
 
 setup(name='sedfitter',
-      version='0.1.1',
-      description='SED Fitter in python',
+      version='0.1.2.dev',
+      description='SED Fitter in Python',
       author='Thomas Robitaille',
-      author_email='trobitaille@cfa.harvard.edu',
-      packages=['sedfitter', 'sedfitter.convolve', 'sedfitter.filter', 'sedfitter.sed', 'sedfitter.source', 'sedfitter.utils'],
-      scripts=['scripts/' + x for x in scripts]
+      author_email='thomas.robitaille@gmail.com',
+      packages=['sedfitter',
+                'sedfitter.convolve',
+                'sedfitter.convolved_fluxes',
+                'sedfitter.convolved_fluxes.tests',
+                'sedfitter.extinction',
+                'sedfitter.extinction.tests',
+                'sedfitter.filter',
+                'sedfitter.sed',
+                'sedfitter.sed.tests',
+                'sedfitter.source',
+                'sedfitter.source.tests',
+                'sedfitter.utils',
+                'sedfitter.utils.tests'],
+      package_data={'sedfitter.sed.tests':['data/*.fits.gz'],
+                    'sedfitter.utils.tests':['data/*.conf', 'data/*.par']},
+      provides=['sedfitter'],
+      requires=['numpy', 'astropy', 'atpy', 'scipy', 'matplotlib'],
+      cmdclass={'build_py': build_py, 'test':SEDFitterTest},
+      keywords=['Scientific/Engineering'],
      )
+

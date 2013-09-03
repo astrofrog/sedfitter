@@ -1,6 +1,9 @@
 from __future__ import print_function, division
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 import numpy as np
 
@@ -61,33 +64,23 @@ class FitInfo(object):
         else:
             raise AttributeError(attribute)
 
-    def write_binary(self, file_handle):
-        self.source.write_binary(file_handle)
-        pickle.dump(self.n_fits, file_handle, 2)
-        file_handle.write(self.av.astype(np.float32).tostring())
-        file_handle.write(self.sc.astype(np.float32).tostring())
-        file_handle.write(self.chi2.astype(np.float32).tostring())
-        file_handle.write(self.model_id.astype(np.int32).tostring())
-        pickle.dump(self.model_name.itemsize, file_handle, 2)
-        file_handle.write(self.model_name.tostring())
-        if self.model_fluxes is not None:
-            pickle.dump(True, file_handle, 2)
-            file_handle.write(self.model_fluxes.astype(np.float32).tostring())
-        else:
-            pickle.dump(False, file_handle, 2)
+    def __getstate__(self):
+        return {
+            'source': self.source,
+            'av': self.av,
+            'sc': self.sc,
+            'chi2': self.chi2,
+            'model_id': self.model_id,
+            'model_name': self.model_name,
+            'model_fluxes': self.model_fluxes,
+        }
 
-    def read_binary(self, file_handle):
-        self.source = Source()
-        self.source.read_binary(file_handle)
-        n_fits = pickle.load(file_handle)
-        self.av = np.fromstring(file_handle.read(n_fits * 4), dtype=np.float32)
-        self.sc = np.fromstring(file_handle.read(n_fits * 4), dtype=np.float32)
-        self.chi2 = np.fromstring(file_handle.read(n_fits * 4), dtype=np.float32)
-        self.model_id = np.fromstring(file_handle.read(n_fits * 4), dtype=np.int32)
-        itemsize = pickle.load(file_handle)
-        self.model_name = np.fromstring(file_handle.read(n_fits * itemsize), dtype='|S%i' % itemsize)
-        model_fluxes_present = pickle.load(file_handle)
-        if model_fluxes_present:
-            self.model_fluxes = np.fromstring(file_handle.read(n_fits * 4 * self.source.n_wav), dtype=np.float32).reshape(n_fits, self.source.n_wav)
-        else:
-            self.model_fluxes = None
+    def __setstate__(self, d):
+        self.__init__()
+        self.source = d['source']
+        self.av = d['av']
+        self.sc = d['sc']
+        self.chi2 = d['chi2']
+        self.model_id = d['model_id']
+        self.model_name = d['model_name']
+        self.model_fluxes = d['model_fluxes']

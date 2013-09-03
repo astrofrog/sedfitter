@@ -6,7 +6,10 @@ from __future__ import print_function, division
 # - Optional FITS input/output
 # - Output convolved fluxes
 
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 import numpy as np
 
@@ -16,6 +19,7 @@ from .models import Models
 from .fit_info import FitInfo
 from .source import Source
 from . import util
+from . import six
 
 
 def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
@@ -82,8 +86,8 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print("")
 
     # Open datafile
-    if isinstance(data, basestring):
-        data_file = file(data, 'rb')
+    if isinstance(data, six.string_types):
+        data_file = open(data, 'r')
     else:
         data_file = data
 
@@ -93,7 +97,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         filters.append({'aperture_arcsec': apertures[i], 'name': filter_names[i]})
 
     # Read in models
-    models = Models(model_dir, filters, distance_range=distance_range, remove_resolved=remove_resolved)
+    models = Models.read(model_dir, filters, distance_range=distance_range, remove_resolved=remove_resolved)
 
     # Add wavelength to filters
     for i, f in enumerate(filters):
@@ -107,7 +111,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print('')
 
     # Set Av law
-    av_law = extinction_law.av(models.wavelengths)
+    av_law = extinction_law.get_av(models.wavelengths)
 
     # Set scale model - make this a scalar
     sc_law = -2. * np.ones(av_law.shape)
@@ -116,10 +120,10 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
 
     util.delete_file(output)
 
-    fout = file(output, 'wb')
+    fout = open(output, 'wb')
     pickle.dump(model_dir, fout, 2)
     pickle.dump(filters, fout, 2)
-    extinction_law.write_binary(fout)
+    pickle.dump(extinction_law, fout, 2)
 
     # NOTE _ CAN USE PROTOCOL 2 IN SOURCE FOR COORINDATES
 
@@ -130,8 +134,8 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     while True:
 
         try:
-            s.read_ascii(data_file)
-        except:
+            s = Source.from_ascii(data_file.readline())
+        except EOFError:
             break
 
         if s.n_data >= n_data_min:
@@ -145,7 +149,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
             info.sort()
             info.keep(output_format[0], output_format[1])
 
-            info.write_binary(fout)
+            pickle.dump(info, fout, 2)
 
             t.display()
 

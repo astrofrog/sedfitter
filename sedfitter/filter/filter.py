@@ -31,7 +31,7 @@ class Filter(object):
         '''
 
         # Read in central wavelength
-        self.wavelength = float(open(filename, 'rb').readline().split('=')[1])
+        self.wavelength = float(open(filename, 'r').readline().split('=')[1])
 
         # Read in spectral response curve
         self.wav = np.loadtxt(filename, usecols=[0], dtype=float)

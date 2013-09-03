@@ -1,7 +1,10 @@
 from __future__ import print_function, division
 
 import os
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 import atpy
 import numpy as np
@@ -91,13 +94,12 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     util.create_dir(output_dir)
 
     # Open output file
-    fin = file(input_file, 'rb')
+    fin = open(input_file, 'rb')
 
     # Read in header of output file
     model_dir = pickle.load(fin)
     filters = pickle.load(fin)
-    extinction = Extinction()
-    extinction.read_binary(fin)
+    extinction = pickle.load(fin)
 
     # Read in table of parameters for model grid
     if os.path.exists(model_dir + '/parameters.fits'):
@@ -110,8 +112,6 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
-
-    info = FitInfo()
 
     # Initialize figure
     fig = plt.figure()
@@ -161,8 +161,8 @@ def plot_params_1d(input_file, parameter, output_dir=None,
 
         # Read in next fit
         try:
-            info.read_binary(fin)
-        except:
+            info = pickle.load(fin)
+        except EOFError:
             break
 
         # Remove previous histogram
@@ -179,7 +179,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
         tsub = t.where(subset)
         index = np.argsort(np.argsort(info.model_name))
         tsorted = tsub.rows(index)
-        if not np.all(info.model_name == tsorted['MODEL_NAME']):
+        if not np.all(info.model_name == np.char.decode(tsorted['MODEL_NAME'], 'ascii')):
             raise Exception("Parameter file sorting failed")
 
         # Add additional parameter columns if necessary

@@ -4,14 +4,14 @@ import os
 
 import numpy as np
 
-from .convolve import ConvolvedFluxes
+from .convolved_fluxes import ConvolvedFluxes
 from . import fitting_routines as f
-from . import parfile
+from .utils import parfile
 
 
 class Models(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
 
         self.names = None
         self.fluxes = None
@@ -20,12 +20,10 @@ class Models(object):
         self.logd = None
         self.extended = []
 
-        if args:
-            self.read(*args, **kwargs)
+    @classmethod
+    def read(cls, directory, filters, distance_range=None, remove_resolved=False):
 
-        return
-
-    def read(self, directory, filters, distance_range=None, remove_resolved=False):
+        m = cls()
 
         # Read in model parameters
         modpar = parfile.read("%s/models.conf" % directory, 'conf')
@@ -40,17 +38,17 @@ class Models(object):
         if modpar['aperture_dependent']:
             if distance_range:
                 if distance_range[0] == distance_range[1]:
-                    self.n_distances = 1
-                    self.distances = np.array([distance_range[0]])
+                    m.n_distances = 1
+                    m.distances = np.array([distance_range[0]])
                 else:
-                    self.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
-                    self.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), self.n_distances)
-                print("   Number of distances :  %i" % self.n_distances)
+                    m.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
+                    m.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), m.n_distances)
+                print("   Number of distances :  %i" % m.n_distances)
             else:
                 raise Exception("For aperture-dependent models, a distange range is required")
         else:
-            self.n_distances = None
-            self.distances = None
+            m.n_distances = None
+            m.distances = None
 
         print("")
         print(" ------------------------------------------------------------")
@@ -59,7 +57,7 @@ class Models(object):
         print("")
 
         model_fluxes = []
-        self.wavelengths = []
+        m.wavelengths = []
 
         for filt in filters:
 
@@ -73,51 +71,52 @@ class Models(object):
 
             print("   Reading " + filename)
 
-            conv = ConvolvedFluxes()
-            conv.read(filename)
+            conv = ConvolvedFluxes.read(filename)
 
-            self.wavelengths.append(conv.wavelength)
+            m.wavelengths.append(conv.wavelength)
 
-            if self.n_distances is not None:
-                apertures_au = filt['aperture_arcsec'] * self.distances * 1.e3
+            if m.n_distances is not None:
+                apertures_au = filt['aperture_arcsec'] * m.distances * 1.e3
                 conv = conv.interpolate(apertures_au)
-                conv.flux = conv.flux / self.distances ** 2
-                self.logd = np.log10(self.distances)
+                conv.flux = conv.flux / m.distances ** 2
+                m.logd = np.log10(m.distances)
                 if remove_resolved:
-                    self.extended.append(apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis])
+                    m.extended.append(apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis])
 
             model_fluxes.append(conv.flux)
 
-        if self.n_distances is not None:
-            self.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), self.n_distances)
-            self.fluxes = self.fluxes.swapaxes(1, 2)
+        if m.n_distances is not None:
+            m.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), m.n_distances)
+            m.fluxes = m.fluxes.swapaxes(1, 2)
             if remove_resolved:
-                self.extended = np.column_stack(self.extended).reshape(conv.n_models, len(filters), self.n_distances)
-                self.extended = self.extended.swapaxes(1, 2)
+                m.extended = np.column_stack(m.extended).reshape(conv.n_models, len(filters), m.n_distances)
+                m.extended = m.extended.swapaxes(1, 2)
         else:
-            self.fluxes = np.column_stack(model_fluxes)
+            m.fluxes = np.column_stack(model_fluxes)
 
         try:
-            self.names = np.char.strip(conv.model_names)
+            m.names = np.char.strip(conv.model_names)
         except:
-            self.names = np.array([x.strip() for x in conv.model_names], dtype=conv.model_names.dtype)
+            m.names = np.array([x.strip() for x in conv.model_names], dtype=conv.model_names.dtype)
 
-        self.n_models = conv.n_models
+        m.n_models = conv.n_models
 
-        self.valid = self.fluxes != 0
+        m.valid = m.fluxes != 0
 
-        self.fluxes[~self.valid] = -np.inf
-        self.fluxes[self.valid] = np.log10(self.fluxes[self.valid])
+        m.fluxes[~m.valid] = -np.inf
+        m.fluxes[m.valid] = np.log10(m.fluxes[m.valid])
 
-        return
+        return m
 
     def fit(self, source, av_law, sc_law, av_min, av_max):
+
+        weight, log_flux, log_error = source.get_log_fluxes()
 
         if self.fluxes.ndim == 2:  # Aperture-independent fitting
 
             # Use 2-parameter linear regression to find the best-fit av and scale for each model
-            residual = source.logflux - self.fluxes
-            av_best, sc_best = f.linear_regression(residual, source.weight, av_law, sc_law)
+            residual = log_flux - self.fluxes
+            av_best, sc_best = f.linear_regression(residual, weight, av_law, sc_law)
 
             # Use optimal scaling for Avs that are outside range
             reset1 = (av_best < av_min)
@@ -125,13 +124,13 @@ class Models(object):
             av_best[reset1] = av_min
             av_best[reset2] = av_max
             reset = reset1 | reset2
-            sc_best[reset] = f.optimal_scaling(residual[reset] - av_best[reset][:, np.newaxis] * av_law[np.newaxis, :], source.weight, sc_law)
+            sc_best[reset] = f.optimal_scaling(residual[reset] - av_best[reset][:, np.newaxis] * av_law[np.newaxis, :], weight, sc_law)
 
             # Compute best-fit model in each case
             model = av_best[:, np.newaxis] * av_law[np.newaxis, :] + sc_best[:, np.newaxis] * sc_law[np.newaxis, :]
 
             # Calculate the chi-squared value
-            ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
+            ch_best = f.chi_squared(source.valid, residual, log_error, weight, model)
 
             # Extract convolved model fluxes for best-fit
             model_fluxes = model + self.fluxes
@@ -139,8 +138,8 @@ class Models(object):
         elif self.fluxes.ndim == 3:  # Aperture dependent fitting
 
             # Use optimal scaling to fit the Av
-            residual = source.logflux - self.fluxes
-            av_best = f.optimal_scaling(residual, source.weight, av_law)
+            residual = log_flux - self.fluxes
+            av_best = f.optimal_scaling(residual, weight, av_law)
 
             # Reset to valid range
             av_best[av_best < av_min] = av_min
@@ -150,7 +149,7 @@ class Models(object):
             model = av_best[:, :, np.newaxis] * av_law[np.newaxis, np.newaxis, :]
 
             # Calculate the chi-squared value
-            ch_best = f.chi_squared(source.valid, residual, source.logerror, source.weight, model)
+            ch_best = f.chi_squared(source.valid, residual, log_error, weight, model)
 
             # Remove extended objects
             if type(self.extended) == np.ndarray:

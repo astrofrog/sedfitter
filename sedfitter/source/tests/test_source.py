@@ -69,13 +69,13 @@ def test_source_valid_range():
     assert exc.value.args[0] == "valid values should be in the range [0,4]"
 
 
-@pytest.mark.parametrize(('attribute', 'value'), zip(['flux', 'error'], [[1., 2., 3., 4., 5], (1, 2, 3), np.array([1, 2, 3, 4])]))
+@pytest.mark.parametrize(('attribute', 'value'), list(zip(['flux', 'error'], [[1., 2., 3., 4., 5], (1, 2, 3), np.array([1, 2, 3, 4])])))
 def test_source_flux(attribute, value):
     s = Source()
     setattr(s, attribute, value)
 
 
-@pytest.mark.parametrize(('attribute', 'value'), zip(['flux', 'error'], [1, 1., 'a', object()]))
+@pytest.mark.parametrize(('attribute', 'value'), list(zip(['flux', 'error'], [1, 1., 'a', object()])))
 def test_source_flux_invalid(attribute, value):
     s = Source()
     with pytest.raises(TypeError) as exc:

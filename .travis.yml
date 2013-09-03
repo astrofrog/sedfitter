@@ -32,12 +32,13 @@ before_install:
    - pip install wheel
 
    - sudo apt-get update -qq
-   - sudo apt-get install -qq python-numpy
+   - sudo apt-get install -qq python-numpy python-scipy
 
 install:
    - export PYTHONIOENCODING=UTF8 # just in case
    - $PIP_WHEEL_COMMAND "Cython>=0.18" --use-mirrors
    - $PIP_WHEEL_COMMAND "numpy==$NUMPY_VERSION" --use-mirrors
+   - $PIP_WHEEL_COMMAND "scipy>=0.12" --use-mirrors
    - pip install git+http://github.com/astropy/astropy.git#egg=astropy
    - if [[ $SETUP_CMD == cov ]]; then pip install pytest --use-mirrors; fi
    - if [[ $SETUP_CMD == cov ]]; then pip install pytest-cov --use-mirrors; fi

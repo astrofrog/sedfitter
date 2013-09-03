@@ -211,17 +211,17 @@ class ConvolvedFluxes(object):
         keywords['NAP'] = self.n_ap
 
         tc = Table()
-        tc.add_column(Column('MODEL_NAME', self.model_names))
-        tc.add_column(Column('TOTAL_FLUX', self.flux))
-        tc.add_column(Column('TOTAL_FLUX_ERR', self.error))
+        tc['MODEL_NAME'] = self.model_names
+        tc['TOTAL_FLUX'] = self.flux
+        tc['TOTAL_FLUX_ERR'] = self.error
 
         if self.apertures is not None:
-            tc.add_column(Column('RADIUS_SIGMA_50', self.find_radius_sigma(0.50)))
-            tc.add_column(Column('RADIUS_CUMUL_99', self.find_radius_cumul(0.99)))
+            tc['RADIUS_SIGMA_50'] = self.find_radius_sigma(0.50)
+            tc['RADIUS_CUMUL_99'] = self.find_radius_cumul(0.99)
 
         if self.apertures is not None:
             ta = Table()
-            ta.add_column(Column("APERTURE", self.apertures))
+            ta['APERTURE'] = self.apertures
 
         # Convert to FITS
         hdulist = fits.HDUList()

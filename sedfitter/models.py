@@ -6,7 +6,7 @@ import numpy as np
 
 from .convolved_fluxes import ConvolvedFluxes
 from . import fitting_routines as f
-from . import parfile
+from .utils import parfile
 
 
 class Models(object):

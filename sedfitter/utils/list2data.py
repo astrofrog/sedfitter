@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.logger import log
 
 from ..source import Source
-
+from .. import six
 
 def list2data(file_in, file_out, models_dir=None, source_name='source'):
     '''
@@ -76,7 +76,7 @@ def list2data(file_in, file_out, models_dir=None, source_name='source'):
     s.valid = datafile['valid']
     s.flux = datafile['flux']
     s.error = datafile['err']
-    if isinstance(file_out, basestring):
+    if isinstance(file_out, six.string_types):
         s.write_ascii(open(file_out, 'wb'))
     else:
         s.write_ascii(file_out)

@@ -34,7 +34,7 @@ from .extinction import Extinction
 from .fit_info import FitInfo
 from .sed import SED
 from . import util
-from . import parfile
+from .utils import parfile
 
 plt.rc('text', usetex=True)
 plt.rc('axes', titlesize='small')

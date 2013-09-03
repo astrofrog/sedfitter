@@ -1,109 +1,66 @@
 #!/usr/bin/env python
-# Licensed under a 3-clause BSD style license - see LICENSE.rst
 
-import sys
-import imp
-try:
-    # This incantation forces distribute to be used (over setuptools) if it is
-    # available on the path; otherwise distribute will be downloaded.
-    import pkg_resources
-    distribute = pkg_resources.get_distribution('distribute')
-    if pkg_resources.get_distribution('setuptools') != distribute:
-        sys.path.insert(1, distribute.location)
-        distribute.activate()
-        imp.reload(pkg_resources)
-except:  # There are several types of exceptions that can occur here
-    from distribute_setup import use_setuptools
-    use_setuptools()
+from setuptools import setup, Command
 
-import glob
-import os
-from setuptools import setup, find_packages
+from distutils.command.build_py import build_py
 
-#A dirty hack to get around some early import/configurations ambiguities
-if sys.version_info[0] >= 3:
-    import builtins
-else:
-    import __builtin__ as builtins
-builtins._PACKAGE_SETUP_ = True
+class SEDFitterTest(Command):
 
-import astropy
-from astropy.setup_helpers import (register_commands, adjust_compiler,
-                                   filter_packages, update_package_files,
-                                   get_debug_option)
-from astropy.version_helpers import get_git_devstr, generate_version_py
+    user_options = []
 
-# Set affiliated package-specific settings
-PACKAGENAME = 'sedfitter'
-DESCRIPTION = 'SED Fitter in python'
-LONG_DESCRIPTION = ''
-AUTHOR = 'Thomas Robitaille'
-AUTHOR_EMAIL = 'thomas.robitaille@gmail.com'
-LICENSE = 'BSD'
-URL = ''
+    def initialize_options(self):
+        pass
 
-# VERSION should be PEP386 compatible (http://www.python.org/dev/peps/pep-0386)
-VERSION = '0.1.2.dev'
+    def finalize_options(self):
+        pass
 
-# Indicates if this version is a release version
-RELEASE = 'dev' not in VERSION
+    def run(self):
 
-if not RELEASE:
-    VERSION += get_git_devstr(False)
+        import os
+        import shutil
+        import tempfile
 
-# Populate the dict of setup command overrides; this should be done before
-# invoking any other functionality from distutils since it can potentially
-# modify distutils' behavior.
-cmdclassd = register_commands(PACKAGENAME, VERSION, RELEASE)
+        # First ensure that we build the package so that 2to3 gets executed
+        self.reinitialize_command('build', inplace=False)
+        self.run_command('build')
+        build_cmd = self.get_finalized_command('build')
+        new_path = os.path.abspath(build_cmd.build_lib)
 
-# Adjust the compiler in case the default on this platform is to use a
-# broken one.
-adjust_compiler(PACKAGENAME)
+        # Copy the build to a temporary directory for the purposes of testing
+        # - this avoids creating pyc and __pycache__ directories inside the
+        # build directory
+        tmp_dir = tempfile.mkdtemp(prefix='sedfitter-test-')
+        testing_path = os.path.join(tmp_dir, os.path.basename(new_path))
+        shutil.copytree(new_path, testing_path)
 
-# Freeze build information in version.py
-generate_version_py(PACKAGENAME, VERSION, RELEASE, get_debug_option())
+        import sys
+        import subprocess
 
-# Use the find_packages tool to locate all packages and modules
-packagenames = filter_packages(find_packages())
+        errno = subprocess.call([sys.executable, os.path.abspath('runtests.py')], cwd=testing_path)
+        raise SystemExit(errno)
 
-# Treat everything in scripts except README.rst as a script to be installed
-scripts = [fname for fname in glob.glob(os.path.join('scripts', '*'))
-           if fname != 'README.rst']
+setup(name='sedfitter',
+      version='0.1.2.dev',
+      description='SED Fitter in Python',
+      author='Thomas Robitaille',
+      author_email='thomas.robitaille@gmail.com',
+      packages=['sedfitter',
+                'sedfitter.convolve',
+                'sedfitter.convolved_fluxes',
+                'sedfitter.convolved_fluxes.tests',
+                'sedfitter.extinction',
+                'sedfitter.extinction.tests',
+                'sedfitter.filter',
+                'sedfitter.sed',
+                'sedfitter.source',
+                'sedfitter.source.tests',
+                'sedfitter.utils',
+                'sedfitter.utils.tests'],
+      package_data={'sedfitter.sed.tests':['data/*.fits.gz'],
+                    'sedfitter.utils.tests':['data/*.conf', 'data/*.par']},
+      provides=['sedfitter'],
+      requires=['numpy', 'astropy', 'atpy'],
+      cmdclass={'build_py': build_py, 'test':SEDFitterTest},
+      keywords=['Scientific/Engineering'],
+     )
 
-# Additional C extensions that are not Cython-based should be added here.
-extensions = []
-
-# A dictionary to keep track of all package data to install
-package_data = {PACKAGENAME: ['data/*']}
-
-# A dictionary to keep track of extra packagedir mappings
-package_dirs = {}
-
-# Update extensions, package_data, packagenames and package_dirs from
-# any sub-packages that define their own extension modules and package
-# data.  See the docstring for setup_helpers.update_package_files for
-# more details.
-update_package_files(PACKAGENAME, extensions, package_data, packagenames,
-                     package_dirs)
-
-
-setup(name=PACKAGENAME,
-      version=VERSION,
-      description=DESCRIPTION,
-      packages=packagenames,
-      package_data=package_data,
-      package_dir=package_dirs,
-      ext_modules=extensions,
-      scripts=scripts,
-      requires=['astropy'],
-      install_requires=['astropy'],
-      provides=[PACKAGENAME],
-      author=AUTHOR,
-      author_email=AUTHOR_EMAIL,
-      license=LICENSE,
-      url=URL,
-      long_description=LONG_DESCRIPTION,
-      cmdclass=cmdclassd,
-      zip_safe=False,
-      use_2to3=True
-      )

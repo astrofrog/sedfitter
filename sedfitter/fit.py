@@ -19,6 +19,7 @@ from .models import Models
 from .fit_info import FitInfo
 from .source import Source
 from . import util
+from . import six
 
 
 def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
@@ -85,7 +86,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print("")
 
     # Open datafile
-    if isinstance(data, basestring):
+    if isinstance(data, six.string_types):
         data_file = file(data, 'rb')
     else:
         data_file = data

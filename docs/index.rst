@@ -16,6 +16,8 @@ this stage.
 
    installation.rst
    data.rst
+   fitting.rst
+   model_packages.rst
 
 
 Indices and tables

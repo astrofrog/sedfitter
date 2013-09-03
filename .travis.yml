@@ -36,9 +36,10 @@ before_install:
 
 install:
    - export PYTHONIOENCODING=UTF8 # just in case
-   - $PIP_WHEEL_COMMAND "Cython>=0.18" --use-mirrors
-   - $PIP_WHEEL_COMMAND "numpy==$NUMPY_VERSION" --use-mirrors
-   - $PIP_WHEEL_COMMAND "scipy>=0.12" --use-mirrors
+   - $PIP_WHEEL_COMMAND "Cython>=0.18"
+   - $PIP_WHEEL_COMMAND "numpy==$NUMPY_VERSION"
+   - $PIP_WHEEL_COMMAND "scipy>=0.12"
+   - $PIP_WHEEL_COMMAND "matplotlib>=1.3.0"
    - pip install git+http://github.com/astropy/astropy.git#egg=astropy
    - pip install atpy
    - if [[ $SETUP_CMD == cov ]]; then pip install pytest --use-mirrors; fi

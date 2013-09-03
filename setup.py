@@ -60,7 +60,7 @@ setup(name='sedfitter',
       package_data={'sedfitter.sed.tests':['data/*.fits.gz'],
                     'sedfitter.utils.tests':['data/*.conf', 'data/*.par']},
       provides=['sedfitter'],
-      requires=['numpy', 'astropy', 'atpy'],
+      requires=['numpy', 'astropy', 'atpy', 'scipy', 'matplotlib'],
       cmdclass={'build_py': build_py, 'test':SEDFitterTest},
       keywords=['Scientific/Engineering'],
      )

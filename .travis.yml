@@ -40,6 +40,7 @@ install:
    - $PIP_WHEEL_COMMAND "numpy==$NUMPY_VERSION" --use-mirrors
    - $PIP_WHEEL_COMMAND "scipy>=0.12" --use-mirrors
    - pip install git+http://github.com/astropy/astropy.git#egg=astropy
+   - pip install atpy
    - if [[ $SETUP_CMD == cov ]]; then pip install pytest --use-mirrors; fi
    - if [[ $SETUP_CMD == cov ]]; then pip install pytest-cov --use-mirrors; fi
    - if [[ $SETUP_CMD == cov ]]; then pip install coveralls --use-mirrors; fi

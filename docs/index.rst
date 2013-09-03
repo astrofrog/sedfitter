@@ -3,14 +3,18 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to SED Fitter's documentation!
-======================================
+Python SED Fitter's documentation
+=================================
 
-Contents:
+This package is an experimental port of the SED Fitting tool described in
+`Robitaille et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJS..169..328R>`_
+and is still under active development. It should not be considered robust at
+this stage.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
+   installation.rst
    data.rst
 
 

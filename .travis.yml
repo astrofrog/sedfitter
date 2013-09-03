@@ -7,8 +7,10 @@ python:
     - 3.3
 
 env:
-    # try all python versions with the latest stable Numpy
-    - NUMPY_VERSION=1.7.1 SETUP_CMD='test'
+    global:
+        - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel --upgrade --use-mirrors"
+    matrix:
+        - NUMPY_VERSION=1.7.1 SETUP_CMD='test'
 
 matrix:
     include:
@@ -28,7 +30,8 @@ before_install:
 
 install:
    - export PYTHONIOENCODING=UTF8 # just in case
-   - pip install --upgrade "numpy==$NUMPY_VERSION" --use-mirrors
+   - $PIP_WHEEL_COMMAND "Cython>=0.18" --use-mirrors
+   - $PIP_WHEEL_COMMAND "numpy==$NUMPY_VERSION" --use-mirrors
    - pip install git+http://github.com/astropy/astropy.git#egg=astropy
    - if [[ $SETUP_CMD == cov ]]; then pip install pytest --use-mirrors; fi
    - if [[ $SETUP_CMD == cov ]]; then pip install pytest-cov --use-mirrors; fi

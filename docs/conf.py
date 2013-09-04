@@ -267,7 +267,7 @@ if os.environ.get('READTHEDOCS', None) == 'True':
             else:
                 return Mock()
 
-    MOCK_MODULES = ['scipy', 'matplotlib', 'atpy', 'scipy.interpolate']
+    MOCK_MODULES = ['scipy', 'matplotlib', 'atpy', 'scipy.interpolate', 'matplotlib.pyplot']
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = Mock()
 

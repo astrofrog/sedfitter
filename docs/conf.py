@@ -25,7 +25,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'hyperion.sphinx.ext.numpydoc', 'sphinx.ext.pngmath']
+extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'astropy.sphinx.ext.numpydoc', 'sphinx.ext.pngmath']
 
 autosummary_generate = True
 numpydoc_show_class_members = False
@@ -267,7 +267,7 @@ if os.environ.get('READTHEDOCS', None) == 'True':
             else:
                 return Mock()
 
-    MOCK_MODULES = ['atpy']
+    MOCK_MODULES = ['scipy', 'matplotlib', 'atpy']
     for mod_name in MOCK_MODULES:
         sys.modules[mod_name] = Mock()
 

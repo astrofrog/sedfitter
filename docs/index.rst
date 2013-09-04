@@ -14,6 +14,7 @@ this stage.
 .. toctree::
    :maxdepth: 1
 
+   introduction.rst
    installation.rst
    data.rst
    fitting.rst

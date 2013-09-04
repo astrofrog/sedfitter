@@ -25,7 +25,11 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx', 'sphinx.ext.mathjax']
+extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'hyperion.sphinx.ext.numpydoc', 'sphinx.ext.pngmath']
+
+autosummary_generate = True
+numpydoc_show_class_members = False
+autoclass_content = 'class'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -244,3 +248,26 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
+
+if os.environ.get('READTHEDOCS', None) == 'True':
+
+    class Mock(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def __call__(self, *args, **kwargs):
+            return Mock()
+
+        @classmethod
+        def __getattr__(self, name):
+            if name in ('__file__', '__path__'):
+                return '/dev/null'
+            elif name[0] == name[0].upper():
+                return type(name, (), {})
+            else:
+                return Mock()
+
+    MOCK_MODULES = ['atpy']
+    for mod_name in MOCK_MODULES:
+        sys.modules[mod_name] = Mock()
+

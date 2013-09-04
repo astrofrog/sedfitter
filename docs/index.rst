@@ -18,6 +18,8 @@ this stage.
    data.rst
    fitting.rst
    model_packages.rst
+   select_syntax.rst
+   api/api.rst
 
 
 Indices and tables

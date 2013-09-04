@@ -12,8 +12,8 @@ The arguments are:
 * ``data_file``: the filename of an ASCII data file containing the fluxes for
   the sources (see :doc:`data` for a description of the format)
 
-* ``filters``: a list of filter names (given as individual strings) for which the data is
-  defined. The filter names should be the name of the files in the
+* ``filters``: a list of filter names (given as individual strings) for which
+  the data is defined. The filter names should be the name of the files in the
   ``convolved`` directory for the models, without the extensions. This is
   typically ``2J``, ``I1``, ``M1``, etc.
 
@@ -39,11 +39,15 @@ The arguments are:
 
 In addition to the above compulstory arguments, the following optional arguments can be specified:
 
-* ``output_format``:
+* ``output_format``: which models to output (see :doc:`select_syntax`)
 
-* ``output_convolved``:
+* ``output_convolved``: whether or not to output convolved fluxes in the output
+  file (specified as a boolean - default is ``False``)
 
-* ``remove_resolved``:
+* ``remove_resolved``: whether to remove models that are larger than the
+  apertures in any of the bands (specified as a boolean - default is ``False``)
+
+For more details, you can also check out the :func:`sedfitter.fit` documentation.
 
 The following is a complete example showing how to use the :func:`sedfitter.fit` function::
 

@@ -64,8 +64,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         log.debug('Convolving {}'.format(os.path.basename(sed_file)))
 
         # Read in SED
-        s = SED()
-        s.read(sed_file, unit_freq='Hz', unit_flux='mJy', order='nu')
+        s = SED.read(sed_file, unit_freq='Hz', unit_flux='mJy', order='nu')
 
         # Check if filters need to be re-binned
         if np.any(s.nu != binned_nu):
@@ -82,10 +81,10 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
             if n_ap == 1:
                 fluxes[i].flux[im] = np.sum(s.flux * f.r)
-                fluxes[i].err[im] = np.sqrt(np.sum((s.err * f.r) ** 2))
+                fluxes[i].error[im] = np.sqrt(np.sum((s.error * f.r) ** 2))
             else:
                 fluxes[i].flux[im, :] = np.sum(s.flux * f.r, axis=1)
-                fluxes[i].err[im] = np.sqrt(np.sum((s.err * f.r) ** 2, axis=1))
+                fluxes[i].error[im] = np.sqrt(np.sum((s.error * f.r) ** 2, axis=1))
 
     for i, f in enumerate(binned_filters):
         fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits',

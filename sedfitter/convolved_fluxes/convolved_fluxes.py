@@ -20,12 +20,34 @@ def is_numpy_array(variable):
 
 class ConvolvedFluxes(object):
 
-    def __init__(self, wavelength=None, model_names=None, apertures=None, flux=None, error=None):
-        self.wavelength = wavelength
+    def __init__(self, wavelength=None, model_names=None, apertures=None, flux=None, error=None, initialize_arrays=True):
+
         self.model_names = model_names
         self.apertures = apertures
-        self.flux = flux
-        self.error = error
+        self.wavelength = wavelength
+
+        if initialize_arrays:
+
+            if model_names is None:
+                raise ValueError("model_names is required when using initialize_arrays=True")
+
+            if apertures is None:
+                raise ValueError("apertures is required when using initialize_arrays=True")
+
+            if flux is None:
+                self.flux = np.zeros((self.n_models, self.n_ap))
+            else:
+                self.flux = flux
+
+            if error is None:
+                self.error = np.zeros((self.n_models, self.n_ap))
+            else:
+                self.error = error
+
+        else:
+
+            self.flux = flux
+            self.error = error
 
     @property
     def wavelength(self):

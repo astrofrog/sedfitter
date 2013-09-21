@@ -20,7 +20,7 @@ def is_numpy_array(variable):
 
 class ConvolvedFluxes(object):
 
-    def __init__(self, wavelength=None, model_names=None, apertures=None, flux=None, error=None, initialize_arrays=True):
+    def __init__(self, wavelength=None, model_names=None, apertures=None, flux=None, error=None, initialize_arrays=False):
 
         self.model_names = model_names
         self.apertures = apertures

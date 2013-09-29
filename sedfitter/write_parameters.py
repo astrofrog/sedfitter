@@ -6,8 +6,8 @@ try:
 except ImportError:
     import pickle
 
-import atpy
 import numpy as np
+from astropy.table import Table
 
 from .fit_info import FitInfo
 from .extinction import Extinction
@@ -17,7 +17,7 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
 
     # Open input and output file
     fin = open(input_file, 'rb')
-    fout = open(output_file, 'wb')
+    fout = open(output_file, 'w')
 
     # Read in header of output file
     model_dir = pickle.load(fin)
@@ -25,9 +25,9 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
     extinction = pickle.load(fin)
 
     if os.path.exists(model_dir + '/parameters.fits'):
-        t = atpy.Table(model_dir + '/parameters.fits')
+        t = Table.read(model_dir + '/parameters.fits')
     elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = atpy.Table(model_dir + '/parameters.fits.gz')
+        t = Table.read(model_dir + '/parameters.fits.gz')
     else:
         raise Exception("Parameter file not found in %s" % model_dir)
 
@@ -49,14 +49,14 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
     fout.write('av'.center(10) + ' ')
     fout.write('scale'.center(10) + ' ')
 
-    for par in t.columns.keys + additional.keys():
+    for par in list(t.columns.keys()) + list(additional.keys()):
         if par == 'MODEL_NAME':
             continue
         fout.write(par.lower().center(10) + ' ')
 
     fout.write('\n')
 
-    fout.write('-' * (75 + 11 * (len(t.columns.keys + additional.keys()))))
+    fout.write('-' * (75 + 11 * (len(list(t.columns.keys()) + list(additional.keys())))))
     fout.write('\n')
 
     while True:
@@ -71,9 +71,9 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
         info.keep(select_format[0], select_format[1])
 
         subset = np.in1d(t['MODEL_NAME'], info.model_name)
-        tsub = t.where(subset)
+        tsub = t[subset]
         index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub.rows(index)
+        tsorted = tsub[index]
         if not np.all(info.model_name == tsorted['MODEL_NAME']):
             raise Exception("Parameter file sorting failed")
 

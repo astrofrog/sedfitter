@@ -52,7 +52,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     apertures = fits.open(sed_files[0], memmap=False)[2].data['APERTURE']
 
     # Set up convolved fluxes
-    fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='S30'), apertures=apertures) for i in range(len(filters))]
+    fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='S30'), apertures=apertures, initialize_arrays=True) for i in range(len(filters))]
 
     # Set up list of binned filters
     binned_filters = []

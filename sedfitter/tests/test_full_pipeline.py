@@ -67,15 +67,20 @@ class BasePipelineTest(object):
         self.tmpdir = tempfile.mkdtemp()
         generate_random_models(self.tmpdir, aperture_dependent=self.aperture_dependent)
 
+        from ..extinction import Extinction
+
+        self.extinction = Extinction()
+        self.extinction.wav = np.logspace(-2., 3.)
+        self.extinction.chi = self.extinction.wav ** -2
+
     def teardown_class(self):
         shutil.rmtree(self.tmpdir)
 
-    def test_full_pipeline(self, tmpdir):
-
-        from ..convolve import convolve_model_dir
-        from ..filter import Filter
+    def test_broadband(self, tmpdir):
 
         np.random.seed(12345)
+
+        from ..filter import Filter
 
         f1 = Filter()
         f1.name = 'alice'
@@ -101,13 +106,9 @@ class BasePipelineTest(object):
         f3.r = np.random.random(100)
         f3.normalize()
 
-        convolve_model_dir(self.tmpdir, filters=[f1, f2, f3], overwrite=True)
+        from ..convolve import convolve_model_dir
 
-        from ..extinction import Extinction
-
-        extinction = Extinction()
-        extinction.wav = np.logspace(-2., 3.)
-        extinction.chi = extinction.wav ** -2
+        convolve_model_dir(self.tmpdir, filters=[f1, f2, f3])
 
         from ..fit import fit
 
@@ -117,11 +118,37 @@ class BasePipelineTest(object):
         output_file = tmpdir.join('output').strpath
 
         fit(data_file, ['bob', 'alice', 'eve'], [1., 3., 3.], self.tmpdir, output_file,
-            extinction_law=extinction,
+            extinction_law=self.extinction,
             distance_range=[1., 2.],
             av_range=[0., 0.1],
             output_format=('F', 3.),
             output_convolved=False)
+
+        self._postprocess(output_file, tmpdir)
+
+    def test_monochromatic(self, tmpdir):
+
+        from ..convolve import convolve_model_dir_monochromatic
+
+        convolve_model_dir_monochromatic(self.tmpdir)
+
+        from ..fit import fit
+
+        data_file = tmpdir.join('data').strpath
+        open(data_file, 'w').write(DATA.strip())
+
+        output_file = tmpdir.join('output').strpath
+
+        fit(data_file, ['MO001', 'MO002', 'MO020'], [1., 3., 3.], self.tmpdir, output_file,
+            extinction_law=self.extinction,
+            distance_range=[1., 2.],
+            av_range=[0., 0.1],
+            output_format=('F', 3.),
+            output_convolved=False)
+
+        self._postprocess(output_file, tmpdir)
+
+    def _postprocess(self, output_file, tmpdir):
 
         from ..plot import plot
 

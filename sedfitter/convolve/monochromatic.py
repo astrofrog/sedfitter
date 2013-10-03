@@ -6,6 +6,8 @@ import glob
 import numpy as np
 from astropy.io import fits
 from astropy.logger import log
+from astropy.table import Table
+from astropy import units as u
 
 from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
@@ -90,8 +92,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         log.info('Processing wavelengths {0} to {1}'.format(jmin, jmax))
 
         # Set up convolved fluxes
-        fluxes = [ConvolvedFluxes(n_models=n_models, n_ap=n_ap)
-                  for j in range(chunk_size)]
+        fluxes = [ConvolvedFluxes(model_names=np.zeros(n_models, dtype='S30'), apertures=apertures, initialize_arrays=True) for i in range(chunk_size)]
 
         # Loop over SEDs
         for im, sed_file in enumerate(sed_files):
@@ -99,8 +100,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
             log.debug('Processing {0}'.format(os.path.basename(sed_file)))
 
             # Read in SED
-            s = SED()
-            s.read(sed_file, unit_freq='Hz', unit_flux='mJy', order='nu')
+            s = SED.read(sed_file, unit_freq=u.Hz, unit_flux=u.mJy, order='nu')
 
             # Convolve
             for j in range(chunk_size):
@@ -111,10 +111,10 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
 
                 if n_ap == 1:
                     fluxes[j].flux[im] = s.flux[0, j + jmin]
-                    fluxes[j].err[im] = s.err[0, j + jmin]
+                    fluxes[j].error[im] = s.error[0, j + jmin]
                 else:
                     fluxes[j].flux[im, :] = s.flux[:, j + jmin]
-                    fluxes[j].err[im, :] = s.err[:, j + jmin]
+                    fluxes[j].error[im, :] = s.error[:, j + jmin]
 
         for j in range(chunk_size):
             fluxes[j].write('{:s}/convolved/MO{:03d}.fits'.format(model_dir, j + jmin + 1),

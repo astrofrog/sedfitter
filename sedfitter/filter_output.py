@@ -9,21 +9,18 @@ from .fit_info import FitInfo
 from .extinction import Extinction
 
 
-def filter_output(input=None, output_good='auto', output_bad='auto', chi=None,
+def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=None,
                   cpd=None):
 
-    if input[-8:] != '.fitinfo':
-        raise Exception("Extension of input file should be .fitinfo")
-
-    fin = open(input, 'rb')
+    fin = open(input_file, 'rb')
 
     if output_good == 'auto':
-        fout_good = open(input.replace('.fitinfo', '_good.fitinfo'), 'wb')
+        fout_good = open(input_file + '_good', 'wb')
     else:
         fout_good = open(output_good, 'wb')
 
     if output_bad == 'auto':
-        fout_bad = open(input.replace('.fitinfo', '_bad.fitinfo'), 'wb')
+        fout_bad = open(input_file + '_bad', 'wb')
     else:
         fout_bad = open(output_bad, 'wb')
 
@@ -35,7 +32,7 @@ def filter_output(input=None, output_good='auto', output_bad='auto', chi=None,
     # Output header to good fits file
     pickle.dump(model_dir, fout_good, 2)
     pickle.dump(filters, fout_good, 2)
-    pickle.dump(extinction, fout_good, 2)
+    pickle.dump(extinction_law, fout_good, 2)
 
     # Output header to bad fits file
     pickle.dump(model_dir, fout_bad, 2)

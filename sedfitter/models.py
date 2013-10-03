@@ -7,6 +7,7 @@ import numpy as np
 from .convolved_fluxes import ConvolvedFluxes
 from . import fitting_routines as f
 from .utils import parfile
+from astropy.table import Table
 
 
 class Models(object):
@@ -172,3 +173,15 @@ class Models(object):
             raise Exception("Unexpected number of dimensions in flux array")
 
         return av_best, sc_best, ch_best, self.names, model_fluxes
+
+
+def load_parameter_table(model_dir):
+
+    if os.path.exists(model_dir + '/parameters.fits'):
+        t = Table.read(model_dir + '/parameters.fits')
+    elif os.path.exists(model_dir + '/parameters.fits.gz'):
+        t = Table.read(model_dir + '/parameters.fits.gz')
+    else:
+        raise Exception("Parameter file not found in %s" % model_dir)
+
+    return t

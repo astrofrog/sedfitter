@@ -8,6 +8,8 @@ except ImportError:
 from copy import deepcopy
 
 from astropy.table import Table
+from astropy.convolution import Tophat2DKernel
+
 import numpy as np
 from scipy.ndimage import convolve
 
@@ -19,26 +21,8 @@ from .fit_info import FitInfo
 from .extinction import Extinction
 from . import util
 
-
-# KERNEL = np.array([[ 0.  ,  0.39,  0.87,  1.  ,  0.87,  0.39,  0.  ],
-#                    [ 0.39,  0.98,  1.  ,  1.  ,  1.  ,  0.98,  0.39],
-#                    [ 0.87,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  0.87],
-#                    [ 1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ],
-#                    [ 0.87,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  0.87],
-#                    [ 0.39,  0.98,  1.  ,  1.  ,  1.  ,  0.98,  0.38],
-#                    [ 0.  ,  0.39,  0.87,  1.  ,  0.87,  0.38,  0.01]])
-
-KERNEL = np.array([[0., 0., 0.15, 0.58, 0.91, 1., 0.91, 0.58, 0.15, 0., 0.],
-                   [0., 0.26, 0.98, 1., 1., 1., 1., 1., 0.98, 0.26, 0.],
-                   [0.15, 0.98, 1., 1., 1., 1., 1., 1., 1., 0.98, 0.15],
-                   [0.58, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.58],
-                   [0.91, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.91],
-                   [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
-                   [0.91, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.91],
-                   [0.58, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.58],
-                   [0.15, 0.98, 1., 1., 1., 1., 1., 1., 1., 0.98, 0.15],
-                   [0., 0.26, 0.98, 1., 1., 1., 1., 1., 0.98, 0.26, 0.],
-                   [0., 0., 0.15, 0.58, 0.91, 1., 0.91, 0.58, 0.15, 0., 0.]])
+KERNEL = Tophat2DKernel(5.5,x_size=11,y_size=11,mode='oversample').array
+KERNEL /= KERNEL.max()  # normalize so maximum is 1
 
 
 class LogFormatterMathtextAuto(LogFormatterMathtext):

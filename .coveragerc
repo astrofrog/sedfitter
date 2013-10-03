@@ -1,2 +1,4 @@
 [run]
-omit = sedfitter/*/tests/*.py
+omit =
+    sedfitter/*/tests/*.py
+    sedfitter/six.py

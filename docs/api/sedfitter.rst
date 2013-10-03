@@ -22,7 +22,6 @@ Extracting values
 
 .. autofunction:: sedfitter.write_parameters
 .. autofunction:: sedfitter.write_parameter_ranges
-.. autofunction:: sedfitter.extract_parameters
 
 
 

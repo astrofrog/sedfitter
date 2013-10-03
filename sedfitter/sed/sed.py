@@ -5,22 +5,55 @@ import os
 import numpy as np
 from astropy import log
 from astropy.io import fits
+from astropy.table import Table
 from scipy.interpolate import interp1d
+from astropy import units as u
 
 from ..utils.validator import validate_array
 
-C = 299792458
-KPC = 3.086e21
+UNIT_MAPPING = {}
+UNIT_MAPPING['MICRONS'] = u.micron
+UNIT_MAPPING['HZ'] = u.Hz
+UNIT_MAPPING['MJY'] = u.mJy
+UNIT_MAPPING['ergs/cm^2/s'] = u.erg / u.cm**2 / u.s
 
+def parse_unit_safe(unit_string):
+    if unit_string in UNIT_MAPPING:
+        return UNIT_MAPPING[unit_string]
+    else:
+        return u.Unit(unit_string, parse_strict=False)
+
+
+def assert_allclose_quantity(q1, q2):
+    np.testing.assert_allclose(q1.value, q2.to(q1.unit).value)
 
 class SED(object):
 
     def __init__(self):
+
+        self.name = None
+        self.distance = None
         self.wav = None
         self.nu = None
         self.apertures = None
         self.flux = None
         self.error = None
+
+    def __eq__(self, other):
+
+        try:
+            assert self.name == other.name
+            assert_allclose_quantity(self.distance, other.distance)
+            assert_allclose_quantity(self.distance, other.distance)
+            assert_allclose_quantity(self.wav, other.wav)
+            assert_allclose_quantity(self.nu, other.nu)
+            assert_allclose_quantity(self.apertures, other.apertures)
+            assert_allclose_quantity(self.flux, other.flux)
+            assert_allclose_quantity(self.error, other.error)
+        except AssertionError:
+            return False
+        else:
+            return True
 
     def copy(self):
         from copy import deepcopy
@@ -29,7 +62,7 @@ class SED(object):
     def scale_to_distance(self, distance):
         """
         Returns the SED scaled to distance `distance`
-        
+
         Parameters
         ----------
         distance : float
@@ -64,7 +97,10 @@ class SED(object):
         if value is None:
             self._wav = None
         else:
-            self._wav = validate_array('wav', value, domain='positive', ndim=1, shape=None if self.nu is None else (len(self.nu),))
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
+                self._wav = validate_array('wav', value, domain='positive', ndim=1, shape=None if self.nu is None else (len(self.nu),))
+            else:
+                raise TypeError("wavelengths should be given as a Quantity object with units of distance")
 
     @property
     def nu(self):
@@ -78,7 +114,10 @@ class SED(object):
         if value is None:
             self._nu = None
         else:
-            self._nu = validate_array('nu', value, domain='positive', ndim=1, shape=None if self.wav is None else (len(self.wav),))
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.Hz):
+                self._nu = validate_array('nu', value, domain='positive', ndim=1, shape=None if self.wav is None else (len(self.wav),))
+            else:
+                raise TypeError("frequencies should be given as a Quantity object with units of frequency")
 
     @property
     def apertures(self):
@@ -92,7 +131,10 @@ class SED(object):
         if value is None:
             self._apertures = None
         else:
-            self._apertures = validate_array('apertures', value, domain='positive', ndim=1)
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
+                self._apertures = validate_array('apertures', value, domain='positive', ndim=1)
+            else:
+                raise TypeError("apertures should be given as a Quantity object with units of frequency")
 
     @property
     def flux(self):
@@ -106,11 +148,10 @@ class SED(object):
         if value is None:
             self._flux = value
         else:
-
-            if self.n_ap is not None:
+            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
                 self._flux = validate_array('flux', value, ndim=2, shape=(self.n_ap, self.n_wav))
             else:
-                self._flux = validate_array('flux', value, ndim=1, shape=(self.n_wav, ))
+                raise TypeError("fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
 
     @property
     def error(self):
@@ -124,16 +165,15 @@ class SED(object):
         if value is None:
             self._error = value
         else:
-
-            if self.n_ap is not None:
+            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
                 self._error = validate_array('error', value, ndim=2, shape=(self.n_ap, self.n_wav))
             else:
-                self._error = validate_array('error', value, ndim=1, shape=(self.n_wav, ))
+                raise TypeError("flux errors should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
 
     @property
     def n_ap(self):
         if self.apertures is None:
-            return None
+            return 1
         else:
             return len(self.apertures)
 
@@ -145,8 +185,8 @@ class SED(object):
             return len(self.wav)
 
     @classmethod
-    def read(cls, filename, unit_wav='microns', unit_freq='Hz',
-             unit_flux='ergs/cm^2/s', order='freq'):
+    def read(cls, filename, unit_wav=u.micron, unit_freq=u.Hz,
+             unit_flux=u.erg / u.cm**2 / u.s, order='nu'):
         '''
         Read an SED from a FITS file.
 
@@ -154,15 +194,15 @@ class SED(object):
         ----------
         filename: str
             The name of the file to read the SED from.
-        unit_wav: str, optional
+        unit_wav: `~astropy.units.Unit`, optional
             The units to convert the wavelengths to.
-        unit_freq: str, optional
+        unit_freq: `~astropy.units.Unit`, optional
             The units to convert the frequency to.
-        unit_flux: str, optional
+        unit_flux: `~astropy.units.Unit`, optional
             The units to convert the flux to.
         order: str, optional
             Whether to sort the SED by increasing wavelength (`wav`) or
-            frequency ('freq').
+            frequency ('nu').
         '''
 
         # Instantiate SED class
@@ -180,87 +220,70 @@ class SED(object):
 
         # Check if distance is specified in header, otherwise assume 1kpc
         if 'DISTANCE' in hdulist[0].header:
-            sed.distance = hdulist[0].header['DISTANCE']
+            sed.distance = hdulist[0].header['DISTANCE'] * u.cm
         else:
             log.debug("No distance found in SED file, assuming 1kpc")
-            sed.distance = KPC  # cm (=1kpc)
+            sed.distance = 1. * u.kpc
 
         # Extract SED values
         wav = hdulist[1].data.field('WAVELENGTH')
         nu = hdulist[1].data.field('FREQUENCY')
         ap = hdulist[2].data.field('APERTURE')
         flux = hdulist[3].data.field('TOTAL_FLUX')
-        err = hdulist[3].data.field('TOTAL_FLUX_ERR')
+        error = hdulist[3].data.field('TOTAL_FLUX_ERR')
 
-        # Save apertures
+        # Set units
+
+        wav = wav * parse_unit_safe(hdulist[1].columns[0].unit)
+        nu = nu * parse_unit_safe(hdulist[1].columns[1].unit)
+        ap = ap * parse_unit_safe(hdulist[2].columns[0].unit)
+        flux = flux * parse_unit_safe(hdulist[3].columns[0].unit)
+        error = error * parse_unit_safe(hdulist[3].columns[1].unit)
+
         sed.apertures = ap
 
-        # Extract units
-        curr_unit_wav = hdulist[1].columns[0].unit.lower()
-        curr_unit_freq = hdulist[1].columns[1].unit.lower()
-        curr_unit_flux = hdulist[3].columns[0].unit.lower()
+        if flux.unit != error.unit:
+            raise ValueError("flux and flux error unit should match")
 
-        # Convert requested units to lowercase for comparison
-        unit_wav = unit_wav.lower()
-        unit_freq = unit_freq.lower()
-        unit_flux = unit_flux.lower()
+        # Convert wavelength and frequencies to requested units
+        sed.wav = wav.to(unit_wav)
+        sed.nu = nu.to(unit_freq)
 
-        # Convert wavelength to microns
-        if curr_unit_wav == 'm':
-            wav_microns = wav * 1.e6
-        elif curr_unit_wav == 'nm':
-            wav_microns = wav / 1000.
-        elif curr_unit_wav == 'microns':
-            wav_microns = wav
-        else:
-            raise Exception("Don't know how to convert %s to %s" % (curr_unit_wav, unit_wav))
+        # Convert flux and error
 
-        # Convert wavelength from microns to requested units
-        if unit_wav == 'microns':
-            sed.wav = wav_microns
-        else:
-            raise Exception("Don't know how to convert %s to %s" % (curr_unit_wav, unit_wav))
+        if not unit_flux.is_equivalent(flux.unit):
 
-        # Convert frequency to Hz
-        if curr_unit_freq == 'hz':
-            nu_hz = nu
-        else:
-            raise Exception("Don't know how to convert %s to %s" % (curr_unit_freq, unit_freq))
+            # Convert to ergs / cm^2 / s
 
-        # Convert frequency from Hz to requested units
-        if unit_freq == 'hz':
-            sed.nu = nu_hz
-        else:
-            raise Exception("Don't know how to convert %s to %s" % (curr_unit_freq, unit_freq))
+            if flux.unit.is_equivalent(u.erg / u.s):
+                flux = flux / sed.distance ** 2
+                error = error / sed.distance ** 2
+            elif flux.unit.is_equivalent(u.Jy):
+                flux = flux * nu
+                error = error * nu
+            elif not flux.unit.is_equivalent(u.erg / u.cm ** 2 / u.s):
+                raise Exception("Don't know how to convert {0} to ergs/cm^2/s" % (flux.unit))
 
-        # Convert flux to ergs/cm^2/s
-        if curr_unit_flux == 'ergs/s':
-            flux_cgs = flux / sed.distance ** 2.
-            error_cgs = err / sed.distance ** 2.
-        elif curr_unit_flux == 'mjy':
-            flux_cgs = flux * C / (wav_microns * 1.e-6) * 1.e-26
-            error_cgs = err * C / (wav_microns * 1.e-6) * 1.e-26
-        elif curr_unit_flux == 'ergs/cm^2/s':
-            flux_cgs = flux
-            error_cgs = err
-        else:
-            raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
+            # Convert to requested unit
 
-        # Convert flux from ergs/cm^2/s to requested units
-        if unit_flux == 'ergs/s':
-            sed.flux = flux_cgs * sed.distance ** 2.
-            sed.error = error_cgs * sed.distance ** 2.
-        elif unit_flux == 'mjy':
-            sed.flux = flux_cgs / C * (wav_microns * 1.e-6) / 1.e-26
-            sed.error = error_cgs / C * (wav_microns * 1.e-6) / 1.e-26
-        elif unit_flux == 'ergs/cm^2/s':
-            sed.flux = flux_cgs
-            sed.error = error_cgs
-        else:
-            raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
+            if unit_flux.is_equivalent(u.erg / u.s):
+                flux = flux * sed.distance ** 2
+                error = error * sed.distance ** 2
+            elif unit_flux.is_equivalent(u.Jy):
+                flux = flux / nu
+                error = error / nu
+            elif not flux.unit.is_equivalent(u.erg / u.cm ** 2 / u.s):
+                raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
+
+        sed.flux = flux.to(unit_flux)
+        sed.error = error.to(unit_flux)
 
         # Sort SED
-        if (order == 'freq' and sed.nu[0] > sed.nu[-1]) or \
+
+        if order not in ('nu', 'wav'):
+            raise ValueError('order should be nu or wav')
+
+        if (order == 'nu' and sed.nu[0] > sed.nu[-1]) or \
            (order == 'wav' and sed.wav[0] > sed.wav[-1]):
             sed.wav = sed.wav[::-1]
             sed.nu = sed.nu[::-1]
@@ -268,6 +291,78 @@ class SED(object):
             sed.error = sed.error[..., ::-1]
 
         return sed
+
+    def write(self, filename):
+        '''
+        Write an SED to a FITS file.
+
+        Parameters
+        ----------
+        filename: str
+            The name of the file to write the SED to.
+        '''
+
+        # Create first HDU with meta-data
+        hdu0 = fits.PrimaryHDU()
+
+        if self.name is None:
+            raise ValueError("Model name is not set")
+        else:
+            hdu0.header['MODEL'] = self.name
+
+        if self.distance is None:
+            raise ValueError("Model distance is not set")
+        else:
+            hdu0.header['DISTANCE'] = self.distance.to(u.cm).value
+
+        hdu0.header['NAP'] = self.n_ap
+        hdu0.header['NWAV'] = self.n_wav
+
+        # Create wavelength table
+        twav = Table()
+        if self.wav is None:
+            raise ValueError("Wavelengths are not set")
+        else:
+            twav['WAVELENGTH'] = self.wav
+        if self.nu is None:
+            raise ValueError("Frequencies are not set")
+        else:
+            twav['FREQUENCY'] = self.nu
+        twav.sort('FREQUENCY')
+        hdu1 = fits.BinTableHDU(np.array(twav))
+        hdu1.columns[0].unit = self.wav.unit.to_string(format='fits')
+        hdu1.columns[1].unit = self.nu.unit.to_string(format='fits')
+
+        # Create aperture table
+        tap = Table()
+        if self.apertures is None:
+            tap['APERTURE'] = [1.e-30]
+        else:
+            tap['APERTURE'] = self.apertures
+        hdu2 = fits.BinTableHDU(np.array(tap))
+        if self.apertures is None:
+            hdu2.columns[0].unit = 'cm'
+        else:
+            hdu2.columns[0].unit = self.apertures.unit.to_string(format='fits')
+
+        # Create flux table
+        tflux = Table()
+        if self.flux is None:
+            raise ValueError("Fluxes are not set")
+        else:
+            tflux['TOTAL_FLUX'] = self.flux
+        if self.error is None:
+            raise ValueError("Wavelengths are not set")
+        else:
+            tflux['TOTAL_FLUX_ERR'] = self.error
+        hdu3 = fits.BinTableHDU(np.array(tflux))
+        hdu3.columns[0].unit = self.flux.unit.to_string(format='fits')
+        hdu3.columns[1].unit = self.error.unit.to_string(format='fits')
+
+        # Create overall FITS file
+        hdulist = fits.HDUList([hdu0, hdu1, hdu2, hdu3])
+        hdulist.writeto(filename)
+
 
     def interpolate(self, apertures):
         '''

@@ -29,7 +29,9 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
     for f in filters:
         if f.name is None:
-            raise Exception("filters need to be named")
+            raise Exception("filter name needs to be set")
+        if f.wavelength is None:
+            raise Exception("filter central wavelength needs to be set")
 
     # Create 'convolved' sub-directory if needed
     if not os.path.exists(model_dir + '/convolved'):

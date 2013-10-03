@@ -74,8 +74,8 @@ def test_single():
     c = ConvolvedFluxes()
     c.model_names = ['a', 'b', 'c', 'd', 'e']  # this sets the number of models
     c.apertures = None  # this sets the number of apertures
-    c.flux = [1., 2., 3., 4., 5.]
-    c.error = [0.1, 0.2, 0.3, 0.4, 0.5]
+    c.flux = [(1.,), (2.,), (3.,), (4.,), (5.,)]
+    c.error = [(0.1,), (0.2,), (0.3,), (0.4,), (0.5,)]
 
 
 def test_single_invalid_lengths():
@@ -85,12 +85,12 @@ def test_single_invalid_lengths():
     c.model_names = ['a', 'b', 'c', 'd']
 
     with pytest.raises(ValueError) as exc:
-        c.flux = [1., 2., 3.]
-    assert exc.value.args[0] == 'flux has incorrect length (expected 4 but found 3)'
+        c.flux = [(1.,), (2.,), (3.,)]
+    assert exc.value.args[0] == 'flux has incorrect shape (expected (4, 1) but found (3, 1))'
 
     with pytest.raises(ValueError) as exc:
-        c.error = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
-    assert exc.value.args[0] == 'error has incorrect length (expected 4 but found 6)'
+        c.error = [(0.1,), (0.2,), (0.3,), (0.4,), (0.5,), (0.6,)]
+    assert exc.value.args[0] == 'error has incorrect shape (expected (4, 1) but found (6, 1))'
 
 
 @pytest.mark.parametrize('value', ['string', 1, 0.5, np.zeros((2, 2, 3))])
@@ -103,11 +103,11 @@ def test_single_invalid_types(value):
 
     with pytest.raises(TypeError) as exc:
         c.flux = value
-    assert exc.value.args[0] == 'flux should be a 1-d sequence'
+    assert exc.value.args[0] == 'flux should be a 2-d array'
 
     with pytest.raises(TypeError) as exc:
         c.error = value
-    assert exc.value.args[0] == 'error should be a 1-d sequence'
+    assert exc.value.args[0] == 'error should be a 2-d array'
 
 
 def test_single_io_roundtrip(tmpdir):
@@ -115,8 +115,8 @@ def test_single_io_roundtrip(tmpdir):
     c1 = ConvolvedFluxes()
     c1.model_names = ['a', 'b', 'c', 'd', 'e']
     c1.apertures = None
-    c1.flux = [1., 2., 3., 4., 5.]
-    c1.error = [0.1, 0.2, 0.3, 0.4, 0.5]
+    c1.flux = [(1.,), (2.,), (3.,), (4.,), (5.,)]
+    c1.error = [(0.1,), (0.2,), (0.3,), (0.4,), (0.5,)]
 
     filename = str(tmpdir.join('test_single.fits'))
 
@@ -131,8 +131,8 @@ def test_single_interpolate(tmpdir):
     c1 = ConvolvedFluxes()
     c1.model_names = ['a', 'b', 'c', 'd', 'e']
     c1.apertures = None
-    c1.flux = [1., 2., 3., 4., 5.]
-    c1.error = [0.1, 0.2, 0.3, 0.4, 0.5]
+    c1.flux = [(1.,), (2.,), (3.,), (4.,), (5.,)]
+    c1.error = [(0.1,), (0.2,), (0.3,), (0.4,), (0.5,)]
 
     c2 = c1.interpolate([0.5, 1.0, 1.5])
 
@@ -140,13 +140,13 @@ def test_single_interpolate(tmpdir):
 
     assert np.all(c2.apertures == [0.5, 1.0, 1.5])
 
-    assert np.all(c2.flux[:, 0] == c1.flux[:])
-    assert np.all(c2.flux[:, 1] == c1.flux[:])
-    assert np.all(c2.flux[:, 2] == c1.flux[:])
+    assert np.all(c2.flux[:, 0] == c1.flux[:, 0])
+    assert np.all(c2.flux[:, 1] == c1.flux[:, 0])
+    assert np.all(c2.flux[:, 2] == c1.flux[:, 0])
 
-    assert np.all(c2.error[:, 0] == c1.error[:])
-    assert np.all(c2.error[:, 1] == c1.error[:])
-    assert np.all(c2.error[:, 2] == c1.error[:])
+    assert np.all(c2.error[:, 0] == c1.error[:, 0])
+    assert np.all(c2.error[:, 1] == c1.error[:, 0])
+    assert np.all(c2.error[:, 2] == c1.error[:, 0])
 
 
 def test_multiple():

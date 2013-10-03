@@ -90,8 +90,8 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
         # Add additional parameter columns if necessary
         for parameter in additional:
             if parameter in tsorted.columns:
-                raise Exception("Parameter {} already exists in file".format(parameter))
-            tsorted.add_empty_column(parameter, dtype=float)
+                raise Exception("Parameter {0} already exists in file".format(parameter))
+            tsorted[parameter] = np.zeros(len(tsorted), dtype=float)
             for i, name in enumerate(tsorted['MODEL_NAME']):
                 tsorted[parameter][i] = additional[parameter][name.strip()]
 

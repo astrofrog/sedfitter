@@ -196,11 +196,18 @@ class BasePipelineTest(object):
 
         extract_parameters(output_file, output_prefix)
 
+        additional = {}
+        additional['add'] = {}
+        for i in range(5):
+            additional['add']['model_{0:04d}'.format(i)] = np.random.random()
+
         from ..write_parameters import write_parameters
 
         output_ascii_file = tmpdir.join('write_parameters').strpath
 
         write_parameters(output_file, output_ascii_file)
+
+        write_parameters(output_file, output_ascii_file, additional=additional)
 
         from ..write_parameter_ranges import write_parameter_ranges
 
@@ -208,9 +215,12 @@ class BasePipelineTest(object):
 
         write_parameter_ranges(output_file, output_ascii_file)
 
+        write_parameter_ranges(output_file, output_ascii_file, additional=additional)
+
         from ..filter_output import filter_output
 
         filter_output(output_file, output_good='auto', output_bad='auto', cpd=3.)
+
 
 
 class TestApertureIndependentPipeline(BasePipelineTest):

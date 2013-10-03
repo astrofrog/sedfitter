@@ -85,15 +85,7 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
         info.keep(select_format[0], select_format[1])
 
         # Get filtered and sorted table of parameters
-        tsorted = info.filter_table(t)
-
-        # Add additional parameter columns if necessary
-        for parameter in additional:
-            if parameter in tsorted.columns:
-                raise Exception("Parameter {0} already exists in file".format(parameter))
-            tsorted[parameter] = np.zeros(len(tsorted), dtype=float)
-            for i, name in enumerate(tsorted['MODEL_NAME']):
-                tsorted[parameter][i] = additional[parameter][name.strip()]
+        tsorted = info.filter_table(t, additional=additional)
 
         fout.write("%30s " % info.source.name)
         fout.write("%10i " % info.source.n_data)

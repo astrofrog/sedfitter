@@ -117,8 +117,8 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
                     fluxes[j].error[im, :] = s.error[:, j + jmin]
 
         for j in range(chunk_size):
-            fluxes[j].write('{:s}/convolved/MO{:03d}.fits'.format(model_dir, j + jmin + 1),
+            fluxes[j].write('{0:s}/convolved/MO{1:03d}.fits'.format(model_dir, j + jmin + 1),
                             overwrite=overwrite)
-            filters['filter'][j + jmin] = "MO{:03d}".format(j + jmin + 1)
+            filters['filter'][j + jmin] = "MO{0:03d}".format(j + jmin + 1)
 
     return filters

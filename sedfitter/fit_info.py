@@ -85,7 +85,7 @@ class FitInfo(object):
         self.model_name = d['model_name']
         self.model_fluxes = d['model_fluxes']
 
-    def filter_table(self, input_table):
+    def filter_table(self, input_table, additional={}):
         """
         Given an input table, return only the rows matching the FitInfo object, and in the same order.
         """
@@ -101,5 +101,13 @@ class FitInfo(object):
         # Double check that the sorting worked
         if not np.all(self.model_name == table_sorted['MODEL_NAME']):
             raise Exception("Parameter file sorting failed")
+
+        # Add additional parameter columns if necessary
+        for par in additional:
+            if par in table_sorted.columns:
+                raise Exception("Parameter {0} already exists in table".format(par))
+            table_sorted[par] = np.zeros(len(table_sorted), dtype=float)
+            for i, name in enumerate(table_sorted['MODEL_NAME']):
+                table_sorted[par][i] = additional[par][name.strip()]
 
         return table_sorted

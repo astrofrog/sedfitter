@@ -64,7 +64,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     # Loop over SEDs
     for im, sed_file in enumerate(sed_files):
 
-        log.debug('Convolving {}'.format(os.path.basename(sed_file)))
+        log.debug('Convolving {0}'.format(os.path.basename(sed_file)))
 
         # Read in SED
         s = SED.read(sed_file, unit_freq=u.Hz, unit_flux=u.mJy, order='nu')

@@ -161,15 +161,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
         info.keep(select_format[0], select_format[1])
 
         # Get filtered and sorted table of parameters
-        tsorted = info.filter_table(t)
-
-        # Add additional parameter columns if necessary
-        for par in additional:
-            if par in tsorted.columns:
-                raise Exception("Parameter {} already exists in file".format(par))
-            tsorted.add_empty_column(par, dtype=float)
-            for i, name in enumerate(tsorted['MODEL_NAME']):
-                tsorted[par][i] = additional[par][name.strip()]
+        tsorted = info.filter_table(t, additional=additional)
 
         # Compute histogram
         if log_x:

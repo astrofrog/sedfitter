@@ -33,7 +33,7 @@ import matplotlib.ticker as ticker
 from .extinction import Extinction
 from .fit_info import FitInfo
 from .sed import SED
-from . import util
+from .utils import io
 from .utils import parfile
 from .utils.formatter import LogFormatterMathtextAuto
 
@@ -234,7 +234,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
     '''
 
     if output_dir:
-        util.create_dir(output_dir)
+        io.create_dir(output_dir)
     else:
         figures = {}
 

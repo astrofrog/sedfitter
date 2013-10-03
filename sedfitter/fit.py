@@ -18,7 +18,7 @@ from . import timer
 from .models import Models
 from .fit_info import FitInfo
 from .source import Source
-from . import util
+from .utils import io
 from . import six
 
 
@@ -121,7 +121,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
 
     # Cycle through sources
 
-    util.delete_file(output)
+    io.delete_file(output)
 
     fout = open(output, 'wb')
     pickle.dump(model_dir, fout, 2)

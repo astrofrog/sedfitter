@@ -19,7 +19,7 @@ from matplotlib.font_manager import FontProperties
 from .fit_info import FitInfo
 from .extinction import Extinction
 from .models import load_parameter_table
-from . import util
+from .utils import io
 from .utils.formatter import LogFormatterMathtextAuto
 
 KERNEL = Tophat2DKernel(5.5,x_size=11,y_size=11,mode='oversample').array
@@ -91,7 +91,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
         raise ValueError("No output directory has been specified")
 
     # Create output directory
-    util.create_dir(output_dir)
+    io.create_dir(output_dir)
 
     # Open output file
     fin = open(input_file, 'rb')

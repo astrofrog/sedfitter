@@ -163,6 +163,11 @@ class BasePipelineTest(object):
                        output_dir=plots_dir,
                        select_format=('F', 2.), format='png')
 
+        from ..extract_parameters import extract_parameters
+
+        output_prefix = tmpdir.join('extract_parameters').strpath
+
+        extract_parameters(output_file, output_prefix)
 
 
 class TestApertureIndependentPipeline(BasePipelineTest):

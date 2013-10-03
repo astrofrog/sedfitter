@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 
+import os
 try:
     import cPickle as pickle
 except ImportError:
     import pickle
-import string
 
+from astropy.table import Table
 import numpy as np
-import atpy
 
 from .fit_info import FitInfo
 from .extinction import Extinction
@@ -16,9 +16,6 @@ from .extinction import Extinction
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,
                        parameters='all', select_format=("N", 1), header=True):
 
-    if input[-8:] != '.fitinfo':
-        raise Exception("Extension of input file should be .fitinfo")
-
     fin = open(input, 'rb')
 
     # Read in header of output file
@@ -26,24 +23,23 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     filters = pickle.load(fin)
     extinction_law = pickle.load(fin)
 
-    # Read in parameters file
-    tpar = atpy.Table(model_dir + '/parameters.fits.gz')
-    try:
-        par_model_names = np.char.strip(tpar.MODEL_NAME)
-    except:
-        par_model_names = np.array([x.strip() for x in tpar.MODEL_NAME],
-                                   dtype=tpar.MODEL_NAME.dtype)
-    tpar.MODEL_NAME = np.char.strip(tpar.MODEL_NAME)
+    # Read in table of parameters for model grid
+    if os.path.exists(model_dir + '/parameters.fits'):
+        t = Table.read(model_dir + '/parameters.fits')
+    elif os.path.exists(model_dir + '/parameters.fits.gz'):
+        t = Table.read(model_dir + '/parameters.fits.gz')
+    else:
+        raise Exception("Parameter file not found in %s" % model_dir)
 
     format = {}
-    for par in tpar.names:
+    for par in t.dtype.names:
         if par == 'MODEL_NAME':
             format[par] = "%11s"
         else:
             format[par] = "%11.3e"
 
     if parameters == 'all':
-        parameters = tpar.names
+        parameters = t.dtype.names
 
     while True:
 
@@ -63,19 +59,28 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
         if output_suffix:
             output += output_suffix
 
-        fout = open(output, 'wb')
+        fout = open(output, 'w')
 
         if header:
             fout.write("%11s %11s %11s " % ("CHI2", "AV", "SC"))
-            fout.write(string.join([("%11s" % par) for par in parameters], " "))
+            fout.write(" ".join([("%11s" % par) for par in parameters]))
             fout.write("\n")
+
+        # Match good-fitting models to parameter list
+        subset = np.in1d(t['MODEL_NAME'], info.model_name)
+
+        tsub = t[subset]
+        index = np.argsort(np.argsort(info.model_name))
+        tsorted = tsub[index]
+        if not np.all(info.model_name == tsorted['MODEL_NAME']):
+            raise Exception("Parameter file sorting failed")
 
         for i in range(info.n_fits):
 
-            row = tpar.where(info.model_name[i] == par_model_names).row(0)
+            row = tsorted[i]
 
             basic = "%11.3e %11.3e %11.3e " % (info.chi2[i], info.av[i], info.sc[i])
-            pars = string.join([(format[par] % row[par]) for par in parameters], " ")
+            pars = " ".join([(format[par] % row[par]) for par in parameters])
 
             fout.write(basic + pars + "\n")
 

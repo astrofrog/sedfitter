@@ -18,7 +18,7 @@ from . import timer
 from .models import Models
 from .fit_info import FitInfo
 from .source import Source
-from . import util
+from .utils import io
 from . import six
 
 
@@ -91,6 +91,9 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     else:
         data_file = data
 
+    if len(apertures) != len(filter_names):
+        raise ValueError("length of apertures list should match length of filter names list")
+
     # Construct filters dictionary
     filters = []
     for i in range(len(apertures)):
@@ -107,7 +110,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print('     Filter    Wavelength    Aperture (")   ')
     print('    ----------------------------------------')
     for f in filters:
-        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['aperture_arcsec'], f['wav']))
+        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['wav'], f['aperture_arcsec']))
     print('')
 
     # Set Av law
@@ -118,7 +121,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
 
     # Cycle through sources
 
-    util.delete_file(output)
+    io.delete_file(output)
 
     fout = open(output, 'wb')
     pickle.dump(model_dir, fout, 2)

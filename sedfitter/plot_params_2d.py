@@ -7,50 +7,23 @@ except ImportError:
     import pickle
 from copy import deepcopy
 
-import atpy
+from astropy.table import Table
+from astropy.convolution import Tophat2DKernel
+
 import numpy as np
 from scipy.ndimage import convolve
 
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-from matplotlib.ticker import LogFormatterMathtext
 
 from .fit_info import FitInfo
 from .extinction import Extinction
-from . import util
+from .models import load_parameter_table
+from .utils import io
+from .utils.formatter import LogFormatterMathtextAuto
 
-
-# KERNEL = np.array([[ 0.  ,  0.39,  0.87,  1.  ,  0.87,  0.39,  0.  ],
-#                    [ 0.39,  0.98,  1.  ,  1.  ,  1.  ,  0.98,  0.39],
-#                    [ 0.87,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  0.87],
-#                    [ 1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ],
-#                    [ 0.87,  1.  ,  1.  ,  1.  ,  1.  ,  1.  ,  0.87],
-#                    [ 0.39,  0.98,  1.  ,  1.  ,  1.  ,  0.98,  0.38],
-#                    [ 0.  ,  0.39,  0.87,  1.  ,  0.87,  0.38,  0.01]])
-
-KERNEL = np.array([[0., 0., 0.15, 0.58, 0.91, 1., 0.91, 0.58, 0.15, 0., 0.],
-                   [0., 0.26, 0.98, 1., 1., 1., 1., 1., 0.98, 0.26, 0.],
-                   [0.15, 0.98, 1., 1., 1., 1., 1., 1., 1., 0.98, 0.15],
-                   [0.58, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.58],
-                   [0.91, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.91],
-                   [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
-                   [0.91, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.91],
-                   [0.58, 1., 1., 1., 1., 1., 1., 1., 1., 1., 0.58],
-                   [0.15, 0.98, 1., 1., 1., 1., 1., 1., 1., 0.98, 0.15],
-                   [0., 0.26, 0.98, 1., 1., 1., 1., 1., 0.98, 0.26, 0.],
-                   [0., 0., 0.15, 0.58, 0.91, 1., 0.91, 0.58, 0.15, 0., 0.]])
-
-
-class LogFormatterMathtextAuto(LogFormatterMathtext):
-
-    def __call__(self, x, pos=None):
-        if x in [0.001, 0.01, 0.1]:
-            return str(x)
-        elif x in [1., 10., 100., 1000.]:
-            return str(int(x))
-        else:
-            return LogFormatterMathtext.__call__(self, x, pos=pos)
-
+KERNEL = Tophat2DKernel(5.5,x_size=11,y_size=11,mode='oversample').array
+KERNEL /= KERNEL.max()  # normalize so maximum is 1
 
 plt.rc('text', usetex=False)
 plt.rc('axes', titlesize='small')
@@ -118,7 +91,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
         raise ValueError("No output directory has been specified")
 
     # Create output directory
-    util.create_dir(output_dir)
+    io.create_dir(output_dir)
 
     # Open output file
     fin = open(input_file, 'rb')
@@ -129,21 +102,16 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     extinction = pickle.load(fin)
 
     # Read in table of parameters for model grid
-    if os.path.exists(model_dir + '/parameters.fits'):
-        t = atpy.Table(model_dir + '/parameters.fits')
-    elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = atpy.Table(model_dir + '/parameters.fits.gz')
-    else:
-        raise Exception("Parameter file not found in %s" % model_dir)
+    t = load_parameter_table(model_dir)
 
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
     tpos = deepcopy(t)
     if log_x:
-        tpos = tpos.where(tpos[parameter_x] > 0.)
+        tpos = tpos[tpos[parameter_x] > 0.]
     if log_y:
-        tpos = tpos.where(tpos[parameter_y] > 0.)
+        tpos = tpos[tpos[parameter_y] > 0.]
 
     # Initialize figure
     fig = plt.figure()
@@ -188,11 +156,11 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     ax.set_ylabel(parameter_y if label_y is None else label_y)
 
     if log_x:
-        ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
         ax.set_xscale('log')
+        ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
     if log_y:
-        ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
         ax.set_yscale('log')
+        ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
 
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
@@ -219,13 +187,8 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
         # Filter fits
         info.keep(select_format[0], select_format[1])
 
-        # Match good-fitting models to parameter list
-        subset = np.in1d(t['MODEL_NAME'], info.model_name)
-        tsub = t.where(subset)
-        index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub.rows(index)
-        if not np.all(info.model_name == np.char.decode(tsorted['MODEL_NAME'], 'ascii')):
-            raise Exception("Parameter file sorting failed")
+        # Get filtered and sorted table of parameters
+        tsorted = info.filter_table(t)
 
         # Add additional parameter columns if necessary
         for par in additional:

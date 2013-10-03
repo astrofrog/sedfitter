@@ -84,3 +84,22 @@ class FitInfo(object):
         self.model_id = d['model_id']
         self.model_name = d['model_name']
         self.model_fluxes = d['model_fluxes']
+
+    def filter_table(self, input_table):
+        """
+        Given an input table, return only the rows matching the FitInfo object, and in the same order.
+        """
+
+        if not "MODEL_NAME" in input_table.dtype.names:
+            raise ValueError("Input table should contain a MODEL_NAME column")
+
+        subset = np.in1d(input_table['MODEL_NAME'], self.model_name)
+        table_subset = input_table[subset]
+        index = np.argsort(np.argsort(self.model_name))
+        table_sorted = table_subset[index]
+
+        # Double check that the sorting worked
+        if not np.all(self.model_name == table_sorted['MODEL_NAME']):
+            raise Exception("Parameter file sorting failed")
+
+        return table_sorted

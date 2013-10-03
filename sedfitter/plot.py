@@ -33,8 +33,9 @@ import matplotlib.ticker as ticker
 from .extinction import Extinction
 from .fit_info import FitInfo
 from .sed import SED
-from . import util
+from .utils import io
 from .utils import parfile
+from .utils.formatter import LogFormatterMathtextAuto
 
 KPC = 3.086e21
 
@@ -149,7 +150,8 @@ def set_view_limits(ax, wav, source, x_mode, y_mode, x_range, y_range):
         xmax = x_range[1]
 
     if y_mode == 'A':
-        plot_flux = 10. ** (source.logflux - 26. + np.log10(3.e8 / (wav * 1.e-6)))
+        weight, log_flux, log_error = source.get_log_fluxes()
+        plot_flux = 10. ** (log_flux - 26. + np.log10(3.e8 / (wav * 1.e-6)))
         ymin = np.min(plot_flux[source.valid != 0]) * 10. ** (-y_range[0])
         ymax = np.max(plot_flux[source.valid != 0]) * 10. ** (+y_range[1])
     else:
@@ -160,7 +162,8 @@ def set_view_limits(ax, wav, source, x_mode, y_mode, x_range, y_range):
     ax.set_yscale('log')
     ax.set_xlim((xmin, xmax))
     ax.set_ylim((ymin, ymax))
-    ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+    ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
+
 
     return ax
 
@@ -231,7 +234,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
     '''
 
     if output_dir:
-        util.create_dir(output_dir)
+        io.create_dir(output_dir)
     else:
         figures = {}
 

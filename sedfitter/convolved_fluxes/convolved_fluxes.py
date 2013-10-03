@@ -107,10 +107,7 @@ class ConvolvedFluxes(object):
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
 
-            if self.n_ap is not None:
-                self._flux = validate_array('flux', value, ndim=2, shape=(self.n_models, self.n_ap))
-            else:
-                self._flux = validate_array('flux', value, ndim=1, shape=(self.n_models, ))
+            self._flux = validate_array('flux', value, ndim=2, shape=(self.n_models, self.n_ap))
 
     @property
     def error(self):
@@ -128,10 +125,7 @@ class ConvolvedFluxes(object):
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
 
-            if self.n_ap is not None:
-                self._error = validate_array('error', value, ndim=2, shape=(self.n_models, self.n_ap))
-            else:
-                self._error = validate_array('error', value, ndim=1, shape=(self.n_models, ))
+            self._error = validate_array('error', value, ndim=2, shape=(self.n_models, self.n_ap))
 
 
     @property
@@ -144,7 +138,7 @@ class ConvolvedFluxes(object):
     @property
     def n_ap(self):
         if self.apertures is None:
-            return None
+            return 1
         else:
             return len(self.apertures)
 
@@ -195,8 +189,14 @@ class ConvolvedFluxes(object):
         conv.model_names = tc['MODEL_NAME']
 
         # Read in flux and flux errors
-        conv.flux = tc['TOTAL_FLUX']
-        conv.error = tc['TOTAL_FLUX_ERR']
+        if tc['TOTAL_FLUX'].ndim == 1 and conv.n_ap == 1:
+            conv.flux = tc['TOTAL_FLUX'].reshape(tc['TOTAL_FLUX'].shape[0], 1)
+        else:
+            conv.flux = tc['TOTAL_FLUX']
+        if tc['TOTAL_FLUX_ERR'].ndim == 1 and conv.n_ap == 1:
+            conv.error = tc['TOTAL_FLUX_ERR'].reshape(tc['TOTAL_FLUX_ERR'].shape[0], 1)
+        else:
+            conv.error = tc['TOTAL_FLUX_ERR']
 
         # Read in 99% cumulative and 50% surface brightness radii
         try:
@@ -206,7 +206,7 @@ class ConvolvedFluxes(object):
             pass
 
         # Create an interpolating function for the flux vs aperture
-        if conv.flux.ndim > 1:
+        if conv.n_ap > 1:
             conv.flux_interp = interp1d(conv.apertures, conv.flux[:])
 
         return conv
@@ -226,12 +226,6 @@ class ConvolvedFluxes(object):
         from astropy.io import fits
         from astropy.table import Table, Column
 
-        keywords = {}
-        if self.wavelength is not None:
-            keywords['FILTWAV'] = self.wavelength
-        keywords['NMODELS'] = self.n_models
-        keywords['NAP'] = self.n_ap
-
         tc = Table()
         tc['MODEL_NAME'] = self.model_names
         tc['TOTAL_FLUX'] = self.flux
@@ -247,7 +241,12 @@ class ConvolvedFluxes(object):
 
         # Convert to FITS
         hdulist = fits.HDUList()
-        hdulist.append(fits.PrimaryHDU(header=fits.Header(keywords)))
+        hdulist.append(fits.PrimaryHDU())
+        if self.wavelength is not None:
+            hdulist[0].header['FILTWAV'] = self.wavelength
+        hdulist[0].header['NMODELS'] = self.n_models
+        hdulist[0].header['NAP'] = self.n_ap
+
         hdulist.append(fits.BinTableHDU(np.array(tc), name='CONVOLVED FLUXES'))
         if self.apertures is not None:
             hdulist.append(fits.BinTableHDU(np.array(ta), name='APERTURES'))
@@ -271,7 +270,7 @@ class ConvolvedFluxes(object):
         c.model_names = self.model_names
 
         # Interpolate to requested apertures
-        if self.n_ap is not None:
+        if self.n_ap > 1:
 
             # If any apertures are larger than the defined max, reset to max
             if np.any(apertures > self.apertures.max()):

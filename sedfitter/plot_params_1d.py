@@ -6,7 +6,7 @@ try:
 except ImportError:
     import pickle
 
-import atpy
+from astropy.table import Table
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -16,18 +16,9 @@ from matplotlib.ticker import LogFormatterMathtext
 
 from .fit_info import FitInfo
 from .extinction import Extinction
-from . import util
-
-
-class LogFormatterMathtextAuto(LogFormatterMathtext):
-
-    def __call__(self, x, pos=None):
-        if x in [0.001, 0.01, 0.1]:
-            return str(x)
-        elif x in [1., 10., 100., 1000.]:
-            return str(int(x))
-        else:
-            return LogFormatterMathtext.__call__(self, x, pos=pos)
+from .models import load_parameter_table
+from .utils import io
+from .utils.formatter import LogFormatterMathtextAuto
 
 
 plt.rc('text', usetex=False)
@@ -91,7 +82,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     if output_dir is None:
         raise ValueError("No output directory has been specified")
     # Create output directory
-    util.create_dir(output_dir)
+    io.create_dir(output_dir)
 
     # Open output file
     fin = open(input_file, 'rb')
@@ -102,12 +93,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     extinction = pickle.load(fin)
 
     # Read in table of parameters for model grid
-    if os.path.exists(model_dir + '/parameters.fits'):
-        t = atpy.Table(model_dir + '/parameters.fits')
-    elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = atpy.Table(model_dir + '/parameters.fits.gz')
-    else:
-        raise Exception("Parameter file not found in %s" % model_dir)
+    t = load_parameter_table(model_dir)
 
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
@@ -140,14 +126,14 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     p = Polygon(p, facecolor='0.8', edgecolor='none')
     ax.add_patch(p)
 
-    ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
-    ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
     ax.set_xlabel(parameter if label is None else label)
 
     if log_x:
         ax.set_xscale('log')
+        ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
     if log_y:
         ax.set_yscale('log')
+        ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
 
     ax.set_xlim(pmin, pmax)
     ax.set_ylim(0.1, hist_all.max() * 10.)
@@ -174,13 +160,8 @@ def plot_params_1d(input_file, parameter, output_dir=None,
         # Filter fits
         info.keep(select_format[0], select_format[1])
 
-        # Match good-fitting models to parameter list
-        subset = np.in1d(t['MODEL_NAME'], info.model_name)
-        tsub = t.where(subset)
-        index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub.rows(index)
-        if not np.all(info.model_name == np.char.decode(tsorted['MODEL_NAME'], 'ascii')):
-            raise Exception("Parameter file sorting failed")
+        # Get filtered and sorted table of parameters
+        tsorted = info.filter_table(t)
 
         # Add additional parameter columns if necessary
         for par in additional:

@@ -18,17 +18,7 @@ from .fit_info import FitInfo
 from .extinction import Extinction
 from .models import load_parameter_table
 from . import util
-
-
-class LogFormatterMathtextAuto(LogFormatterMathtext):
-
-    def __call__(self, x, pos=None):
-        if x in [0.001, 0.01, 0.1]:
-            return str(x)
-        elif x in [1., 10., 100., 1000.]:
-            return str(int(x))
-        else:
-            return LogFormatterMathtext.__call__(self, x, pos=pos)
+from .utils.formatter import LogFormatterMathtextAuto
 
 
 plt.rc('text', usetex=False)
@@ -136,14 +126,14 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     p = Polygon(p, facecolor='0.8', edgecolor='none')
     ax.add_patch(p)
 
-    ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
-    ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
     ax.set_xlabel(parameter if label is None else label)
 
     if log_x:
         ax.set_xscale('log')
+        ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
     if log_y:
         ax.set_yscale('log')
+        ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
 
     ax.set_xlim(pmin, pmax)
     ax.set_ylim(0.1, hist_all.max() * 10.)

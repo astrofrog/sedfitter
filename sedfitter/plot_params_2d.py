@@ -15,27 +15,15 @@ from scipy.ndimage import convolve
 
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
-from matplotlib.ticker import LogFormatterMathtext
 
 from .fit_info import FitInfo
 from .extinction import Extinction
 from .models import load_parameter_table
 from . import util
+from .utils.formatter import LogFormatterMathtextAuto
 
 KERNEL = Tophat2DKernel(5.5,x_size=11,y_size=11,mode='oversample').array
 KERNEL /= KERNEL.max()  # normalize so maximum is 1
-
-
-class LogFormatterMathtextAuto(LogFormatterMathtext):
-
-    def __call__(self, x, pos=None):
-        if x in [0.001, 0.01, 0.1]:
-            return str(x)
-        elif x in [1., 10., 100., 1000.]:
-            return str(int(x))
-        else:
-            return LogFormatterMathtext.__call__(self, x, pos=pos)
-
 
 plt.rc('text', usetex=False)
 plt.rc('axes', titlesize='small')
@@ -168,11 +156,11 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     ax.set_ylabel(parameter_y if label_y is None else label_y)
 
     if log_x:
-        ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
         ax.set_xscale('log')
+        ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
     if log_y:
-        ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
         ax.set_yscale('log')
+        ax.yaxis.set_major_formatter(LogFormatterMathtextAuto())
 
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)

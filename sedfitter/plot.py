@@ -35,6 +35,7 @@ from .fit_info import FitInfo
 from .sed import SED
 from . import util
 from .utils import parfile
+from .utils.formatter import LogFormatterMathtextAuto
 
 KPC = 3.086e21
 
@@ -161,7 +162,8 @@ def set_view_limits(ax, wav, source, x_mode, y_mode, x_range, y_range):
     ax.set_yscale('log')
     ax.set_xlim((xmin, xmax))
     ax.set_ylim((ymin, ymax))
-    ax.xaxis.set_major_formatter(ticker.ScalarFormatter())
+    ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
+
 
     return ax
 

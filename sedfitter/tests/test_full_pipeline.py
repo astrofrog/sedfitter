@@ -181,6 +181,10 @@ class BasePipelineTest(object):
 
         write_parameter_ranges(output_file, output_ascii_file)
 
+        from ..filter_output import filter_output
+
+        filter_output(output_file, output_good='auto', output_bad='auto', cpd=3.)
+
 
 class TestApertureIndependentPipeline(BasePipelineTest):
     aperture_dependent = False

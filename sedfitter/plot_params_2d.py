@@ -19,6 +19,7 @@ from matplotlib.ticker import LogFormatterMathtext
 
 from .fit_info import FitInfo
 from .extinction import Extinction
+from .models import load_parameter_table
 from . import util
 
 KERNEL = Tophat2DKernel(5.5,x_size=11,y_size=11,mode='oversample').array
@@ -113,12 +114,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     extinction = pickle.load(fin)
 
     # Read in table of parameters for model grid
-    if os.path.exists(model_dir + '/parameters.fits'):
-        t = Table.read(model_dir + '/parameters.fits')
-    elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = Table.read(model_dir + '/parameters.fits.gz')
-    else:
-        raise Exception("Parameter file not found in %s" % model_dir)
+    t = load_parameter_table(model_dir)
 
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
@@ -203,13 +199,8 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
         # Filter fits
         info.keep(select_format[0], select_format[1])
 
-        # Match good-fitting models to parameter list
-        subset = np.in1d(t['MODEL_NAME'], info.model_name)
-        tsub = t[subset]
-        index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub[index]
-        if not np.all(info.model_name == tsorted['MODEL_NAME']):
-            raise Exception("Parameter file sorting failed")
+        # Get filtered and sorted table of parameters
+        tsorted = info.filter_table(t)
 
         # Add additional parameter columns if necessary
         for par in additional:

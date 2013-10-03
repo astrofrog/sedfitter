@@ -11,6 +11,7 @@ import numpy as np
 
 from .fit_info import FitInfo
 from .extinction import Extinction
+from .models import load_parameter_table
 
 
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,
@@ -24,12 +25,7 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     extinction_law = pickle.load(fin)
 
     # Read in table of parameters for model grid
-    if os.path.exists(model_dir + '/parameters.fits'):
-        t = Table.read(model_dir + '/parameters.fits')
-    elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = Table.read(model_dir + '/parameters.fits.gz')
-    else:
-        raise Exception("Parameter file not found in %s" % model_dir)
+    t = load_parameter_table(model_dir)
 
     format = {}
     for par in t.dtype.names:
@@ -66,14 +62,8 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
             fout.write(" ".join([("%11s" % par) for par in parameters]))
             fout.write("\n")
 
-        # Match good-fitting models to parameter list
-        subset = np.in1d(t['MODEL_NAME'], info.model_name)
-
-        tsub = t[subset]
-        index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub[index]
-        if not np.all(info.model_name == tsorted['MODEL_NAME']):
-            raise Exception("Parameter file sorting failed")
+        # Get filtered and sorted table of parameters
+        tsorted = info.filter_table(t)
 
         for i in range(info.n_fits):
 

@@ -11,6 +11,7 @@ from astropy.table import Table
 
 from .fit_info import FitInfo
 from .extinction import Extinction
+from .models import load_parameter_table
 
 
 def write_parameter_ranges(input_file, output_file, select_format=("N", 1), additional={}):
@@ -24,12 +25,8 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
     filters = pickle.load(fin)
     extinction = pickle.load(fin)
 
-    if os.path.exists(model_dir + '/parameters.fits'):
-        t = Table.read(model_dir + '/parameters.fits')
-    elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = Table.read(model_dir + '/parameters.fits.gz')
-    else:
-        raise Exception("Parameter file not found in %s" % model_dir)
+    # Read in table of parameters for model grid
+    t = load_parameter_table(model_dir)
 
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
@@ -94,12 +91,8 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
         # Filter fits
         info.keep(select_format[0], select_format[1])
 
-        subset = np.in1d(t['MODEL_NAME'], info.model_name)
-        tsub = t[subset]
-        index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub[index]
-        if not np.all(info.model_name == tsorted['MODEL_NAME']):
-            raise Exception("Parameter file sorting failed")
+        # Get filtered and sorted table of parameters
+        tsorted = info.filter_table(t)
 
         # Add additional parameter columns if necessary
         for parameter in additional:

@@ -180,7 +180,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
          plot_name=True, plot_info=True, format='eps'):
-    '''
+    """
     Make SED plots
 
     Parameters
@@ -231,7 +231,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
         Whether to show the fit information on the plot(s).
     format : str, optional
         The file format to use for the plot, if output_dir is specified.
-    '''
+    """
 
     if output_dir:
         io.create_dir(output_dir)

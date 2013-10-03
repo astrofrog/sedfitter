@@ -6,11 +6,11 @@ from .interpolate import interp1d_fast
 
 
 def integrate_subset(x, y, xmin, xmax):
-    '''
+    """
     Perform trapezium integration of a set of points (x,y) between bounds xmin
     and xmax. The interpolation between the points is done in linear space, so
     this is designed for functions that are piecewise linear in linear space.
-    '''
+    """
 
     # Swap arrays if necessary
     if x[-1] < x[0]:
@@ -49,11 +49,11 @@ def integrate_subset(x, y, xmin, xmax):
 
 
 def integrate(x, y):
-    '''
+    """
     Perform trapezium integration of a set of points (x,y). The interpolation
     between the points is done in linear space, so this is designed for
     functions that are piecewise linear in linear space.
-    '''
+    """
 
     # Fix NaN values
     y[np.isnan(y)] = 0.

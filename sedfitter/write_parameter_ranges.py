@@ -15,6 +15,23 @@ from .models import load_parameter_table
 
 
 def write_parameter_ranges(input_file, output_file, select_format=("N", 1), additional={}):
+    """
+    Write out an ASCII file with ranges of paramters for each source.
+
+    Parameters
+    ----------
+    input_file : str
+        File containing the fit information
+    output_file : str, optional
+        The output ASCII file containing the parameter ranges
+    select_format : tuple, optional
+        Tuple specifying which fits should be output. See the documentation
+        for a description of the tuple syntax.
+    additional : dict, optional
+        A dictionary giving additional parameters for each model. This should
+        be a dictionary where each key is a parameter, and each value is a
+        dictionary mapping the model names to the parameter values.
+    """
 
     # Open input and output file
     fin = open(input_file, 'rb')

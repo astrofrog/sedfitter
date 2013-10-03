@@ -1,6 +1,6 @@
-=========
-sedfitter
-=========
+===================
+Main user functions
+===================
 
 .. currentmodule:: sedfitter
 

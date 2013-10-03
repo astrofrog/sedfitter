@@ -1,13 +1,8 @@
 API
 ===
 
-Main user functions
--------------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    sedfitter.rst
-   
-Classes
--------

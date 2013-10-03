@@ -4,12 +4,12 @@ import numpy as np
 
 
 class check_bounds(object):
-    '''
+    """
     Decorator to add standard interpolation bounds checking.
 
     This decorator incurs an overhead of 30-50 percent on the runtime of
     the interpolation routine.
-    '''
+    """
 
     def __init__(self, f):
         self.f = f
@@ -43,7 +43,7 @@ class check_bounds(object):
 
 @check_bounds
 def interp1d_fast(x, y, xval):
-    '''On-the-fly linear interpolator'''
+    """On-the-fly linear interpolator"""
     if len(x) != len(y):
         raise Exception("x and y should have the same length")
     ipos = np.searchsorted(x, xval)

@@ -15,7 +15,7 @@ from ..sed import SED
 
 def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
                                      wav_min=-np.inf, wav_max=np.inf):
-    '''
+    """
     Convolve all the model SEDs in a model directory
 
     Parameters
@@ -32,7 +32,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
     wav_max: float, optional
         The maximum wavelength to consider. Only wavelengths below this value
         will be output.
-    '''
+    """
 
     # Create 'convolved' sub-directory if needed
     if not os.path.exists(model_dir + '/convolved'):

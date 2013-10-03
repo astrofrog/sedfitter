@@ -11,7 +11,7 @@ from ..source import Source
 from .. import six
 
 def list2data(file_in, file_out, models_dir=None, source_name='source'):
-    '''
+    """
     Convert a list-formatted data file into the standard fitting format
 
     In some cases it can be convenient to specify an SED in a list-based
@@ -37,7 +37,7 @@ def list2data(file_in, file_out, models_dir=None, source_name='source'):
         The list of filters for the datafile (can be passed to fit())
     apertures: list of float
         The list of apertures for the datafile (can be passed to fit())
-    '''
+    """
 
     # Load datafile
     datafile = np.loadtxt(file_in, dtype=[('flux_type', int), ('name', 'S30'),

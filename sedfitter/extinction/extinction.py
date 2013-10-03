@@ -51,14 +51,14 @@ class Extinction(object):
         return e
 
     def get_av(self, wav):
-        '''
+        """
         Interpolate the Av at given wavelengths
 
         Parameters
         ----------
         wav : sequence
             The wavelengths at which to interpolate the visual extinction
-        '''
+        """
         return -0.4 * np.interp(wav, self.wav, self.chi, left=0., right=0.) \
             / np.interp(0.55, self.wav, self.chi)
 

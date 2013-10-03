@@ -187,7 +187,7 @@ class SED(object):
     @classmethod
     def read(cls, filename, unit_wav=u.micron, unit_freq=u.Hz,
              unit_flux=u.erg / u.cm**2 / u.s, order='nu'):
-        '''
+        """
         Read an SED from a FITS file.
 
         Parameters
@@ -203,7 +203,7 @@ class SED(object):
         order: str, optional
             Whether to sort the SED by increasing wavelength (`wav`) or
             frequency ('nu').
-        '''
+        """
 
         # Instantiate SED class
         sed = cls()
@@ -293,14 +293,14 @@ class SED(object):
         return sed
 
     def write(self, filename):
-        '''
+        """
         Write an SED to a FITS file.
 
         Parameters
         ----------
         filename: str
             The name of the file to write the SED to.
-        '''
+        """
 
         # Create first HDU with meta-data
         hdu0 = fits.PrimaryHDU()
@@ -365,9 +365,9 @@ class SED(object):
 
 
     def interpolate(self, apertures):
-        '''
+        """
         Interpolate the SED to different apertures
-        '''
+        """
 
         # If there is only one aperture, we can't interpolate, we can only repeat
         if self.n_ap == 1:
@@ -386,11 +386,11 @@ class SED(object):
         return flux_interp(apertures)
 
     def interpolate_variable(self, wavelengths, apertures):
-        '''
+        """
         Interpolate the SED to a variable aperture as a function of
         wavelength. This method should be called with an interpolating
         function for aperture as a function of wavelength, in log10 space.
-        '''
+        """
 
         if self.n_ap == 1:
             return self.flux[0, :]

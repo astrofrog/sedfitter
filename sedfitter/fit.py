@@ -26,7 +26,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         extinction_law=None, av_range=None, distance_range=None,
         output_format=('F', 6.), output_convolved=False,
         remove_resolved=False):
-    '''
+    """
     Fit a set of sources with models
 
     Parameters
@@ -58,7 +58,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     remove_resolved : bool, optional
         If set, then models larger than the aperture are removed. See
         Robitaille et al. (2007) for a discussion of this criterion.
-    '''
+    """
 
     print(" ------------------------------------------------------------")
     print("  => Fitting parameters")

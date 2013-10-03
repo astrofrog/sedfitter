@@ -45,7 +45,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
                    label=None, bins=30, additional={}, plot_name=True,
                    format='eps'):
-    '''
+    """
     Make histogram plots of parameters
 
     Parameters
@@ -77,7 +77,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     format: str, optional
         The file format to use for the plot, if output_dir is specified.
 
-    '''
+    """
 
     if output_dir is None:
         raise ValueError("No output directory has been specified")

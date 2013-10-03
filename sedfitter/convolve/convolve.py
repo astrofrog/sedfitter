@@ -14,7 +14,7 @@ from ..sed import SED
 
 
 def convolve_model_dir(model_dir, filters, overwrite=False):
-    '''
+    """
     Convolve all the model SEDs in a model directory
 
     Parameters
@@ -25,7 +25,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         A list of Filter objects to use for the convolution
     overwrite: bool, optional
         Whether to overwrite the output files
-    '''
+    """
 
     for f in filters:
         if f.name is None:

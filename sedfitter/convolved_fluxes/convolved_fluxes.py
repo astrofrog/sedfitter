@@ -151,14 +151,14 @@ class ConvolvedFluxes(object):
 
     @classmethod
     def read(cls, filename):
-        '''
+        """
         Read convolved flux from a FITS file
 
         Parameters
         ----------
         filename : str
             The name of the FITS file to read the convolved fluxes from
-        '''
+        """
 
         from astropy.io import fits
         from astropy.table import Table
@@ -212,7 +212,7 @@ class ConvolvedFluxes(object):
         return conv
 
     def write(self, filename, overwrite=False):
-        '''
+        """
         Write convolved flux to a FITS file.
 
         Parameters
@@ -221,7 +221,7 @@ class ConvolvedFluxes(object):
             The name of the file to output the convolved fluxes to.
         overwrite: bool, optional
             Whether to overwrite the output file
-        '''
+        """
 
         from astropy.io import fits
         from astropy.table import Table, Column
@@ -253,9 +253,9 @@ class ConvolvedFluxes(object):
         hdulist.writeto(filename, clobber=overwrite)
 
     def interpolate(self, apertures):
-        '''
+        """
         Interpolate the flux to the apertures specified.
-        '''
+        """
 
         # Initalize new ConvolvedFluxes object to return
         c = ConvolvedFluxes()
@@ -301,14 +301,14 @@ class ConvolvedFluxes(object):
         return c
 
     def find_radius_cumul(self, fraction):
-        '''
+        """
         Find for each model the radius containing a fraction of the flux.
 
         Parameters
         ----------
         fraction: float
             The fraction to use when determining the radius
-        '''
+        """
 
         log.info("Calculating radii containing %g%s of the flux" % (fraction * 100., '%'))
 
@@ -339,7 +339,7 @@ class ConvolvedFluxes(object):
             return radius
 
     def find_radius_sigma(self, fraction):
-        '''
+        """
         Find for each model a fractional surface brightness radius
 
         This is the outermost radius where the surface brightness is larger
@@ -349,7 +349,7 @@ class ConvolvedFluxes(object):
         ----------
         fraction: float
             The fraction to use when determining the radius
-        '''
+        """
 
         log.info("Calculating %g%s peak surface brightness radii" % (fraction * 100., '%'))
 

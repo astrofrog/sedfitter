@@ -25,13 +25,13 @@ def optimal_scaling(data, weights, pattern1):
 
 
 def chi_squared(valid, data, error, weight, model):
-    '''
+    """
     valid has dimension (n_wav, )
     data has dimension (n_wav, n_models)
     error has dimension(n_wav)
     weight has dimension(n_wav)
     model has dimension (n_wav, n_models)
-    '''
+    """
 
     # Calculate the 'default' chi^2 and handle special cases after
     chi2_array = (data - model) ** 2 * weight

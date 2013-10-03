@@ -22,14 +22,14 @@ class Filter(object):
             self.read(*args, **kwargs)
 
     def read(self, filename):
-        '''
+        """
         Read a filter from a file
 
         Parameters
         ----------
         filename: str
             The name of the file containing the filter
-        '''
+        """
 
         # Read in central wavelength
         self.wavelength = float(open(filename, 'r').readline().split('=')[1])
@@ -52,7 +52,7 @@ class Filter(object):
         self.r /= integrate(self.nu.to(u.Hz).value, self.r)
 
     def rebin(self, nu_new):
-        '''
+        """
         Re-bin the filter onto a new frequency grid
 
         Parameters
@@ -64,7 +64,7 @@ class Filter(object):
         -------
         filter: Filter
             The binned filter
-        '''
+        """
 
         # Define new filter
         f = Filter()

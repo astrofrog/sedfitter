@@ -7,7 +7,7 @@ except ImportError:
     import pickle
 from copy import deepcopy
 
-import atpy
+from astropy.table import Table
 import numpy as np
 from scipy.ndimage import convolve
 
@@ -130,9 +130,9 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
 
     # Read in table of parameters for model grid
     if os.path.exists(model_dir + '/parameters.fits'):
-        t = atpy.Table(model_dir + '/parameters.fits')
+        t = Table.read(model_dir + '/parameters.fits')
     elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = atpy.Table(model_dir + '/parameters.fits.gz')
+        t = Table.read(model_dir + '/parameters.fits.gz')
     else:
         raise Exception("Parameter file not found in %s" % model_dir)
 
@@ -141,9 +141,9 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     t.sort('MODEL_NAME')
     tpos = deepcopy(t)
     if log_x:
-        tpos = tpos.where(tpos[parameter_x] > 0.)
+        tpos = tpos[tpos[parameter_x] > 0.]
     if log_y:
-        tpos = tpos.where(tpos[parameter_y] > 0.)
+        tpos = tpos[tpos[parameter_y] > 0.]
 
     # Initialize figure
     fig = plt.figure()
@@ -221,10 +221,10 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
 
         # Match good-fitting models to parameter list
         subset = np.in1d(t['MODEL_NAME'], info.model_name)
-        tsub = t.where(subset)
+        tsub = t[subset]
         index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub.rows(index)
-        if not np.all(info.model_name == np.char.decode(tsorted['MODEL_NAME'], 'ascii')):
+        tsorted = tsub[index]
+        if not np.all(info.model_name == tsorted['MODEL_NAME']):
             raise Exception("Parameter file sorting failed")
 
         # Add additional parameter columns if necessary

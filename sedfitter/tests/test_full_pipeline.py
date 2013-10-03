@@ -3,6 +3,7 @@ import shutil
 import tempfile
 
 import numpy as np
+from astropy.table import Table
 from astropy import units as u
 
 
@@ -16,6 +17,8 @@ def generate_random_models(models_dir, aperture_dependent=False):
     # Create fake SEDs
     np.random.seed(12345)
     os.mkdir(os.path.join(models_dir, 'seds'))
+
+    names = []
 
     for i in range(5):
 
@@ -39,12 +42,23 @@ def generate_random_models(models_dir, aperture_dependent=False):
 
         sed.write(os.path.join(models_dir, 'seds', sed.name + '_sed.fits'))
 
+        names.append(sed.name)
+
+    # Generate model conf file
     f = open(os.path.join(models_dir, 'models.conf'), 'w')
     f.write("name = test\n")
     f.write("length_subdir = 0\n")
     f.write("aperture_dependent = {0}\n".format('yes' if aperture_dependent else 'no'))
     f.write("logd_step = 0.02\n")
     f.close()
+
+    # Generate model parameter file
+    t = Table()
+    t['MODEL_NAME'] = np.array(names, dtype='S30')
+    t['par1'] = np.random.random(5)
+    t['par2'] = np.random.random(5)
+    t.write(os.path.join(models_dir, 'parameters.fits'))
+
 
 class BasePipelineTest(object):
 
@@ -130,6 +144,25 @@ class BasePipelineTest(object):
             x_mode='M', x_range=(0.1, 2000),
             y_mode='M', y_range=(1.e-14, 2e-8),
             plot_max=100)
+
+        from ..plot_params_1d import plot_params_1d
+
+        plots_dir = tmpdir.join('plots_1d').strpath
+
+        plot_params_1d(output_file, 'par1',
+                       log_x=True,
+                       output_dir=plots_dir,
+                       select_format=('F', 2.), format='png')
+
+        from ..plot_params_2d import plot_params_2d
+
+        plots_dir = tmpdir.join('plots_2d').strpath
+
+        plot_params_2d(output_file, 'par1', 'par2',
+                       log_x=True, log_y=True,
+                       output_dir=plots_dir,
+                       select_format=('F', 2.), format='png')
+
 
 
 class TestApertureIndependentPipeline(BasePipelineTest):

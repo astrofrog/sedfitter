@@ -6,7 +6,7 @@ try:
 except ImportError:
     import pickle
 
-import atpy
+from astropy.table import Table
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -103,9 +103,9 @@ def plot_params_1d(input_file, parameter, output_dir=None,
 
     # Read in table of parameters for model grid
     if os.path.exists(model_dir + '/parameters.fits'):
-        t = atpy.Table(model_dir + '/parameters.fits')
+        t = Table.read(model_dir + '/parameters.fits')
     elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = atpy.Table(model_dir + '/parameters.fits.gz')
+        t = Table.read(model_dir + '/parameters.fits.gz')
     else:
         raise Exception("Parameter file not found in %s" % model_dir)
 
@@ -176,10 +176,11 @@ def plot_params_1d(input_file, parameter, output_dir=None,
 
         # Match good-fitting models to parameter list
         subset = np.in1d(t['MODEL_NAME'], info.model_name)
-        tsub = t.where(subset)
+
+        tsub = t[subset]
         index = np.argsort(np.argsort(info.model_name))
-        tsorted = tsub.rows(index)
-        if not np.all(info.model_name == np.char.decode(tsorted['MODEL_NAME'], 'ascii')):
+        tsorted = tsub[index]
+        if not np.all(info.model_name == tsorted['MODEL_NAME']):
             raise Exception("Parameter file sorting failed")
 
         # Add additional parameter columns if necessary

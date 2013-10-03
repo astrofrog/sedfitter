@@ -169,6 +169,18 @@ class BasePipelineTest(object):
 
         extract_parameters(output_file, output_prefix)
 
+        from ..write_parameters import write_parameters
+
+        output_ascii_file = tmpdir.join('write_parameters').strpath
+
+        write_parameters(output_file, output_ascii_file)
+
+        from ..write_parameter_ranges import write_parameter_ranges
+
+        output_ascii_file = tmpdir.join('write_parameters_ranges').strpath
+
+        write_parameter_ranges(output_file, output_ascii_file)
+
 
 class TestApertureIndependentPipeline(BasePipelineTest):
     aperture_dependent = False

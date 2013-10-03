@@ -3,7 +3,6 @@ from __future__ import print_function, division
 import os
 import glob
 
-import atpy
 import numpy as np
 from astropy.io import fits
 from astropy.logger import log
@@ -72,9 +71,9 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
     else:
         log.info("Producing monochromatic files in chunks of {0}".format(chunk_size))
 
-    filters = atpy.Table()
-    filters.add_column('wav', wavelengths)
-    filters.add_empty_column('filter', dtype='S10')
+    filters = Table()
+    filters['wav'] = wavelengths
+    filters['filter'] = np.zeros(wavelengths.shape, dtype='S10')
 
     # Figure out range of wavelength indices to use
     # (wavelengths array is sorted in reverse order)

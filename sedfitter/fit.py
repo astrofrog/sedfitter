@@ -31,31 +31,31 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
 
     Parameters
     ----------
-    data: str
+    data : str
         Filename of the file containing the data, one source per line.
-    filter_names: tuple or list
+    filter_names : tuple or list
         List of the filters that the data is specified in.
-    apertures: tuple or list
+    apertures : tuple or list
         List of the aperture radii that the data is specified in.
-    models_dir: str
+    models_dir : str
         Name of the directory containing the models to use.
-    output: str
+    output : str
         Name of the file to output the fit information to (in binary format).
-    extinction_law: `~sedfitter.extinction.Extinction`
+    extinction_law : `~sedfitter.extinction.Extinction`
         The extinction law to use
-    av_range: tuple
+    av_range : tuple
         Minimum and maximum Av to allow in the fitting
-    distance_range: tuple
+    distance_range : tuple
         Minimum and maximum distance to allow in the fitting (in kpc)
-    n_data_min: int, optional
+    n_data_min : int, optional
         The minimum number of points a source needs to be fit.
-    output_format: tuple, optional
+    output_format : tuple, optional
         Tuple specifying which fits should be output. See the documentation
         for a description of the tuple syntax.
-    output_convolved: bool, optional
+    output_convolved : bool, optional
         Whether to output the convolved fluxes (necessary if the convolved
         model fluxes are needed for the SED plot).
-    remove_resolved: bool, optional
+    remove_resolved : bool, optional
         If set, then models larger than the aperture are removed. See
         Robitaille et al. (2007) for a discussion of this criterion.
     '''

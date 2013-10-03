@@ -91,6 +91,9 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     else:
         data_file = data
 
+    if len(apertures) != len(filter_names):
+        raise ValueError("length of apertures list should match length of filter names list")
+
     # Construct filters dictionary
     filters = []
     for i in range(len(apertures)):

@@ -3,8 +3,9 @@ from __future__ import print_function, division
 import os
 
 import numpy as np
+from astropy import units as u
 
-from ..utils.integrate import integrate_subset
+from ..utils.integrate import integrate_subset, integrate
 
 c = 299792458.
 
@@ -44,6 +45,12 @@ class Filter(object):
         if self.name is None:
             self.name = os.path.basename(filename).split('.')[0]
 
+    def normalize(self):
+        """
+        Normalize so the integral over nu is 1
+        """
+        self.r /= integrate(self.nu.to(u.Hz).value, self.r)
+
     def rebin(self, nu_new):
         '''
         Re-bin the filter onto a new frequency grid
@@ -64,7 +71,10 @@ class Filter(object):
         f.name = self.name
         f.wavelength = self.wavelength
         f.nu = nu_new
-        f.wav = c / self.nu * 1.e6
+        f.wav = f.nu.to(u.micron, equivalencies=u.spectral())
+
+        self_nu_hz = self.nu.to(u.Hz).value
+        nu_new_hz = f.nu.to(u.Hz).value
 
         # Compute re-binned transmission
 
@@ -73,19 +83,19 @@ class Filter(object):
         for i in range(len(f.r)):
 
             if i == 0:
-                nu1 = nu_new[0]
+                nu1 = nu_new_hz[0]
             else:
-                nu1 = 0.5 * (nu_new[i - 1] + nu_new[i])
+                nu1 = 0.5 * (nu_new_hz[i - 1] + nu_new_hz[i])
 
-            if i == len(nu_new) - 1:
-                nu2 = nu_new[-1]
+            if i == len(nu_new_hz) - 1:
+                nu2 = nu_new_hz[-1]
             else:
-                nu2 = 0.5 * (nu_new[i] + nu_new[i + 1])
+                nu2 = 0.5 * (nu_new_hz[i] + nu_new_hz[i + 1])
 
-            nu1 = min(max(nu1, self.nu[0]), self.nu[-1])
-            nu2 = min(max(nu2, self.nu[0]), self.nu[-1])
+            nu1 = min(max(nu1, self_nu_hz[0]), self_nu_hz[-1])
+            nu2 = min(max(nu2, self_nu_hz[0]), self_nu_hz[-1])
 
             if nu2 != nu1:
-                f.r[i] = integrate_subset(self.nu, self.r, nu1, nu2)
+                f.r[i] = integrate_subset(self_nu_hz, self.r, nu1, nu2)
 
         return f

@@ -74,9 +74,9 @@ class SED(object):
             The SED, scaled to the new distance
         """
         sed = self.copy()
-        sed.distance = distance
-        sed.flux *= (self.distance / distance) ** 2
-        sed.error *= (self.distance / distance) ** 2
+        sed.distance = distance * u.cm
+        sed.flux *= (self.distance.to(u.cm) / sed.distance) ** 2
+        sed.error *= (self.distance.to(u.cm) / sed.distance) ** 2
         return sed
 
     def scale_to_av(self, av, law):
@@ -392,15 +392,18 @@ class SED(object):
         function for aperture as a function of wavelength, in log10 space.
         '''
 
-        # If any apertures are larger than the defined max, reset to max
-        apertures[apertures > self.apertures.max()] = self.apertures.max() * 0.999
-
-        # If any apertures are smaller than the defined min, raise Exception
-        if np.any(apertures < self.apertures.min()):
-            raise Exception("Aperture(s) requested too small")
-
         if self.n_ap == 1:
             return self.flux[0, :]
+
+        sed_apertures = self.apertures.to(u.au).value
+        sed_wav = self.wav.to(u.micron).value
+
+        # If any apertures are larger than the defined max, reset to max
+        apertures[apertures > sed_apertures.max()] = sed_apertures.max() * 0.999
+
+        # If any apertures are smaller than the defined min, raise Exception
+        if np.any(apertures < sed_apertures.min()):
+            raise Exception("Aperture(s) requested too small")
 
         # Find wavelength order
         order = np.argsort(wavelengths)
@@ -409,14 +412,14 @@ class SED(object):
         log10_ap_interp = interp1d(np.log10(wavelengths[order]), np.log10(apertures[order]), bounds_error=False, fill_value=np.nan)
 
         # Create interpolating function
-        flux_interp = interp1d(self.apertures, self.flux.swapaxes(0, 1))
+        flux_interp = interp1d(sed_apertures, self.flux.swapaxes(0, 1))
 
         # Interpolate the apertures
-        apertures = 10. ** log10_ap_interp(np.log10(self.wav))
+        apertures = 10. ** log10_ap_interp(np.log10(sed_wav))
 
         # Extrapolate on either side
-        apertures[np.log10(self.wav) < log10_ap_interp.x[0]] = 10. ** log10_ap_interp.y[0]
-        apertures[np.log10(self.wav) > log10_ap_interp.x[-1]] = 10. ** log10_ap_interp.y[-1]
+        apertures[np.log10(sed_wav) < log10_ap_interp.x[0]] = 10. ** log10_ap_interp.y[0]
+        apertures[np.log10(sed_wav) > log10_ap_interp.x[-1]] = 10. ** log10_ap_interp.y[-1]
 
         # Interpolate and return only diagonal elements
         return flux_interp(apertures).diagonal()

@@ -75,14 +75,14 @@ class SED(object):
         """
         sed = self.copy()
         sed.distance = distance * u.cm
-        sed.flux *= (self.distance.to(u.cm) / sed.distance) ** 2
-        sed.error *= (self.distance.to(u.cm) / sed.distance) ** 2
+        sed.flux = sed.flux * (self.distance.to(u.cm) / sed.distance) ** 2
+        sed.error = sed.error * (self.distance.to(u.cm) / sed.distance) ** 2
         return sed
 
     def scale_to_av(self, av, law):
         sed = self.copy()
-        sed.flux *= 10. ** (av * law(sed.wav))
-        sed.error *= 10. ** (av * law(sed.wav))
+        sed.flux = sed.flux * 10. ** (av * law(sed.wav))
+        sed.error = sed.error * 10. ** (av * law(sed.wav))
         return sed
 
     @property

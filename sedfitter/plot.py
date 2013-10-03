@@ -185,19 +185,19 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
 
     Parameters
     ----------
-    input_file: str
+    input_file : str
         File containing the fit information
-    output_dir: str, optional
+    output_dir : str, optional
         If specified, plots are written to that directory
-    select_format: tuple, optional
+    select_format : tuple, optional
         Tuple specifying which fits should be plotted. See the documentation
         for a description of the tuple syntax.
-    plot_max: int, optional
+    plot_max : int, optional
         Maximum number of fits to plot
-    plot_mode: str, optional
+    plot_mode : str, optional
         Whether to plot all fits in a single plot ('A') or one fit per plot
         ('I')
-    sed_type: str, optional
+    sed_type : str, optional
         Which SED should be shown:
             * `largest`: show the SED for the largest aperture specified.
             * `smallest`: show the SED for the smallest aperture specified.
@@ -207,29 +207,29 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
             * `interp`: interpolate the SEDs to the correct aperture at each
               wavelength (and interpolated apertures in between), so that a
               single composite SED is shown.
-    show_sed: bool, optional
+    show_sed : bool, optional
         Show the SEDs
-    show_convolved: bool, optional
+    show_convolved : bool, optional
         Show convolved model fluxes
-    x_mode: str, optional
+    x_mode : str, optional
         Whether to automatically select the wavelength range ('A'), or whether
         to use manually set values ('M').
-    x_range: tuple, optional
+    x_range : tuple, optional
         If x_mode is set to 'M', this is the range of wavelengths to show. If
         x_mode is set to 'A', this is the marging to add around the wavelength
         range (in dex).
-    y_mode: str, optional
+    y_mode : str, optional
         Whether to automatically select the flux range ('A'), or whether to
         use manually set values ('M').
-    y_range: tuple, optional
+    y_range : tuple, optional
         If y_mode is set to 'M', this is the range of fluxes to show. If
         y_mode is set to 'A', this is the marging to add around the flux
         range (in dex).
-    plot_name: bool, optional
+    plot_name : bool, optional
         Whether to show the source name on the plot(s).
-    plot_info: bool, optional
+    plot_info : bool, optional
         Whether to show the fit information on the plot(s).
-    format: str, optional
+    format : str, optional
         The file format to use for the plot, if output_dir is specified.
     '''
 

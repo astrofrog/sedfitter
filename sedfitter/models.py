@@ -18,7 +18,7 @@ class Models(object):
 
         self.names = None
         self.fluxes = None
-        self.wavelengths = None
+        self.distances = None
         self.apertures = None
         self.logd = None
         self.distances = None
@@ -39,7 +39,24 @@ class Models(object):
             if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
                 self._wavelengths = validate_array('wavelengths', value, domain='positive', ndim=1)
             else:
-                raise TypeError("wavelengths should be given as a Quantity object with units of distance")
+                raise TypeError("wavelengths should be given as a Quantity object with units of length")
+
+    @property
+    def distances(self):
+        """
+        The distances at which the models are defined
+        """
+        return self._distances
+
+    @distances.setter
+    def distances(self, value):
+        if value is None:
+            self._distances = None
+        else:
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
+                self._distances = validate_array('distances', value, domain='positive', ndim=1)
+            else:
+                raise TypeError("distances should be given as a Quantity object with units of distance")
 
     @property
     def apertures(self):
@@ -139,10 +156,10 @@ class Models(object):
             if distance_range:
                 if distance_range[0] == distance_range[1]:
                     n_distances = 1
-                    m.distances = np.array([distance_range[0]])
+                    m.distances = np.array([distance_range[0]]) * u.kpc
                 else:
                     n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
-                    m.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), n_distances)
+                    m.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), n_distances) * u.kpc
                 print("   Number of distances :  %i" % m.n_distances)
             else:
                 raise Exception("For aperture-dependent models, a distange range is required")
@@ -180,11 +197,10 @@ class Models(object):
             m.wavelengths[ifilt] = conv.wavelength
 
             if m.n_distances is not None:
-                # TODO - can use u.parallax here to not have to force AU unit
-                apertures_au = filt['aperture_arcsec'] * m.distances * 1.e3
-                conv = conv.interpolate(apertures_au * u.au)
-                conv.flux = conv.flux / m.distances ** 2
-                m.logd = np.log10(m.distances)
+                apertures_au = filt['aperture_arcsec'] * m.distances.to(u.pc).value * u.au
+                conv = conv.interpolate(apertures_au)
+                conv.flux = conv.flux * (u.kpc / m.distances) ** 2
+                m.logd = np.log10(m.distances.to(u.kpc).value)
                 if remove_resolved:
                     extended[:, :, ifilt] = apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis]
                 model_fluxes[:, :, ifilt] = conv.flux

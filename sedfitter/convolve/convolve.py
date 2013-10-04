@@ -48,11 +48,10 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     else:
         log.info("{0} SEDs found in {1}".format(len(sed_files), model_dir))
 
-    # Find out number of apertures
-    n_ap = fits.getheader(sed_files[0], memmap=False)['NAP']
-
     # Find out apertures
-    apertures = fits.open(sed_files[0], memmap=False)[2].data['APERTURE']
+    first_sed = SED.read(sed_files[0])
+    n_ap = first_sed.n_ap
+    apertures = first_sed.apertures
 
     # Set up convolved fluxes
     fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='S30'), apertures=apertures, initialize_arrays=True) for i in range(len(filters))]
@@ -78,7 +77,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         # Convolve
         for i, f in enumerate(binned_filters):
 
-            fluxes[i].wavelength = f.wavelength.to(u.micron).value  # temporary
+            fluxes[i].wavelength = f.wavelength
             fluxes[i].apertures = apertures
             fluxes[i].model_names[im] = s.name
 

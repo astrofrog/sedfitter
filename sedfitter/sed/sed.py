@@ -134,7 +134,7 @@ class SED(object):
             if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
                 self._apertures = validate_array('apertures', value, domain='positive', ndim=1)
             else:
-                raise TypeError("apertures should be given as a Quantity object with units of frequency")
+                raise TypeError("apertures should be given as a Quantity object with units of length")
 
     @property
     def flux(self):

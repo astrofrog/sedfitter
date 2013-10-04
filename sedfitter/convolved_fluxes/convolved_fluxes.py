@@ -6,7 +6,9 @@ np.seterr(all='ignore')
 from scipy.interpolate import interp1d
 
 from astropy.logger import log
+from astropy import units as u
 from astropy.utils.misc import isiterable
+
 from ..utils.validator import validate_scalar, validate_array
 
 # TODO: get rid of use of interp1d
@@ -35,12 +37,12 @@ class ConvolvedFluxes(object):
                 raise ValueError("apertures is required when using initialize_arrays=True")
 
             if flux is None:
-                self.flux = np.zeros((self.n_models, self.n_ap))
+                self.flux = np.zeros((self.n_models, self.n_ap)) * u.mJy
             else:
                 self.flux = flux
 
             if error is None:
-                self.error = np.zeros((self.n_models, self.n_ap))
+                self.error = np.zeros((self.n_models, self.n_ap)) * u.mJy
             else:
                 self.error = error
 
@@ -52,7 +54,7 @@ class ConvolvedFluxes(object):
     @property
     def wavelength(self):
         """
-        The effective wavelength at which the fluxes are defined
+        The central or characteristic wavelength of the filter
         """
         return self._wavelength
 
@@ -61,7 +63,14 @@ class ConvolvedFluxes(object):
         if value is None:
             self._wavelength = None
         else:
-            self._wavelength = validate_scalar('wavelength', value, domain='positive')
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
+                if not value.isscalar:
+                    raise TypeError("wavelength should be a scalar Quantity")
+                if not value > 0 * u.micron:
+                    raise ValueError("wavelength should be strictly positive")
+                self._wavelength = value
+            else:
+                raise TypeError("central wavelength should be given as a Quantity object with units of distance")
 
     @property
     def model_names(self):
@@ -80,21 +89,24 @@ class ConvolvedFluxes(object):
     @property
     def apertures(self):
         """
-        The apertures for which the models are defined
+        The apertures at which the SED is defined
         """
         return self._apertures
 
     @apertures.setter
     def apertures(self, value):
         if value is None:
-            self._apertures = value
+            self._apertures = None
         else:
-            self._apertures = validate_array('apertures', value, ndim=1)
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
+                self._apertures = validate_array('apertures', value, domain='positive', ndim=1)
+            else:
+                raise TypeError("apertures should be given as a Quantity object with units of length")
 
     @property
     def flux(self):
         """
-        The convolved fluxes
+        The SED fluxes
         """
         return self._flux
 
@@ -107,7 +119,10 @@ class ConvolvedFluxes(object):
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
 
-            self._flux = validate_array('flux', value, ndim=2, shape=(self.n_models, self.n_ap))
+            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
+                self._flux = validate_array('flux', value, ndim=2, shape=(self.n_models, self.n_ap))
+            else:
+                raise TypeError("fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
 
     @property
     def error(self):
@@ -125,8 +140,10 @@ class ConvolvedFluxes(object):
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
 
-            self._error = validate_array('error', value, ndim=2, shape=(self.n_models, self.n_ap))
-
+            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
+                self._error = validate_array('error', value, ndim=2, shape=(self.n_models, self.n_ap))
+            else:
+                raise TypeError("flux errors should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
 
     @property
     def n_models(self):
@@ -171,14 +188,14 @@ class ConvolvedFluxes(object):
 
         # Try and read in the wavelength of the filter
         if 'FILTWAV' in keywords:
-            conv.wavelength = keywords['FILTWAV']
+            conv.wavelength = keywords['FILTWAV'] * u.micron
         else:
             conv.wavelength = None
 
         # Read in apertures, if present
         try:
             ta = Table(convolved['APERTURES'].data)
-            conv.apertures = ta['APERTURE']
+            conv.apertures = ta['APERTURE'] * u.au
         except KeyError:
             pass
 
@@ -190,18 +207,18 @@ class ConvolvedFluxes(object):
 
         # Read in flux and flux errors
         if tc['TOTAL_FLUX'].ndim == 1 and conv.n_ap == 1:
-            conv.flux = tc['TOTAL_FLUX'].reshape(tc['TOTAL_FLUX'].shape[0], 1)
+            conv.flux = tc['TOTAL_FLUX'].reshape(tc['TOTAL_FLUX'].shape[0], 1) * u.mJy
         else:
-            conv.flux = tc['TOTAL_FLUX']
+            conv.flux = tc['TOTAL_FLUX'] * u.mJy
         if tc['TOTAL_FLUX_ERR'].ndim == 1 and conv.n_ap == 1:
-            conv.error = tc['TOTAL_FLUX_ERR'].reshape(tc['TOTAL_FLUX_ERR'].shape[0], 1)
+            conv.error = tc['TOTAL_FLUX_ERR'].reshape(tc['TOTAL_FLUX_ERR'].shape[0], 1) * u.mJy
         else:
-            conv.error = tc['TOTAL_FLUX_ERR']
+            conv.error = tc['TOTAL_FLUX_ERR'] * u.mJy
 
         # Read in 99% cumulative and 50% surface brightness radii
         try:
-            conv.radius_sigma_50 = tc['RADIUS_SIGMA_50']
-            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99']
+            conv.radius_sigma_50 = tc['RADIUS_SIGMA_50'] * u.au
+            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99'] * u.au
         except KeyError:
             pass
 
@@ -232,24 +249,38 @@ class ConvolvedFluxes(object):
         tc['TOTAL_FLUX_ERR'] = self.error
 
         if self.apertures is not None:
-            tc['RADIUS_SIGMA_50'] = self.find_radius_sigma(0.50)
-            tc['RADIUS_CUMUL_99'] = self.find_radius_cumul(0.99)
+            radius_sigma_50 = self.find_radius_sigma(0.50)
+            tc['RADIUS_SIGMA_50'] = radius_sigma_50
+            radius_cumul_99 = self.find_radius_cumul(0.99)
+            tc['RADIUS_CUMUL_99'] = radius_cumul_99
 
         if self.apertures is not None:
             ta = Table()
             ta['APERTURE'] = self.apertures
 
-        # Convert to FITS
-        hdulist = fits.HDUList()
-        hdulist.append(fits.PrimaryHDU())
+        # Primary HDU (for metadata)
+        hdu0 = fits.PrimaryHDU()
         if self.wavelength is not None:
-            hdulist[0].header['FILTWAV'] = self.wavelength
-        hdulist[0].header['NMODELS'] = self.n_models
-        hdulist[0].header['NAP'] = self.n_ap
+            hdu0.header['FILTWAV'] = self.wavelength.to(u.micron).value
+        hdu0.header['NMODELS'] = self.n_models
+        hdu0.header['NAP'] = self.n_ap
 
-        hdulist.append(fits.BinTableHDU(np.array(tc), name='CONVOLVED FLUXES'))
+        # Convolved fluxes
+        hdu1 = fits.BinTableHDU(np.array(tc), name='CONVOLVED FLUXES')
+        hdu1.columns[0].unit = self.flux.unit.to_string(format='fits')
+        hdu1.columns[1].unit = self.error.unit.to_string(format='fits')
         if self.apertures is not None:
-            hdulist.append(fits.BinTableHDU(np.array(ta), name='APERTURES'))
+            hdu1.columns[2].unit = radius_sigma_50.unit.to_string(format='fits')
+            hdu1.columns[3].unit = radius_cumul_99.unit.to_string(format='fits')
+
+        # Apertures
+        if self.apertures is not None:
+            hdu2 = fits.BinTableHDU(np.array(ta), name='APERTURES')
+            hdu2.columns[0].unit = self.apertures.unit.to_string(format='fits')
+        else:
+            hdu2 = None
+
+        hdulist = fits.HDUList([hdu0, hdu1] if hdu2 is None else [hdu0, hdu1, hdu2])
         hdulist.writeto(filename, clobber=overwrite)
 
     def interpolate(self, apertures):
@@ -264,7 +295,10 @@ class ConvolvedFluxes(object):
         c.wavelength = self.wavelength
 
         # Save requested apertures
-        c.apertures = apertures[:]
+        if isinstance(apertures, u.Quantity):
+            c.apertures = apertures[:]
+        else:
+            c.apertures = apertures[:] * u.au
 
         # Transfer model names
         c.model_names = self.model_names
@@ -273,26 +307,27 @@ class ConvolvedFluxes(object):
         if self.n_ap > 1:
 
             # If any apertures are larger than the defined max, reset to max
-            if np.any(apertures > self.apertures.max()):
-                apertures[apertures > self.apertures.max()] = self.apertures.max()
+            if np.any(c.apertures > self.apertures.max()):
+                apertures[c.apertures > self.apertures.max()] = self.apertures.max()
 
             # If any apertures are smaller than the defined min, raise error
-            if np.any(apertures < self.apertures.min()):
+            if np.any(c.apertures < self.apertures.min()):
                 raise Exception("Aperture(s) requested too small")
 
             flux_interp = interp1d(self.apertures, self.flux)
-            c.flux = flux_interp(apertures)
+            c.flux = flux_interp(c.apertures.to(self.apertures.unit)) * self.flux.unit
 
             # The following is not strictly correct - errors from interpolation is not interpolation of errors
             error_interp = interp1d(self.apertures, self.error)
-            c.error = error_interp(apertures)
+            c.error = error_interp(c.apertures.to(self.apertures.unit)) * self.error.unit
 
         else:
 
-            c.flux = np.repeat(self.flux, len(apertures)).reshape(c.n_models, len(apertures))
-            c.error = np.repeat(self.error, len(apertures)).reshape(c.n_models, len(apertures))
+            c.flux = np.repeat(self.flux, len(c.apertures)).reshape(c.n_models, len(c.apertures))
+            c.error = np.repeat(self.error, len(c.apertures)).reshape(c.n_models, len(c.apertures))
 
         try:
+            # TODO: is this actually correct?!
             c.radius_sigma_50 = self.radius_sigma_50[:]
             c.radius_cumul_99 = self.radius_cumul_99[:]
         except AttributeError:
@@ -312,7 +347,7 @@ class ConvolvedFluxes(object):
 
         log.info("Calculating radii containing %g%s of the flux" % (fraction * 100., '%'))
 
-        radius = np.zeros(self.n_models, dtype=self.flux.dtype)
+        radius = np.zeros(self.n_models, dtype=self.flux.dtype) * u.au
 
         if self.apertures is None:
 
@@ -360,7 +395,7 @@ class ConvolvedFluxes(object):
 
         maximum = np.max(sigma, axis=1)
 
-        radius = np.zeros(self.n_models, dtype=self.flux.dtype)
+        radius = np.zeros(self.n_models, dtype=self.flux.dtype) * u.au
 
         # Linear interpolation - need to loop over apertures backwards for vectorization
         for ia in range(len(self.apertures) - 2, -1, -1):
@@ -372,5 +407,5 @@ class ConvolvedFluxes(object):
 
         calc = sigma[:, -1] > fraction * maximum
         radius[calc] = self.apertures[-1]
-
+        
         return radius

@@ -8,6 +8,7 @@ from .convolved_fluxes import ConvolvedFluxes
 from . import fitting_routines as f
 from .utils import parfile
 from astropy.table import Table
+from astropy import units as u
 
 
 class Models(object):
@@ -74,7 +75,7 @@ class Models(object):
 
             conv = ConvolvedFluxes.read(filename)
 
-            m.wavelengths.append(conv.wavelength)
+            m.wavelengths.append(conv.wavelength.to(u.micron).value)
 
             if m.n_distances is not None:
                 apertures_au = filt['aperture_arcsec'] * m.distances * 1.e3
@@ -84,7 +85,7 @@ class Models(object):
                 if remove_resolved:
                     m.extended.append(apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis])
 
-            model_fluxes.append(conv.flux)
+            model_fluxes.append(conv.flux.to(u.mJy).value)
 
         if m.n_distances is not None:
             m.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), m.n_distances)

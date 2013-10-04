@@ -78,7 +78,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         # Convolve
         for i, f in enumerate(binned_filters):
 
-            fluxes[i].wavelength = f.wavelength
+            fluxes[i].wavelength = f.wavelength.to(u.micron).value  # temporary
             fluxes[i].apertures = apertures
             fluxes[i].model_names[im] = s.name
 

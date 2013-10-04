@@ -12,6 +12,7 @@ except ImportError:
     import pickle
 
 import numpy as np
+from astropy import units as u
 
 from . import timer
 
@@ -109,7 +110,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print('     Filter    Wavelength    Aperture (")   ')
     print('    ----------------------------------------')
     for f in filters:
-        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['wav'], f['aperture_arcsec']))
+        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['wav'].to(u.micron).value, f['aperture_arcsec']))
     print('')
 
     # Set Av law

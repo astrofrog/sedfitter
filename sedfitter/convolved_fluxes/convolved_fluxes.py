@@ -227,10 +227,6 @@ class ConvolvedFluxes(object):
         except KeyError:
             pass
 
-        # Create an interpolating function for the flux vs aperture
-        if conv.n_ap > 1:
-            conv.flux_interp = interp1d(conv.apertures, conv.flux[:])
-
         return conv
 
     def write(self, filename, overwrite=False):
@@ -291,6 +287,11 @@ class ConvolvedFluxes(object):
     def interpolate(self, apertures):
         """
         Interpolate the flux to the apertures specified.
+
+        Parameters
+        ----------
+        apertures : `astropy.units.Quantity` instance
+            The apertures to interpolate to
         """
 
         # Initalize new ConvolvedFluxes object to return
@@ -300,10 +301,7 @@ class ConvolvedFluxes(object):
         c.wavelength = self.wavelength
 
         # Save requested apertures
-        if isinstance(apertures, u.Quantity):
-            c.apertures = apertures[:]
-        else:
-            c.apertures = apertures[:] * u.au
+        c.apertures = apertures[:]
 
         # Transfer model names
         c.model_names = self.model_names
@@ -318,6 +316,11 @@ class ConvolvedFluxes(object):
             # If any apertures are smaller than the defined min, raise error
             if np.any(c.apertures < self.apertures.min()):
                 raise Exception("Aperture(s) requested too small")
+
+            # Note that we have to be careful here because interp1d will drop
+            # the units, so we need to make sure the new apertures are in the
+            # same units as the current ones for the interpolation, and we need
+            # to add the flux unit back.
 
             flux_interp = interp1d(self.apertures, self.flux)
             c.flux = flux_interp(c.apertures.to(self.apertures.unit)) * self.flux.unit

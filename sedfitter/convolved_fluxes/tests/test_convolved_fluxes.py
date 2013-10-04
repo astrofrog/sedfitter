@@ -139,7 +139,7 @@ def test_single_interpolate(tmpdir):
     c1.flux = [(1.,), (2.,), (3.,), (4.,), (5.,)] * u.mJy
     c1.error = [(0.1,), (0.2,), (0.3,), (0.4,), (0.5,)] * u.mJy
 
-    c2 = c1.interpolate([0.5, 1.0, 1.5])
+    c2 = c1.interpolate([0.5, 1.0, 1.5] * u.au)
 
     assert np.all(c1.model_names == c2.model_names)
 
@@ -219,7 +219,7 @@ def test_multiple_interpolate():
     c1.flux = [[1., 2., 3.], [4., 5., 6.]] * u.mJy
     c1.error = [[0.1, 0.2, 0.4], [0.5, 0.3, 0.1]] * u.mJy
 
-    c2 = c1.interpolate([1.5, 2.5])
+    c2 = c1.interpolate([1.5, 2.5] * u.au)
 
     assert np.all(c1.model_names == c2.model_names)
 

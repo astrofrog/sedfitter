@@ -22,7 +22,9 @@ def is_numpy_array(variable):
 
 class ConvolvedFluxes(object):
 
-    def __init__(self, wavelength=None, model_names=None, apertures=None, flux=None, error=None, initialize_arrays=False):
+    def __init__(self, wavelength=None, model_names=None, apertures=None,
+                 flux=None, error=None,
+                 initialize_arrays=False, initialize_units=u.mJy):
 
         self.model_names = model_names
         self.apertures = apertures
@@ -37,12 +39,12 @@ class ConvolvedFluxes(object):
                 raise ValueError("apertures is required when using initialize_arrays=True")
 
             if flux is None:
-                self.flux = np.zeros((self.n_models, self.n_ap)) * u.mJy
+                self.flux = np.zeros((self.n_models, self.n_ap)) * initialize_units
             else:
                 self.flux = flux
 
             if error is None:
-                self.error = np.zeros((self.n_models, self.n_ap)) * u.mJy
+                self.error = np.zeros((self.n_models, self.n_ap)) * initialize_units
             else:
                 self.error = error
 
@@ -184,6 +186,7 @@ class ConvolvedFluxes(object):
 
         # Open the convolved flux FITS file
         convolved = fits.open(filename)
+
         keywords = convolved[0].header
 
         # Try and read in the wavelength of the filter
@@ -194,31 +197,33 @@ class ConvolvedFluxes(object):
 
         # Read in apertures, if present
         try:
-            ta = Table(convolved['APERTURES'].data)
-            conv.apertures = ta['APERTURE'] * u.au
+            ta = Table.read(convolved['APERTURES'])
+            conv.apertures = ta['APERTURE'] * ta['APERTURE'].unit
         except KeyError:
             pass
 
         # Create shortcuts to table
-        tc = Table(convolved['CONVOLVED FLUXES'].data)
+        tc = Table.read(convolved['CONVOLVED FLUXES'])
 
         # Read in model names
         conv.model_names = tc['MODEL_NAME']
 
         # Read in flux and flux errors
+
         if tc['TOTAL_FLUX'].ndim == 1 and conv.n_ap == 1:
-            conv.flux = tc['TOTAL_FLUX'].reshape(tc['TOTAL_FLUX'].shape[0], 1) * u.mJy
+            conv.flux = tc['TOTAL_FLUX'].reshape(tc['TOTAL_FLUX'].shape[0], 1) * tc['TOTAL_FLUX'].unit
         else:
-            conv.flux = tc['TOTAL_FLUX'] * u.mJy
+            conv.flux = tc['TOTAL_FLUX'] * tc['TOTAL_FLUX'].unit
+
         if tc['TOTAL_FLUX_ERR'].ndim == 1 and conv.n_ap == 1:
-            conv.error = tc['TOTAL_FLUX_ERR'].reshape(tc['TOTAL_FLUX_ERR'].shape[0], 1) * u.mJy
+            conv.error = tc['TOTAL_FLUX_ERR'].reshape(tc['TOTAL_FLUX_ERR'].shape[0], 1) * tc['TOTAL_FLUX_ERR'].unit
         else:
-            conv.error = tc['TOTAL_FLUX_ERR'] * u.mJy
+            conv.error = tc['TOTAL_FLUX_ERR'] * tc['TOTAL_FLUX_ERR'].unit
 
         # Read in 99% cumulative and 50% surface brightness radii
         try:
-            conv.radius_sigma_50 = tc['RADIUS_SIGMA_50'] * u.au
-            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99'] * u.au
+            conv.radius_sigma_50 = tc['RADIUS_SIGMA_50'] * tc['RADIUS_SIGMA_50'].unit
+            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99'] * tc['RADIUS_SIGMA_50'].unit
         except KeyError:
             pass
 
@@ -267,11 +272,11 @@ class ConvolvedFluxes(object):
 
         # Convolved fluxes
         hdu1 = fits.BinTableHDU(np.array(tc), name='CONVOLVED FLUXES')
-        hdu1.columns[0].unit = self.flux.unit.to_string(format='fits')
-        hdu1.columns[1].unit = self.error.unit.to_string(format='fits')
+        hdu1.columns[1].unit = self.flux.unit.to_string(format='fits')
+        hdu1.columns[2].unit = self.error.unit.to_string(format='fits')
         if self.apertures is not None:
-            hdu1.columns[2].unit = radius_sigma_50.unit.to_string(format='fits')
-            hdu1.columns[3].unit = radius_cumul_99.unit.to_string(format='fits')
+            hdu1.columns[3].unit = radius_sigma_50.unit.to_string(format='fits')
+            hdu1.columns[4].unit = radius_cumul_99.unit.to_string(format='fits')
 
         # Apertures
         if self.apertures is not None:
@@ -407,5 +412,5 @@ class ConvolvedFluxes(object):
 
         calc = sigma[:, -1] > fraction * maximum
         radius[calc] = self.apertures[-1]
-        
+
         return radius

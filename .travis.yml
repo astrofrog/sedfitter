@@ -8,7 +8,7 @@ python:
 
 env:
     global:
-        - PIP_WHEEL_COMMAND="pip install --find-links http://wheels.astropy.org/ --find-links http://wheels2.astropy.org/ --use-wheel --upgrade --use-mirrors"
+        - PIP_WHEEL_COMMAND="pip install --find-links http://wheels2.astropy.org/ --find-links http://wheels.astropy.org/ --use-wheel --upgrade --use-mirrors"
     matrix:
         - NUMPY_VERSION=1.7.1 SETUP_CMD='test'
 

@@ -74,7 +74,7 @@ class Models(object):
                 if self.n_distances is None:
                     self._fluxes = validate_array('fluxes', value, ndim=2, shape=(self.n_models, self.n_wav))
                 else:
-                    self._fluxes = validate_array('fluxes', value, ndim=3, shape=(self.n_models, self.n_wav, self.n_distances or 1))
+                    self._fluxes = validate_array('fluxes', value, ndim=3, shape=(self.n_models, self.n_distances, self.n_wav))
             else:
                 raise TypeError("fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
 
@@ -171,11 +171,11 @@ class Models(object):
 
             if ifilt == 0:
                 if m.n_distances is None:
-                    model_fluxes = np.zeros((conv.n_models, len(filters))) * u.mJy
+                    model_fluxes = np.zeros((conv.n_models,len(filters))) * u.mJy
                     extended = None
                 else:
-                    model_fluxes = np.zeros((conv.n_models, len(filters), m.n_distances)) * u.mJy
-                    extended = np.zeros((conv.n_models, len(filters), m.n_distances), dtype=bool)
+                    model_fluxes = np.zeros((conv.n_models, m.n_distances, len(filters))) * u.mJy
+                    extended = np.zeros((conv.n_models, m.n_distances, len(filters)), dtype=bool)
 
             m.wavelengths[ifilt] = conv.wavelength
 
@@ -186,8 +186,8 @@ class Models(object):
                 conv.flux = conv.flux / m.distances ** 2
                 m.logd = np.log10(m.distances)
                 if remove_resolved:
-                    extended[:, ifilt, :] = apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis]
-                model_fluxes[:, ifilt, :] = conv.flux
+                    extended[:, :, ifilt] = apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis]
+                model_fluxes[:, :, ifilt] = conv.flux
             else:
                 model_fluxes[:, ifilt] = conv.flux[:,0]
 

@@ -149,6 +149,15 @@ class ConvolvedFluxes(object):
             and np.all(self.flux == other.flux) \
             and np.all(self.error == other.error)
 
+    def sort_by_name(self):
+        """
+        Sort the models by model name
+        """
+        order = np.argsort(self.model_names)
+        self.model_names = self.model_names[order]
+        self.flux = self.flux[order, :]
+        self.error = self.error[order, :]
+
     @classmethod
     def read(cls, filename):
         """

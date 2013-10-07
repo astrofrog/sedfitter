@@ -8,10 +8,12 @@ import numpy as np
 from astropy.io import fits
 from astropy.logger import log
 from astropy import units as u
+from astropy.utils.console import ProgressBar
 
 from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
-
+from ..models import load_parameter_table
+from .. import six
 
 def convolve_model_dir(model_dir, filters, overwrite=False):
     """
@@ -38,10 +40,12 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         os.mkdir(model_dir + '/convolved')
 
     # Find all SED files to convolve
-    sed_files = glob.glob(model_dir + '/seds/*.fits.gz') + \
-        glob.glob(model_dir + '/seds/*/*.fits.gz') + \
-        glob.glob(model_dir + '/seds/*.fits') + \
-        glob.glob(model_dir + '/seds/*/*.fits')
+    sed_files = (glob.glob(model_dir + '/seds/*.fits.gz') +
+                 glob.glob(model_dir + '/seds/*/*.fits.gz') +
+                 glob.glob(model_dir + '/seds/*.fits') +
+                 glob.glob(model_dir + '/seds/*/*.fits'))
+
+    par_table = load_parameter_table(model_dir)
 
     if len(sed_files) == 0:
         raise Exception("No SEDs found in %s" % model_dir)
@@ -55,14 +59,19 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     apertures = fits.open(sed_files[0], memmap=False)[2].data['APERTURE']
 
     # Set up convolved fluxes
-    fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='S30'), apertures=apertures, initialize_arrays=True) for i in range(len(filters))]
+    fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='U30' if six.PY3 else 'S30'), apertures=apertures, initialize_arrays=True) for i in range(len(filters))]
 
     # Set up list of binned filters
     binned_filters = []
     binned_nu = None
 
     # Loop over SEDs
+
+    b = ProgressBar(len(sed_files))
+
     for im, sed_file in enumerate(sed_files):
+
+        b.update()
 
         log.debug('Convolving {0}'.format(os.path.basename(sed_file)))
 
@@ -90,5 +99,6 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
                 fluxes[i].error[im] = np.sqrt(np.sum((s.error * f.r) ** 2, axis=1))
 
     for i, f in enumerate(binned_filters):
+        fluxes[i].sort_to_match(par_table['MODEL_NAME'])
         fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits',
                         overwrite=overwrite)

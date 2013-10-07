@@ -149,6 +149,26 @@ class ConvolvedFluxes(object):
             and np.all(self.flux == other.flux) \
             and np.all(self.error == other.error)
 
+    def sort_to_match(self, requested_model_names):
+        """
+        Sort the models by model name
+        """
+
+        order = np.arange(self.n_models)
+
+        subset = np.in1d(requested_model_names, self.model_names)
+        order = order[subset]
+        index = np.argsort(self.model_names)
+        order = order[index]
+
+        # Double check that the sorting will work
+        if not np.all(self.model_names[order] == requested_model_names):
+            raise Exception("Sorting failed")
+
+        self.model_names = self.model_names[order]
+        self.flux = self.flux[order, :]
+        self.error = self.error[order, :]
+
     @classmethod
     def read(cls, filename):
         """
@@ -227,7 +247,7 @@ class ConvolvedFluxes(object):
         from astropy.table import Table, Column
 
         tc = Table()
-        tc['MODEL_NAME'] = self.model_names
+        tc['MODEL_NAME'] = self.model_names.astype('S30')
         tc['TOTAL_FLUX'] = self.flux
         tc['TOTAL_FLUX_ERR'] = self.error
 

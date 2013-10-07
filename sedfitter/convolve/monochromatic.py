@@ -12,7 +12,8 @@ from astropy.utils.console import ProgressBar
 
 from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
-
+from ..models import load_parameter_table
+from .. import six
 
 def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
                                      wav_min=-np.inf, wav_max=np.inf):
@@ -44,6 +45,8 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
                  glob.glob(model_dir + '/seds/*/*.fits.gz') +
                  glob.glob(model_dir + '/seds/*.fits') +
                  glob.glob(model_dir + '/seds/*/*.fits'))
+
+    par_table = load_parameter_table(model_dir)
 
     # Find number of models
     n_models = len(sed_files)
@@ -93,7 +96,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         log.info('Processing wavelengths {0} to {1}'.format(jmin, jmax))
 
         # Set up convolved fluxes
-        fluxes = [ConvolvedFluxes(model_names=np.zeros(n_models, dtype='S30'), apertures=apertures, initialize_arrays=True) for i in range(chunk_size)]
+        fluxes = [ConvolvedFluxes(model_names=np.zeros(n_models, dtype='U30' if six.PY3 else 'S30'), apertures=apertures, initialize_arrays=True) for i in range(chunk_size)]
 
         b = ProgressBar(len(sed_files))
 
@@ -122,7 +125,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
                     fluxes[j].error[im, :] = s.error[:, j + jmin]
 
         for j in range(chunk_size):
-            fluxes[j].sort_by_name()
+            fluxes[j].sort_to_match(par_table['MODEL_NAME'])
             fluxes[j].write('{0:s}/convolved/MO{1:03d}.fits'.format(model_dir, j + jmin + 1),
                             overwrite=overwrite)
             filters['filter'][j + jmin] = "MO{0:03d}".format(j + jmin + 1)

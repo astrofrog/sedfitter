@@ -71,18 +71,21 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
     for im, sed_file in enumerate(sed_files):
 
-        b.update()
-
         log.debug('Convolving {0}'.format(os.path.basename(sed_file)))
 
         # Read in SED
         s = SED.read(sed_file, unit_freq=u.Hz, unit_flux=u.mJy, order='nu')
 
         # Check if filters need to be re-binned
-        if np.any(s.nu != binned_nu):
+        try:
+            assert binned_nu is not None
+            np.testing.assert_array_almost_equal_nulp(s.nu.value, binned_nu.value, 100)
+        except AssertionError:
             log.info('Rebinning filters')
             binned_filters = [f.rebin(s.nu) for f in filters]
             binned_nu = s.nu
+
+        b.update()
 
         # Convolve
         for i, f in enumerate(binned_filters):

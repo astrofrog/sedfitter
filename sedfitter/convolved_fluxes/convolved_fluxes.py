@@ -156,6 +156,9 @@ class ConvolvedFluxes(object):
 
         order = np.arange(self.n_models)
 
+        # Make sure there are no spaces at the end of model names
+        requested_model_names = np.char.strip(requested_model_names)
+
         subset = np.in1d(requested_model_names, self.model_names)
         order = order[subset]
         index = np.argsort(self.model_names)

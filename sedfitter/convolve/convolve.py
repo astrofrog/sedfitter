@@ -78,10 +78,10 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
         # Check if filters need to be re-binned
         try:
-	    assert binned_nu is not None
-	    np.testing.assert_array_almost_equal_nulp(s.nu.value, binned_nu.value, 100)
-	except AssertionError:
-	    log.info('Rebinning filters')
+            assert binned_nu is not None
+            np.testing.assert_array_almost_equal_nulp(s.nu.value, binned_nu.value, 100)
+        except AssertionError:
+            log.info('Rebinning filters')
             binned_filters = [f.rebin(s.nu) for f in filters]
             binned_nu = s.nu
 

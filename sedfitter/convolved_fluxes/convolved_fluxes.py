@@ -151,7 +151,7 @@ class ConvolvedFluxes(object):
 
     def sort_to_match(self, requested_model_names):
         """
-        Sort the models by model name
+        Sort the models following ``requested_model_names``
         """
 
         order = np.arange(self.n_models)
@@ -159,10 +159,8 @@ class ConvolvedFluxes(object):
         # Make sure there are no spaces at the end of model names
         requested_model_names = np.char.strip(requested_model_names)
 
-        subset = np.in1d(requested_model_names, self.model_names)
-        order = order[subset]
-        index = np.argsort(self.model_names)
-        order = order[index]
+        from ..utils.misc import order_to_match
+        order = order_to_match(self.model_names, requested_model_names)
 
         # Double check that the sorting will work
         if not np.all(self.model_names[order] == requested_model_names):

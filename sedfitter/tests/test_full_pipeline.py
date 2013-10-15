@@ -57,6 +57,7 @@ def generate_random_models(models_dir, aperture_dependent=False):
     t['MODEL_NAME'] = np.array(names, dtype='S30')
     t['par1'] = np.random.random(5)
     t['par2'] = np.random.random(5)
+    t = t[[0,4,1,3,2]]
     t.write(os.path.join(models_dir, 'parameters.fits'))
 
 

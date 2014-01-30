@@ -37,12 +37,12 @@ plt.rc('patch', linewidth=0.5)
 fp = FontProperties(size='small')
 
 
-def get_axes(fig):
+def get_axes(fig, label=None):
     vxmin, vxmax = 1.5, 4.5
     vymin, vymax = 1.0, 4.0
     width, height = fig.get_figwidth(), fig.get_figheight()
     rect = [vxmin / width, vymin / width, (vxmax - vxmin) / width, (vymax - vymin) / height]
-    return fig.add_axes(rect)
+    return fig.add_axes(rect, label=label)
 
 
 def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
@@ -115,7 +115,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
 
     # Initialize figure
     fig = plt.figure()
-    ax = get_axes(fig)
+    ax = get_axes(fig, label='main')
 
     # Find range of values
     xmin, xmax = tpos[parameter_x].min(), tpos[parameter_x].max()
@@ -127,19 +127,16 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
                                           np.log10(tpos[parameter_y]), bins=npix,
                                           range=[[np.log10(xmin), np.log10(xmax)],
                                                  [np.log10(ymin), np.log10(ymax)]])
-        ex, ey = 10. ** ex, 10. ** ey
     elif log_x:
         gray_all, ex, ey = np.histogram2d(np.log10(tpos[parameter_x]),
                                           tpos[parameter_y], bins=npix,
                                           range=[[np.log10(xmin), np.log10(xmax)],
                                                  [ymin, ymax]])
-        ex = 10. ** ex
     elif log_y:
         gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
                                           np.log10(tpos[parameter_y]), bins=npix,
                                           range=[[xmin, xmax],
                                                  [np.log10(ymin), np.log10(ymax)]])
-        ey = 10. ** ey
     else:
         gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
                                           tpos[parameter_y], bins=npix,
@@ -149,8 +146,11 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     gray_all = convolve(gray_all, KERNEL)
     gray_all = np.clip(gray_all, 0., 13.)
 
-    # Grayscale showing all models
-    ax.pcolormesh(ex, ey, gray_all.transpose(), cmap='binary', vmin=0, vmax=40.)
+    # Grayscale showing all models. Since pcolormesh is very slow for PDF, we
+    # create a 'ghost' axis which is already in log space.
+    ax_log = get_axes(fig, label='log')
+    ax_log.axis('off')
+    ax_log.imshow(gray_all.transpose(), cmap='binary', vmin=0, vmax=40., extent=[ex[0], ex[-1], ey[0], ey[-1]], aspect='auto')
 
     ax.set_xlabel(parameter_x if label_x is None else label_x)
     ax.set_ylabel(parameter_y if label_y is None else label_y)
@@ -165,7 +165,18 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
 
+    if log_x:
+        ax_log.set_xlim(np.log10(xmin), np.log10(xmax))
+    else:
+        ax_log.set_xlim(xmin, xmax)
+
+    if log_y:
+        ax_log.set_ylim(np.log10(ymin), np.log10(ymax))
+    else:
+        ax_log.set_ylim(ymin, ymax)
+
     ax.set_autoscale_on(False)
+    ax_log.set_autoscale_on(False)
 
     pfits = None
     source_label = None

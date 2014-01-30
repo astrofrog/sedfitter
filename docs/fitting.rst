@@ -74,7 +74,7 @@ The following is a complete example showing how to use the
 
     # Run the fitting
     fit('data_glimpse', filters, apertures, model_dir,
-        'output_glimpse.fitinfo',
+        'output.fitinfo',
         extinction_law=extinction,
         distance_range=[1., 2.] * u.kpc,
         av_range=[0., 40.])
@@ -99,7 +99,7 @@ The :func:`~sedfitter.plot` requires the output file from the
 example, continuing the example above, you can do::
 
     from sedfitter import plot
-    plot('output_glimpse.fitinfo', 'plots_seds')
+    plot('output.fitinfo', 'plots_seds')
 
 By default, only the best-fit parameter is shown, but this can be changed by
 using the ``select_format`` option, which is described in more detail in
@@ -107,7 +107,7 @@ using the ``select_format`` option, which is described in more detail in
 :math:`\Delta\chi^2` value per data point (relative to the best fit) of less
 than 3, you can do::
 
-    plot('output_glimpse.fitinfo', 'plots_seds', select_format=('F', 3))
+    plot('output.fitinfo', 'plots_seds', select_format=('F', 3))
 
 In addition, there are many options available to
 customize the format and appearance of the plots. For more information about
@@ -127,10 +127,12 @@ parameters to plot::
     from sedfitter import plot_params_1d, plot_params_2d
 
     # Make histograms of the disk mass
-    plot_params_1d('output_glimpse.fitinfo', 'MDISK', 'plots_mdisk')
+    plot_params_1d('output.fitinfo', 'MDISK', 'plots_mdisk',
+                   log_x=True)
 
     # Make 2-d plots of the envelope infall rate vs disk mass
-    plot_params_2d('output_glimpse.fitinfo', 'MDISK', 'MDOT', 'plots_mdot_mdisk')
+    plot_params_2d('output.fitinfo', 'MDISK', 'MDOT', 'plots_mdot_mdisk',
+                   log_x=True, log_y=True)
 
 By default, only the best-fit parameter is shown, but this can be changed by
 using the ``select_format`` option, which is described in more detail in
@@ -152,10 +154,10 @@ with::
 For example, to split the above file into well- and badly-fit sources based on
 the absolute :math:`\chi^2` of the best-fit, you can do::
 
-    filter_output('output_glimpse.fitinfo', chi=3.)
+    filter_output('output.fitinfo', chi=3.)
 
-This will produce files named ``output_glimpse_good.fitinfo`` and
-``output_glimpse_bad.fitinfo`` by default (although you can also specify custom
+This will produce files named ``output_good.fitinfo`` and
+``output_bad.fitinfo`` by default (although you can also specify custom
 names for the output files). It is also possible to split the fits based on the
 :math:`\chi^2` value per datapoint using the ``cpd`` option. More information
 about the available options is available in :func:`~sedfitter.filter_output`.
@@ -178,11 +180,11 @@ output ASCII file name::
     from sedfitter import write_parameters, write_parameter_ranges
 
     # Write out all models with a delta chi^2-chi_best^2 per datapoint < 3
-    write_parameters('output_glimpse.fitinfo', 'parameters.txt',
+    write_parameters('output.fitinfo', 'parameters.txt',
                      select_format=('F', 3.))
 
     # Write out the min/max ranges corresponding to the above file
-    write_parameter_ranges('output_glimpse.fitinfo', 'parameter_ranges.txt',
+    write_parameter_ranges('output.fitinfo', 'parameter_ranges.txt',
                            select_format=('F', 3.))
 
 More information about the available options is given in

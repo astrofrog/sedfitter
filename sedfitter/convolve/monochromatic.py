@@ -16,7 +16,7 @@ from ..models import load_parameter_table
 from .. import six
 
 def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
-                                     wav_min=-np.inf, wav_max=np.inf):
+                                     wav_min=-np.inf * u.micron, wav_max=np.inf * u.micron):
     """
     Convolve all the model SEDs in a model directory
 
@@ -56,17 +56,12 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
     else:
         log.info("{0} SEDs found in {1}".format(n_models, model_dir))
 
-    # Find out number of apertures
-    n_ap = fits.getheader(sed_files[0], memmap=False)['NAP']
-
-    # Find out apertures
-    apertures = fits.open(sed_files[0], memmap=False)[2].data['APERTURE']
-
-    # Find out number of wavelengths
-    n_wav = fits.getheader(sed_files[0], memmap=False)['NWAV']
-
-    # Find out wavelengths
-    wavelengths = fits.open(sed_files[0], memmap=False)[1].data['WAVELENGTH']
+    # Find out apertures and wavelengths
+    first_sed = SED.read(sed_files[0])
+    n_ap = first_sed.n_ap
+    apertures = first_sed.apertures
+    n_wav = first_sed.n_wav
+    wavelengths = first_sed.wav
 
     # For model grids that are very large, it is not possible to compute all
     # fluxes in one go, so we need to process in chunks in wavelength space.

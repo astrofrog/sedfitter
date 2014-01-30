@@ -3,11 +3,13 @@ from __future__ import print_function, division
 import os
 
 import numpy as np
+from astropy.table import Table
+from astropy import units as u
 
 from .convolved_fluxes import ConvolvedFluxes
 from . import fitting_routines as f
 from .utils import parfile
-from astropy.table import Table
+from .utils.validator import validate_array
 
 
 class Models(object):
@@ -16,10 +18,117 @@ class Models(object):
 
         self.names = None
         self.fluxes = None
-        self.wavelengths = None
+        self.distances = None
         self.apertures = None
         self.logd = None
+        self.wavelengths = None
+        self.distances = None
         self.extended = []
+
+    @property
+    def wavelengths(self):
+        """
+        The wavelengths at which the models are defined
+        """
+        return self._wavelengths
+
+    @wavelengths.setter
+    def wavelengths(self, value):
+        if value is None:
+            self._wavelengths = None
+        else:
+            self._wavelengths = validate_array('wavelengths', value, domain='positive', ndim=1, physical_type='length')
+
+    @property
+    def distances(self):
+        """
+        The distances at which the models are defined
+        """
+        return self._distances
+
+    @distances.setter
+    def distances(self, value):
+        if value is None:
+            self._distances = None
+        else:
+            self._distances = validate_array('distances', value, domain='positive', ndim=1, physical_type='length')
+
+    @property
+    def apertures(self):
+        """
+        The apertures at which the fluxes are defined
+        """
+        return self._apertures
+
+    @apertures.setter
+    def apertures(self, value):
+        if value is None:
+            self._apertures = None
+        else:
+            self._apertures = validate_array('apertures', value, domain='positive', ndim=1, physical_type='length')
+
+    @property
+    def fluxes(self):
+        """
+        The model fluxes
+        """
+        return self._fluxes
+
+    @fluxes.setter
+    def fluxes(self, value):
+        if value is None:
+            self._fluxes = value
+        else:
+            if self.n_distances is None:
+                self._fluxes = validate_array('fluxes', value, ndim=2,
+                                              shape=(self.n_models, self.n_wav),
+                                              physical_type=('power', 'flux', 'spectral flux density'))
+            else:
+                self._fluxes = validate_array('fluxes', value, ndim=3,
+                                              shape=(self.n_models, self.n_distances, self.n_wav),
+                                              physical_type=('power', 'flux', 'spectral flux density'))
+
+    @property
+    def n_ap(self):
+        if self.apertures is None:
+            return 1
+        else:
+            return len(self.apertures)
+
+    @property
+    def n_wav(self):
+        if self.wavelengths is None:
+            return None
+        else:
+            return len(self.wavelengths)
+
+    @property
+    def n_distances(self):
+        if self.distances is None:
+            return None
+        else:
+            return len(self.distances)
+
+    @property
+    def n_models(self):
+        if self.names is None:
+            return None
+        else:
+            return len(self.names)
+
+    @property
+    def valid(self):
+        if self.fluxes is None:
+            return None
+        else:
+            return self.fluxes != 0
+
+    @property
+    def log_fluxes_mJy(self):
+        values = np.zeros(self.fluxes.shape)
+        values[~self.valid] = -np.inf
+        values[self.valid] = np.log10(self.fluxes[self.valid].to(u.mJy).value)
+        return values
 
     @classmethod
     def read(cls, directory, filters, distance_range=None, remove_resolved=False):
@@ -37,19 +146,19 @@ class Models(object):
         print("   Log[d] stepping     :  %g" % modpar['logd_step'])
 
         if modpar['aperture_dependent']:
+
+            distance_range_kpc = distance_range.to(u.kpc).value
+
             if distance_range:
-                if distance_range[0] == distance_range[1]:
-                    m.n_distances = 1
-                    m.distances = np.array([distance_range[0]])
+                if distance_range_kpc[0] == distance_range_kpc[1]:
+                    n_distances = 1
+                    m.distances = np.array([distance_range_kpc[0]]) * u.kpc
                 else:
-                    m.n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
-                    m.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), m.n_distances)
+                    n_distances = 1 + (np.log10(distance_range_kpc[1]) - np.log10(distance_range_kpc[0])) / modpar['logd_step']
+                    m.distances = np.logspace(np.log10(distance_range_kpc[0]), np.log10(distance_range_kpc[1]), n_distances) * u.kpc
                 print("   Number of distances :  %i" % m.n_distances)
             else:
                 raise Exception("For aperture-dependent models, a distange range is required")
-        else:
-            m.n_distances = None
-            m.distances = None
 
         print("")
         print(" ------------------------------------------------------------")
@@ -57,10 +166,9 @@ class Models(object):
         print(" ------------------------------------------------------------")
         print("")
 
-        model_fluxes = []
-        m.wavelengths = []
+        m.wavelengths = np.zeros(len(filters)) * u.micron
 
-        for filt in filters:
+        for ifilt, filt in enumerate(filters):
 
             filename = '%s/convolved/%s.fits' % (directory, filt['name'])
 
@@ -74,38 +182,37 @@ class Models(object):
 
             conv = ConvolvedFluxes.read(filename)
 
-            m.wavelengths.append(conv.wavelength)
+            if ifilt == 0:
+                if m.n_distances is None:
+                    model_fluxes = np.zeros((conv.n_models,len(filters))) * u.mJy
+                    extended = None
+                else:
+                    model_fluxes = np.zeros((conv.n_models, m.n_distances, len(filters))) * u.mJy
+                    extended = np.zeros((conv.n_models, m.n_distances, len(filters)), dtype=bool)
+
+            m.wavelengths[ifilt] = conv.wavelength
 
             if m.n_distances is not None:
-                apertures_au = filt['aperture_arcsec'] * m.distances * 1.e3
+                apertures_au = filt['aperture_arcsec'] * m.distances.to(u.pc).value * u.au
                 conv = conv.interpolate(apertures_au)
-                conv.flux = conv.flux / m.distances ** 2
-                m.logd = np.log10(m.distances)
+                conv.flux = conv.flux * (u.kpc / m.distances) ** 2
+                m.logd = np.log10(m.distances.to(u.kpc).value)
                 if remove_resolved:
-                    m.extended.append(apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis])
+                    extended[:, :, ifilt] = apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis]
+                model_fluxes[:, :, ifilt] = conv.flux
+            else:
+                model_fluxes[:, ifilt] = conv.flux[:,0]
 
-            model_fluxes.append(conv.flux)
-
-        if m.n_distances is not None:
-            m.fluxes = np.column_stack(model_fluxes).reshape(conv.n_models, len(filters), m.n_distances)
-            m.fluxes = m.fluxes.swapaxes(1, 2)
-            if remove_resolved:
-                m.extended = np.column_stack(m.extended).reshape(conv.n_models, len(filters), m.n_distances)
-                m.extended = m.extended.swapaxes(1, 2)
-        else:
-            m.fluxes = np.column_stack(model_fluxes)
 
         try:
             m.names = np.char.strip(conv.model_names)
         except:
             m.names = np.array([x.strip() for x in conv.model_names], dtype=conv.model_names.dtype)
 
-        m.n_models = conv.n_models
+        m.fluxes = model_fluxes
 
-        m.valid = m.fluxes != 0
-
-        m.fluxes[~m.valid] = -np.inf
-        m.fluxes[m.valid] = np.log10(m.fluxes[m.valid])
+        if extended is not None:
+            m.extended = extended
 
         return m
 
@@ -113,10 +220,12 @@ class Models(object):
 
         weight, log_flux, log_error = source.get_log_fluxes()
 
-        if self.fluxes.ndim == 2:  # Aperture-independent fitting
+        model_fluxes = self.log_fluxes_mJy
+
+        if model_fluxes.ndim == 2:  # Aperture-independent fitting
 
             # Use 2-parameter linear regression to find the best-fit av and scale for each model
-            residual = log_flux - self.fluxes
+            residual = log_flux - model_fluxes
             av_best, sc_best = f.linear_regression(residual, weight, av_law, sc_law)
 
             # Use optimal scaling for Avs that are outside range
@@ -134,12 +243,12 @@ class Models(object):
             ch_best = f.chi_squared(source.valid, residual, log_error, weight, model)
 
             # Extract convolved model fluxes for best-fit
-            model_fluxes = model + self.fluxes
+            model_fluxes = model + model_fluxes
 
-        elif self.fluxes.ndim == 3:  # Aperture dependent fitting
+        elif model_fluxes.ndim == 3:  # Aperture dependent fitting
 
             # Use optimal scaling to fit the Av
-            residual = log_flux - self.fluxes
+            residual = log_flux - model_fluxes
             av_best = f.optimal_scaling(residual, weight, av_law)
 
             # Reset to valid range
@@ -166,7 +275,7 @@ class Models(object):
             av_best = av_best[np.arange(self.n_models), best]
 
             # Extract convolved model fluxes for best-fit
-            model_fluxes = (model + self.fluxes)[np.arange(self.n_models), best, :]
+            model_fluxes = (model + model_fluxes)[np.arange(self.n_models), best, :]
 
         else:
 

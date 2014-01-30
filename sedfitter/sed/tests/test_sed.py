@@ -26,12 +26,21 @@ def test_wav_invalid_shape(value):
         s.wav = value
     assert exc.value.args[0] == 'wav should be a 1-d sequence'
 
+
 @pytest.mark.parametrize('value', ['string', object(), 1., [1,2,3]])
-def test_wav_invalid(value):
+def test_wav_invalid_type(value):
     s = SED()
     with pytest.raises(TypeError) as exc:
         s.wav = value
-    assert exc.value.args[0] == 'wavelengths should be given as a Quantity object with units of distance'
+    assert exc.value.args[0] == 'wav should be given as a Quantity object'
+
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.Jy])
+def test_wav_invalid_unit(unit):
+    s = SED()
+    with pytest.raises(TypeError) as exc:
+        s.wav = [1., 2., 3.] * unit
+    assert exc.value.args[0] == 'wav should be given in units of length'
 
 
 # def test_aperture_none():

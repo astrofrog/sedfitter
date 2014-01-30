@@ -97,10 +97,9 @@ class SED(object):
         if value is None:
             self._wav = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._wav = validate_array('wav', value, domain='positive', ndim=1, shape=None if self.nu is None else (len(self.nu),))
-            else:
-                raise TypeError("wavelengths should be given as a Quantity object with units of distance")
+            self._wav = validate_array('wav', value, domain='positive', ndim=1,
+                                       shape=None if self.nu is None else (len(self.nu),),
+                                       physical_type='length')
 
     @property
     def nu(self):
@@ -114,10 +113,9 @@ class SED(object):
         if value is None:
             self._nu = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.Hz):
-                self._nu = validate_array('nu', value, domain='positive', ndim=1, shape=None if self.wav is None else (len(self.wav),))
-            else:
-                raise TypeError("frequencies should be given as a Quantity object with units of frequency")
+            self._nu = validate_array('nu', value, domain='positive', ndim=1,
+                                      shape=None if self.wav is None else (len(self.wav),),
+                                      physical_type='frequency')
 
     @property
     def apertures(self):
@@ -131,10 +129,8 @@ class SED(object):
         if value is None:
             self._apertures = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._apertures = validate_array('apertures', value, domain='positive', ndim=1)
-            else:
-                raise TypeError("apertures should be given as a Quantity object with units of frequency")
+            self._apertures = validate_array('apertures', value, domain='positive',
+                                             ndim=1, physical_type='length')
 
     @property
     def flux(self):
@@ -148,10 +144,9 @@ class SED(object):
         if value is None:
             self._flux = value
         else:
-            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
-                self._flux = validate_array('flux', value, ndim=2, shape=(self.n_ap, self.n_wav))
-            else:
-                raise TypeError("fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
+            self._flux = validate_array('flux', value, ndim=2,
+                                        shape=(self.n_ap, self.n_wav),
+                                        physical_type=('power', 'flux', 'spectral flux density'))
 
     @property
     def error(self):
@@ -165,10 +160,9 @@ class SED(object):
         if value is None:
             self._error = value
         else:
-            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
-                self._error = validate_array('error', value, ndim=2, shape=(self.n_ap, self.n_wav))
-            else:
-                raise TypeError("flux errors should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
+            self._error = validate_array('error', value, ndim=2,
+                                         shape=(self.n_ap, self.n_wav),
+                                         physical_type=('power', 'flux', 'spectral flux density'))
 
     @property
     def n_ap(self):

@@ -12,6 +12,7 @@ except ImportError:
     import pickle
 
 import numpy as np
+from astropy import units as u
 
 from . import timer
 
@@ -19,6 +20,7 @@ from .models import Models
 from .fit_info import FitInfo
 from .source import Source
 from .utils import io
+from .utils.validator import validate_scalar, validate_array
 from . import six
 
 
@@ -35,18 +37,18 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         Filename of the file containing the data, one source per line.
     filter_names : tuple or list
         List of the filters that the data is specified in.
-    apertures : tuple or list
-        List of the aperture radii that the data is specified in.
+    apertures : :class`~astropy.unit.quantity.Quantity` array instance
+        The aperture radii that the data is specified in (as an angle).
     models_dir : str
         Name of the directory containing the models to use.
     output : str
         Name of the file to output the fit information to (in binary format).
-    extinction_law : `~sedfitter.extinction.Extinction`
-        The extinction law to use
+    extinction_law : :class:`~sedfitter.extinction.Extinction` instance
+        The extinction law to use.
     av_range : tuple
-        Minimum and maximum Av to allow in the fitting
-    distance_range : tuple
-        Minimum and maximum distance to allow in the fitting (in kpc)
+        Minimum and maximum Av to allow in the fitting.
+    distance_range : :class`~astropy.unit.quantity.Quantity` array instance
+        Minimum and maximum distance to allow in the fitting in units of length.
     n_data_min : int, optional
         The minimum number of points a source needs to be fit.
     output_format : tuple, optional
@@ -60,14 +62,17 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         Robitaille et al. (2007) for a discussion of this criterion.
     """
 
+    validate_array('apertures', apertures, domain='positive', ndim=1, physical_type='angle')
+    validate_array('distance_range', distance_range, domain='positive', ndim=1, shape=(2,), physical_type='length')
+
     print(" ------------------------------------------------------------")
     print("  => Fitting parameters")
     print(" ------------------------------------------------------------")
     print("")
     print("   Minimum A_V      : %9.3f mag" % av_range[0])
     print("   Maximum A_V      : %9.3f mag" % av_range[1])
-    print("   Minimum distance : %9.3f kpc" % distance_range[0])
-    print("   Maximum distance : %9.3f kpc" % distance_range[1])
+    print("   Minimum distance : %9.3f %s" % (distance_range[0].value, distance_range.unit))
+    print("   Maximum distance : %9.3f %s" % (distance_range[1].value, distance_range.unit))
     print("")
     print(" ------------------------------------------------------------")
     print("  => Output parameters")
@@ -96,7 +101,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     # Construct filters dictionary
     filters = []
     for i in range(len(apertures)):
-        filters.append({'aperture_arcsec': apertures[i], 'name': filter_names[i]})
+        filters.append({'aperture_arcsec': apertures[i].to(u.arcsec).value, 'name': filter_names[i]})
 
     # Read in models
     models = Models.read(model_dir, filters, distance_range=distance_range, remove_resolved=remove_resolved)
@@ -109,7 +114,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print('     Filter    Wavelength    Aperture (")   ')
     print('    ----------------------------------------')
     for f in filters:
-        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['wav'], f['aperture_arcsec']))
+        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['wav'].to(u.micron).value, f['aperture_arcsec']))
     print('')
 
     # Set Av law

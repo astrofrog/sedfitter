@@ -24,6 +24,7 @@ except ImportError:
     import pickle
 
 import numpy as np
+from astropy import units as u
 
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
@@ -117,7 +118,7 @@ def plot_source_data(ax, source, filters, size=20, capsize=3):
 
     weight, log_flux, log_error = source.get_log_fluxes()
 
-    wav = np.array([f['wav'] for f in filters])
+    wav = np.array([f['wav'].to(u.micron).value for f in filters])
     plot_wav = wav
     plot_flux = log_flux - 26. + np.log10(3.e8 / (wav * 1.e-6))
     plot_flux_up = 10. ** (plot_flux + log_error)
@@ -244,7 +245,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
     filters = pickle.load(fin)
     extinction = pickle.load(fin)
 
-    wav = np.array([f['wav'] for f in filters])
+    wav = np.array([f['wav'].to(u.micron).value for f in filters])
     ap = np.array([f['aperture_arcsec'] for f in filters])
 
     unique_ap = np.unique(ap)

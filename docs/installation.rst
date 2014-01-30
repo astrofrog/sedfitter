@@ -5,7 +5,6 @@ Installation
 Requirements
 ============
 
-
 The SED fitter requires Python 2.6, 2.7, 3.2, or 3.3, and the following Python
 packages to be installed:
 
@@ -15,14 +14,11 @@ packages to be installed:
 
 * `Matplotlib <http://www.matplotlib.org>`_
 
-* `ATpy <http://atpy.github.io>`_ 0.9.7 or later.
-
-* `Astropy <http://www.astropy.org>`_ (this should be the latest developer
-  version, as it will not work with Astropy 0.2 or earlier)
+* `Astropy <http://www.astropy.org>`_ 0.3 or later
 
 First-time Python users may want to consider an all-in-one Python installation
 package, such as the `Anaconda Python Distribution
-<http://continuum.io/downloads>`_ which provides Numpy, Scipy, and Matplotlib.
+<http://continuum.io/downloads>`_ which provides all of the above dependencies.
 
 .. _installation:
 

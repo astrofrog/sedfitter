@@ -28,11 +28,19 @@ def test_wav_invalid_shape(value):
 
 
 @pytest.mark.parametrize('value', ['string', object(), 1., [1,2,3]])
-def test_wav_invalid(value):
+def test_wav_invalid_type(value):
     f = Filter()
     with pytest.raises(TypeError) as exc:
         f.wav = value
-    assert exc.value.args[0] == 'wavelengths should be given as a Quantity object with units of distance'
+    assert exc.value.args[0] == 'wav should be given as a Quantity object'
+
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.Jy])
+def test_wav_invalid_unit(unit):
+    f = Filter()
+    with pytest.raises(TypeError) as exc:
+        f.wav = [1., 2., 3.] * unit
+    assert exc.value.args[0] == 'wav should be given in units of length'
 
 
 @pytest.mark.parametrize('filename', ['2J.txt', 'I1.txt', 'S3.txt'])

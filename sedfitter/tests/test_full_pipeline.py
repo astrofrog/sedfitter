@@ -71,8 +71,8 @@ class BasePipelineTest(object):
         from ..extinction import Extinction
 
         self.extinction = Extinction()
-        self.extinction.wav = np.logspace(-2., 3.)
-        self.extinction.chi = self.extinction.wav ** -2
+        self.extinction.wav = np.logspace(-2., 3.) * u.micron
+        self.extinction.chi = self.extinction.wav.value ** -2 * u.cm**2 / u.g
 
     def teardown_class(self):
         shutil.rmtree(self.tmpdir)
@@ -118,9 +118,9 @@ class BasePipelineTest(object):
 
         output_file = tmpdir.join('output').strpath
 
-        fit(data_file, ['bob', 'alice', 'eve'], [1., 3., 3.], self.tmpdir, output_file,
+        fit(data_file, ['bob', 'alice', 'eve'], [1., 3., 3.] * u.arcsec, self.tmpdir, output_file,
             extinction_law=self.extinction,
-            distance_range=[1., 2.],
+            distance_range=[1., 2.] * u.kpc,
             av_range=[0., 0.1],
             output_format=('F', 3.),
             output_convolved=False)
@@ -140,9 +140,9 @@ class BasePipelineTest(object):
 
         output_file = tmpdir.join('output').strpath
 
-        fit(data_file, ['MO001', 'MO002', 'MO020'], [1., 3., 3.], self.tmpdir, output_file,
+        fit(data_file, ['MO001', 'MO002', 'MO020'], [1., 3., 3.] * u.arcsec, self.tmpdir, output_file,
             extinction_law=self.extinction,
-            distance_range=[1., 2.],
+            distance_range=[1., 2.] * u.kpc,
             av_range=[0., 0.1],
             output_format=('F', 3.),
             output_convolved=False)

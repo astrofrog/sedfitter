@@ -5,6 +5,7 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
+from copy import deepcopy
 
 from astropy.table import Table
 import numpy as np
@@ -44,7 +45,7 @@ def get_axes(fig):
 def plot_params_1d(input_file, parameter, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
                    label=None, bins=30, additional={}, plot_name=True,
-                   format='eps'):
+                   format='pdf'):
     """
     Make histogram plots of parameters
 
@@ -98,17 +99,20 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
+    tpos = deepcopy(t)
+    if log_x:
+        tpos = tpos[tpos[parameter] > 0.]
 
     # Initialize figure
     fig = plt.figure()
     ax = get_axes(fig)
 
     # Find range of values
-    pmin, pmax = t[parameter].min(), t[parameter].max()
+    pmin, pmax = tpos[parameter].min(), tpos[parameter].max()
 
     # Compute histogram
     if log_x:
-        hist_all, edges = np.histogram(np.log10(t[parameter]), bins=bins, range=[np.log10(pmin), np.log10(pmax)])
+        hist_all, edges = np.histogram(np.log10(tpos[parameter]), bins=bins, range=[np.log10(pmin), np.log10(pmax)])
         center = (edges[1:] + edges[:-1]) / 2.
         edges, center = 10. ** edges, 10. ** center
     else:

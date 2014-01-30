@@ -37,18 +37,18 @@ plt.rc('patch', linewidth=0.5)
 fp = FontProperties(size='small')
 
 
-def get_axes(fig, label=None):
+def get_axes(fig, label=None, zorder=None):
     vxmin, vxmax = 1.5, 4.5
     vymin, vymax = 1.0, 4.0
     width, height = fig.get_figwidth(), fig.get_figheight()
     rect = [vxmin / width, vymin / width, (vxmax - vxmin) / width, (vymax - vymin) / height]
-    return fig.add_axes(rect, label=label)
+    return fig.add_axes(rect, label=label, zorder=zorder)
 
 
 def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
                    label_x=None, label_y=None, additional={}, plot_name=True,
-                   format='eps'):
+                   format='pdf'):
     """
     Make histogram plots of parameters
 
@@ -115,7 +115,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
 
     # Initialize figure
     fig = plt.figure()
-    ax = get_axes(fig, label='main')
+    ax = get_axes(fig, label='main', zorder=0)
 
     # Find range of values
     xmin, xmax = tpos[parameter_x].min(), tpos[parameter_x].max()
@@ -148,9 +148,11 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
 
     # Grayscale showing all models. Since pcolormesh is very slow for PDF, we
     # create a 'ghost' axis which is already in log space.
-    ax_log = get_axes(fig, label='log')
+    ax_log = get_axes(fig, label='log', zorder=-100)
     ax_log.axis('off')
-    ax_log.imshow(gray_all.transpose(), cmap='binary', vmin=0, vmax=40., extent=[ex[0], ex[-1], ey[0], ey[-1]], aspect='auto')
+    ax_log.imshow(gray_all.transpose(), cmap='binary', vmin=0, vmax=40., extent=[ex[0], ex[-1], ey[0], ey[-1]], aspect='auto', zorder=-100, origin='lower')
+
+    ax.patch.set_facecolor('none')
 
     ax.set_xlabel(parameter_x if label_x is None else label_x)
     ax.set_ylabel(parameter_y if label_y is None else label_y)

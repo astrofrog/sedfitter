@@ -180,7 +180,7 @@ def get_axes(fig):
 def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
-         plot_name=True, plot_info=True, format='eps'):
+         plot_name=True, plot_info=True, format='pdf'):
     """
     Make SED plots
 

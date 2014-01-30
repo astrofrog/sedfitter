@@ -116,14 +116,7 @@ class Filter(object):
         if value is None:
             self._wavelength = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                if not value.isscalar:
-                    raise TypeError("wavelength should be a scalar Quantity")
-                if not value > 0 * u.micron:
-                    raise ValueError("wavelength should be strictly positive")
-                self._wavelength = value
-            else:
-                raise TypeError("central wavelength should be given as a Quantity object with units of distance")
+            self._wavelength = validate_scalar('wavelength', value, domain='strictly-positive', physical_type='length')
 
     @property
     def wav(self):
@@ -137,10 +130,9 @@ class Filter(object):
         if value is None:
             self._wav = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._wav = validate_array('wav', value, domain='strictly-positive', ndim=1, shape=None if self.nu is None else (len(self.nu),))
-            else:
-                raise TypeError("wavelengths should be given as a Quantity object with units of distance")
+            self._wav = validate_array('wav', value, domain='strictly-positive', ndim=1,
+                                       shape=None if self.nu is None else (len(self.nu),),
+                                       physical_type='length')
 
     @property
     def nu(self):
@@ -154,10 +146,9 @@ class Filter(object):
         if value is None:
             self._nu = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.Hz):
-                self._nu = validate_array('nu', value, domain='strictly-positive', ndim=1, shape=None if self.wav is None else (len(self.wav),))
-            else:
-                raise TypeError("frequencies should be given as a Quantity object with units of frequency")
+            self._nu = validate_array('nu', value, domain='strictly-positive', ndim=1,
+                                      shape=None if self.wav is None else (len(self.wav),),
+                                      physical_type='frequency')
 
     @property
     def r(self):
@@ -171,4 +162,5 @@ class Filter(object):
         if value is None:
             self._r = None
         else:
-            self._r = validate_array('r', value, domain='positive', ndim=1, shape=None if (self.wav or self.nu) is None else (len(self.wav or self.nu),))
+            self._r = validate_array('r', value, domain='positive', ndim=1,
+                                     shape=None if (self.wav or self.nu) is None else (len(self.wav or self.nu),))

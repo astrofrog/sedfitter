@@ -1,10 +1,29 @@
 import numpy as np
+from astropy import units as u
+
+u.def_physical_type(u.cm**2 / u.g, 'area per unit mass')
+u.def_physical_type(u.erg/u.cm**2/u.s, 'flux')
 
 
-def validate_scalar(name, value, domain=None):
+def validate_physical_type(name, value, physical_type):
+    if physical_type is not None:
+        if not isinstance(value, u.Quantity):
+            raise TypeError("{0} should be given as a Quantity object".format(name))
+        if isinstance(physical_type, basestring):
+            if value.unit.physical_type != physical_type:
+                raise TypeError("{0} should be given in units of {1}".format(name, physical_type))
+        else:
+            if not value.unit.physical_type in physical_type:
+                raise TypeError("{0} should be given in units of {1}".format(name, ', '.join(physical_type)))
 
-    if not np.isscalar(value) or not np.isreal(value):
-        raise TypeError("{0} should be a scalar floating point value".format(name))
+
+def validate_scalar(name, value, domain=None, physical_type=None):
+
+    validate_physical_type(name, value, physical_type)
+
+    if not physical_type:
+        if np.isscalar(value) or not np.isreal(value):
+            raise TypeError("{0} should be a scalar floating point value".format(name))
 
     if domain == 'positive':
         if value < 0.:
@@ -25,13 +44,15 @@ def validate_scalar(name, value, domain=None):
     return value
 
 
-def validate_array(name, value, domain=None, ndim=1, shape=None):
-    
+def validate_array(name, value, domain=None, ndim=1, shape=None, physical_type=None):
+
+    validate_physical_type(name, value, physical_type)
+
     # First convert to a Numpy array:
     if type(value) in [list, tuple]:
         value = np.array(value)
 
-    # Check the value is an array with the right number of dimensions 
+    # Check the value is an array with the right number of dimensions
     if not isinstance(value, np.ndarray) or value.ndim != ndim:
         if ndim == 1:
             raise TypeError("{0} should be a 1-d sequence".format(name))

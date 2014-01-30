@@ -65,14 +65,7 @@ class ConvolvedFluxes(object):
         if value is None:
             self._wavelength = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                if not value.isscalar:
-                    raise TypeError("wavelength should be a scalar Quantity")
-                if not value > 0 * u.micron:
-                    raise ValueError("wavelength should be strictly positive")
-                self._wavelength = value
-            else:
-                raise TypeError("central wavelength should be given as a Quantity object with units of distance")
+            self._wavelength = validate_scalar('wavelength', value, domain='strictly-positive', physical_type='length')
 
     @property
     def model_names(self):
@@ -100,10 +93,7 @@ class ConvolvedFluxes(object):
         if value is None:
             self._apertures = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._apertures = validate_array('apertures', value, domain='positive', ndim=1)
-            else:
-                raise TypeError("apertures should be given as a Quantity object with units of length")
+            self._apertures = validate_array('apertures', value, domain='positive', ndim=1, physical_type='length')
 
     @property
     def flux(self):
@@ -121,10 +111,9 @@ class ConvolvedFluxes(object):
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
 
-            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
-                self._flux = validate_array('flux', value, ndim=2, shape=(self.n_models, self.n_ap))
-            else:
-                raise TypeError("fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
+            self._flux = validate_array('flux', value, ndim=2,
+                                        shape=(self.n_models, self.n_ap),
+                                        physical_type=('power', 'flux', 'spectral flux density'))
 
     @property
     def error(self):
@@ -142,10 +131,9 @@ class ConvolvedFluxes(object):
             if self.model_names is None:
                 raise ValueError("model_names has not been set")
 
-            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
-                self._error = validate_array('error', value, ndim=2, shape=(self.n_models, self.n_ap))
-            else:
-                raise TypeError("flux errors should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
+            self._error = validate_array('error', value, ndim=2,
+                                         shape=(self.n_models, self.n_ap),
+                                         physical_type=('power', 'flux', 'spectral flux density'))
 
     @property
     def n_models(self):

@@ -20,11 +20,19 @@ def test_wavelength():
 
 
 @pytest.mark.parametrize('value', ['string', object(), np.array([1, 2, 3])])
-def test_wavelength_invalid(value):
+def test_wavelength_invalid_type(value):
     c = ConvolvedFluxes()
     with pytest.raises(TypeError) as exc:
         c.wavelength = value
-    assert exc.value.args[0] == 'central wavelength should be given as a Quantity object with units of distance'
+    assert exc.value.args[0] == 'wavelength should be given as a Quantity object'
+
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.Jy])
+def test_wavelength_invalid_unit(unit):
+    c = ConvolvedFluxes()
+    with pytest.raises(TypeError) as exc:
+        c.wavelength = [1., 2., 3.] * unit
+    assert exc.value.args[0] == 'wavelength should be given in units of length'
 
 
 def test_aperture_none():
@@ -44,7 +52,17 @@ def test_aperture_invalid_type(value):
 
     with pytest.raises(TypeError) as exc:
         c.apertures = value
-    assert exc.value.args[0] == 'apertures should be given as a Quantity object with units of length'
+    assert exc.value.args[0] == 'apertures should be given as a Quantity object'
+
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.Jy])
+def test_aperture_invalid_unit(unit):
+
+    c = ConvolvedFluxes()
+
+    with pytest.raises(TypeError) as exc:
+        c.apertures = [1., 2., 3.] * unit
+    assert exc.value.args[0] == 'apertures should be given in units of length'
 
 
 def test_model_name_list():
@@ -108,12 +126,28 @@ def test_single_invalid_types(value):
 
     with pytest.raises(TypeError) as exc:
         c.flux = value
-    assert exc.value.args[0] == 'fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density'
+    assert exc.value.args[0] == 'flux should be given as a Quantity object'
 
     with pytest.raises(TypeError) as exc:
         c.error = value
-    assert exc.value.args[0] == 'flux errors should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density'
+    assert exc.value.args[0] == 'error should be given as a Quantity object'
 
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.m])
+def test_single_invalid_units(unit):
+
+    c = ConvolvedFluxes()
+
+    c.apertures = None
+    c.model_names = ['a', 'b', 'c', 'd']
+
+    with pytest.raises(TypeError) as exc:
+        c.flux = [(1.,), (2.,), (3.,), (4.,)] * unit
+    assert exc.value.args[0] == 'flux should be given in units of power, flux, spectral flux density'
+
+    with pytest.raises(TypeError) as exc:
+        c.error = [(1.,), (2.,), (3.,), (4.,)] * unit
+    assert exc.value.args[0] == 'error should be given in units of power, flux, spectral flux density'
 
 def test_single_io_roundtrip(tmpdir):
 
@@ -188,11 +222,28 @@ def test_multiple_invalid_types(value):
 
     with pytest.raises(TypeError) as exc:
         c.flux = value
-    assert exc.value.args[0] == 'fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density'
+    assert exc.value.args[0] == 'flux should be given as a Quantity object'
 
     with pytest.raises(TypeError) as exc:
         c.error = value
-    assert exc.value.args[0] == 'flux errors should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density'
+    assert exc.value.args[0] == 'error should be given as a Quantity object'
+
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.m])
+def test_multiple_invalid_unit(unit):
+
+    c = ConvolvedFluxes()
+
+    c.apertures = [1., 2.] * u.au
+    c.model_names = ['a', 'b', 'c']
+
+    with pytest.raises(TypeError) as exc:
+        c.flux = [[1., 2.], [3., 4.], [5., 6.]] * unit
+    assert exc.value.args[0] == 'flux should be given in units of power, flux, spectral flux density'
+
+    with pytest.raises(TypeError) as exc:
+        c.error = [[1., 2.], [3., 4.], [5., 6.]] * unit
+    assert exc.value.args[0] == 'error should be given in units of power, flux, spectral flux density'
 
 
 def test_multiple_roundtrip(tmpdir):

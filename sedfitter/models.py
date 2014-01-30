@@ -36,10 +36,7 @@ class Models(object):
         if value is None:
             self._wavelengths = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._wavelengths = validate_array('wavelengths', value, domain='positive', ndim=1)
-            else:
-                raise TypeError("wavelengths should be given as a Quantity object with units of length")
+            self._wavelengths = validate_array('wavelengths', value, domain='positive', ndim=1, physical_type='length')
 
     @property
     def distances(self):
@@ -53,10 +50,7 @@ class Models(object):
         if value is None:
             self._distances = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._distances = validate_array('distances', value, domain='positive', ndim=1)
-            else:
-                raise TypeError("distances should be given as a Quantity object with units of distance")
+            self._distances = validate_array('distances', value, domain='positive', ndim=1, physical_type='length')
 
     @property
     def apertures(self):
@@ -70,10 +64,7 @@ class Models(object):
         if value is None:
             self._apertures = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._apertures = validate_array('apertures', value, domain='positive', ndim=1)
-            else:
-                raise TypeError("apertures should be given as a Quantity object with units of length")
+            self._apertures = validate_array('apertures', value, domain='positive', ndim=1, physical_type='length')
 
     @property
     def fluxes(self):
@@ -87,13 +78,14 @@ class Models(object):
         if value is None:
             self._fluxes = value
         else:
-            if isinstance(value, u.Quantity) and (value.unit.is_equivalent(u.erg/u.s) or value.unit.is_equivalent(u.erg/u.cm**2/u.s) or value.unit.is_equivalent(u.Jy)):
-                if self.n_distances is None:
-                    self._fluxes = validate_array('fluxes', value, ndim=2, shape=(self.n_models, self.n_wav))
-                else:
-                    self._fluxes = validate_array('fluxes', value, ndim=3, shape=(self.n_models, self.n_distances, self.n_wav))
+            if self.n_distances is None:
+                self._fluxes = validate_array('fluxes', value, ndim=2,
+                                              shape=(self.n_models, self.n_wav),
+                                              physical_type=('power', 'flux', 'spectral flux density'))
             else:
-                raise TypeError("fluxes should be given as a Quantity object with units of luminosity, flux, or monochromatic flux density")
+                self._fluxes = validate_array('fluxes', value, ndim=3,
+                                              shape=(self.n_models, self.n_distances, self.n_wav),
+                                              physical_type=('power', 'flux', 'spectral flux density'))
 
     @property
     def n_ap(self):
@@ -153,13 +145,16 @@ class Models(object):
         print("   Log[d] stepping     :  %g" % modpar['logd_step'])
 
         if modpar['aperture_dependent']:
+
+            distance_range_kpc = distance_range.to(u.kpc).value
+
             if distance_range:
-                if distance_range[0] == distance_range[1]:
+                if distance_range_kpc[0] == distance_range_kpc[1]:
                     n_distances = 1
-                    m.distances = np.array([distance_range[0]]) * u.kpc
+                    m.distances = np.array([distance_range_kpc[0]]) * u.kpc
                 else:
-                    n_distances = 1 + (np.log10(distance_range[1]) - np.log10(distance_range[0])) / modpar['logd_step']
-                    m.distances = np.logspace(np.log10(distance_range[0]), np.log10(distance_range[1]), n_distances) * u.kpc
+                    n_distances = 1 + (np.log10(distance_range_kpc[1]) - np.log10(distance_range_kpc[0])) / modpar['logd_step']
+                    m.distances = np.logspace(np.log10(distance_range_kpc[0]), np.log10(distance_range_kpc[1]), n_distances) * u.kpc
                 print("   Number of distances :  %i" % m.n_distances)
             else:
                 raise Exception("For aperture-dependent models, a distange range is required")

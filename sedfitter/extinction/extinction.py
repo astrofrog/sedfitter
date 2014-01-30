@@ -26,10 +26,9 @@ class Extinction(object):
         if value is None:
             self._wav = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
-                self._wav = validate_array('wav', value, ndim=1, shape=None if self.chi is None else self.chi.shape)
-            else:
-                raise TypeError("wavelengths should be given as a Quantity object with units of length")
+            self._wav = validate_array('wav', value, ndim=1,
+                                       shape=None if self.chi is None else self.chi.shape,
+                                       physical_type='length')
 
     @property
     def chi(self):
@@ -40,10 +39,9 @@ class Extinction(object):
         if value is None:
             self._chi = None
         else:
-            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.cm**2 / u.g):
-                self._chi = validate_array('chi', value, ndim=1, shape=None if self.wav is None else self.wav.shape)
-            else:
-                raise TypeError("chi should be given as a Quantity object with units of area per unit mass")
+            self._chi = validate_array('chi', value, ndim=1,
+                                       shape=None if self.wav is None else self.wav.shape,
+                                       physical_type='area per unit mass')
 
     @classmethod
     def from_file(cls, filename, columns=(0, 1),

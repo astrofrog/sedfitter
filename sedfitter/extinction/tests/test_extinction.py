@@ -26,7 +26,15 @@ def test_extinction_wav_invalid_type(value):
     e = Extinction()
     with pytest.raises(TypeError) as exc:
         e.wav = value
-    assert exc.value.args[0] == 'wavelengths should be given as a Quantity object with units of length'
+    assert exc.value.args[0] == 'wav should be given as a Quantity object'
+
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.Jy])
+def test_extinction_wav_invalid_unit(unit):
+    e = Extinction()
+    with pytest.raises(TypeError) as exc:
+        e.wav = [1., 2., 3.] * unit
+    assert exc.value.args[0] == 'wav should be given in units of length'
 
 
 @pytest.mark.parametrize('value', [np.array([[1, 2]]), np.array(3)])
@@ -48,11 +56,19 @@ def test_extinction_chi_invalid_type(value):
     e = Extinction()
     with pytest.raises(TypeError) as exc:
         e.chi = value
-    assert exc.value.args[0] == 'chi should be given as a Quantity object with units of area per unit mass'
+    assert exc.value.args[0] == 'chi should be given as a Quantity object'
+
+
+@pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.Jy])
+def test_extinction_chi_invalid_unit(unit):
+    e = Extinction()
+    with pytest.raises(TypeError) as exc:
+        e.chi = [1., 2., 3.] * unit
+    assert exc.value.args[0] == 'chi should be given in units of area per unit mass'
 
 
 @pytest.mark.parametrize('value', [np.array([[1, 2]]), np.array(3)])
-def test_extinction_chi_invalid(value):
+def test_extinction_chi_invalid_shape(value):
     e = Extinction()
     with pytest.raises(TypeError) as exc:
         e.chi = value * u.cm ** 2 / u.g

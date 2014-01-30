@@ -25,7 +25,15 @@ package, such as the `Anaconda Python Distribution
 Installation
 ============
 
-To obtain the SED fitting package, you will need to clone the git repository::
+You can install the SED fitting package using::
+
+    pip install sedfitter
+
+or you can get the latest tar file from `PyPI
+<https://pypi.python.org/pypi/sedfitter>`_.
+
+If you want to install the latest developer version, you will need to clone
+the git repository::
 
     git clone http://github.com/astrofrog/sedfitter
 

@@ -25,7 +25,11 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'astropy.sphinx.ext.numpydoc', 'sphinx.ext.pngmath']
+extensions = ['sphinx.ext.autosummary',
+              'sphinx.ext.autodoc',
+              'sphinx.ext.intersphinx',
+              'astropy.sphinx.ext.numpydoc',
+              'sphinx.ext.pngmath']
 
 autosummary_generate = True
 numpydoc_show_class_members = False
@@ -124,7 +128,7 @@ html_theme = 'default'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -247,4 +251,12 @@ texinfo_documents = [
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'http://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+    'matplotlib': ('http://matplotlib.sourceforge.net/', None),
+    'astropy': ('http://docs.astropy.org/en/stable/', None)
+    }
+
+nitpicky=True

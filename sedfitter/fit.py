@@ -34,11 +34,19 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     Parameters
     ----------
     data : str
-        Filename of the file containing the data, one source per line.
+        Filename of the file containing the data, one source per line (see
+        documentation for a description of the required format).
     filter_names : tuple or list
-        List of the filters that the data is specified in.
-    apertures : :class`~astropy.unit.quantity.Quantity` array instance
-        The aperture radii that the data is specified in (as an angle).
+        List of filter names (given as individual strings) for which the data
+        is defined. The filter names should be the name of the files in the
+        ``convolved`` directory for the models, without the extensions. This is
+        typically ``2J``, ``I1``, ``M1``, etc.
+    apertures : :class`~astropy.units.quantity.Quantity` array instance
+        The aperture radii that the data is specified in (as an angle). The
+        fluxes may not be measured from aperture photometry, but this is meant
+        to give an indication of the sizescale of the emission, and can be used
+        to reject models that would have been clearly resolved at the distance
+        specified.
     models_dir : str
         Name of the directory containing the models to use.
     output : str
@@ -47,7 +55,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         The extinction law to use.
     av_range : tuple
         Minimum and maximum Av to allow in the fitting.
-    distance_range : :class`~astropy.unit.quantity.Quantity` array instance
+    distance_range : :class`~astropy.units.quantity.Quantity` array instance
         Minimum and maximum distance to allow in the fitting in units of length.
     n_data_min : int, optional
         The minimum number of points a source needs to be fit.

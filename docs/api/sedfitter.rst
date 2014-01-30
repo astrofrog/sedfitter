@@ -23,5 +23,14 @@ Extracting values
 .. autofunction:: sedfitter.write_parameters
 .. autofunction:: sedfitter.write_parameter_ranges
 
+Classes
+-------
 
+.. autoclass:: sedfitter.extinction.Extinction
+   :members:
 
+.. autoclass:: sedfitter.filter.Filter
+   :members:
+
+.. autoclass:: sedfitter.convolved_fluxes.ConvolvedFluxes
+   :members:

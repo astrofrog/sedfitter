@@ -207,6 +207,8 @@ class ConvolvedFluxes(object):
         # Read in apertures, if present
         try:
             ta = Table.read(convolved['APERTURES'])
+            if ta['APERTURE'].unit is None:
+                ta['APERTURE'].unit = u.au
             conv.apertures = ta['APERTURE'].data * ta['APERTURE'].unit
         except KeyError:
             pass
@@ -218,6 +220,12 @@ class ConvolvedFluxes(object):
         conv.model_names = tc['MODEL_NAME']
 
         # Read in flux and flux errors
+
+        if tc['TOTAL_FLUX'].unit is None:
+            tc['TOTAL_FLUX'].unit = u.mJy
+
+        if tc['TOTAL_FLUX_ERR'].unit is None:
+            tc['TOTAL_FLUX_ERR'].unit = u.mJy
 
         if tc['TOTAL_FLUX'].ndim == 1 and conv.n_ap == 1:
             conv.flux = tc['TOTAL_FLUX'].data.reshape(tc['TOTAL_FLUX'].shape[0], 1) * tc['TOTAL_FLUX'].unit
@@ -231,8 +239,12 @@ class ConvolvedFluxes(object):
 
         # Read in 99% cumulative and 50% surface brightness radii
         try:
+            if tc['RADIUS_SIGMA_50'].unit is None:
+                tc['RADIUS_SIGMA_50'].unit = u.au
+            if tc['RADIUS_CUMUL_99'].unit is None:
+                tc['RADIUS_CUMUL_99'].unit = u.au
             conv.radius_sigma_50 = tc['RADIUS_SIGMA_50'] * tc['RADIUS_SIGMA_50'].unit
-            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99'] * tc['RADIUS_SIGMA_50'].unit
+            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99'] * tc['RADIUS_CUMUL_99'].unit
         except KeyError:
             pass
 

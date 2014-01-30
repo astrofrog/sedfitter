@@ -58,9 +58,9 @@ class Extinction(object):
             The name of the file to read the extinction law from
         columns : tuple or list, optional
             The columns to use for the wavelength and opacity respectively
-        wav_unit : :class:`~astropy.unit.core.Unit`
+        wav_unit : :class:`~astropy.units.core.Unit`
             The units to assume for the wavelength
-        chi_unit : :class:`~astropy.unit.core.Unit`
+        chi_unit : :class:`~astropy.units.core.Unit`
             The units to assume for the opacity
         """
 

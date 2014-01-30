@@ -8,7 +8,7 @@ This page describes the format required of a *model package* in order to be used
 
 * ``models.conf`` - a configuration file for the models.
 
-* ``seds/`` - a directory containing all the model SEDs as ``fits`` or ``fits.gz`` files, in the format described below. In order to avoid huge numbers of files in a single directory, sub-directories can be created with a section of the model names. The size of this section can later be specified in the models :ref:`config`. 
+* ``seds/`` - a directory containing all the model SEDs as ``fits`` or ``fits.gz`` files, in the format described below. In order to avoid huge numbers of files in a single directory, sub-directories can be created with a section of the model names. The size of this section can later be specified in the models :ref:`config`.
 
 * ``convolved/`` - a directory containing all the convolved models, one file per filter. The name of the files should be ``filter.fits`` where ``filter`` should be replaced with the filter code (e.g. ``2J``, ``2H``, etc.).
 
@@ -39,17 +39,16 @@ The ``models.conf`` configuation file should be a plain-ASCII file containing th
   inside ``seds/``.
 
 * Whether the models are aperture/scale dependent::
-  
+
     aperture_dependent = yes
-    
+
   This should only be set to ``no`` if the models are not absolutely scaled to
   1kpc, and if they are only specified in one aperture. In this case, the
-  ``mind`` and ``maxd`` parameters in the fitter parameter file (c.f.
-  :ref:`fitpar`) are ignored.
-  
+  ``distance_range`` option to :func:`~sedfitter.fit` is ignored.
+
 * The step in the distance, in log space. Model SEDs are computed for a range
-  of distances between ``mind`` and ``maxd`` (c.f. :ref:`fitpar`), uniformly
-  spaced in log space, and separated by this value::
+  of distances between ``mind`` and ``maxd``, uniformly spaced in log space,
+  and separated by this value::
 
     logd_step = 0.025
 

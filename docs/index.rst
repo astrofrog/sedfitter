@@ -18,6 +18,7 @@ and is still under active development.
    data.rst
    fitting.rst
    model_packages.rst
+   filter_names.rst
    select_syntax.rst
    api/api.rst
 

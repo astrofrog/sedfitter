@@ -1,5 +1,6 @@
 import numpy as np
 from astropy import units as u
+from .. import six
 
 u.def_physical_type(u.cm**2 / u.g, 'area per unit mass')
 u.def_physical_type(u.erg/u.cm**2/u.s, 'flux')
@@ -9,7 +10,7 @@ def validate_physical_type(name, value, physical_type):
     if physical_type is not None:
         if not isinstance(value, u.Quantity):
             raise TypeError("{0} should be given as a Quantity object".format(name))
-        if isinstance(physical_type, basestring):
+        if isinstance(physical_type, six.string_types):
             if value.unit.physical_type != physical_type:
                 raise TypeError("{0} should be given in units of {1}".format(name, physical_type))
         else:

@@ -21,6 +21,7 @@ class Models(object):
         self.distances = None
         self.apertures = None
         self.logd = None
+        self.wavelengths = None
         self.distances = None
         self.extended = []
 

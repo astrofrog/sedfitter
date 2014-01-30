@@ -6,6 +6,8 @@ except ImportError:
     import pickle
 
 import numpy as np
+from astropy import units as u
+
 from ..utils.validator import validate_array
 
 
@@ -24,7 +26,10 @@ class Extinction(object):
         if value is None:
             self._wav = None
         else:
-            self._wav = validate_array('wav', value, ndim=1, shape=None if self.chi is None else self.chi.shape)
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.m):
+                self._wav = validate_array('wav', value, ndim=1, shape=None if self.chi is None else self.chi.shape)
+            else:
+                raise TypeError("wavelengths should be given as a Quantity object with units of length")
 
     @property
     def chi(self):
@@ -35,20 +40,41 @@ class Extinction(object):
         if value is None:
             self._chi = None
         else:
-            self._chi = validate_array('chi', value, ndim=1, shape=None if self.wav is None else self.wav.shape)
+            if isinstance(value, u.Quantity) and value.unit.is_equivalent(u.cm**2 / u.g):
+                self._chi = validate_array('chi', value, ndim=1, shape=None if self.wav is None else self.wav.shape)
+            else:
+                raise TypeError("chi should be given as a Quantity object with units of area per unit mass")
 
     @classmethod
-    def from_file(cls, filename, columns=[0, 1]):
+    def from_file(cls, filename, columns=(0, 1),
+                  wav_unit=u.micron, chi_unit=u.cm**2 / u.g):
+        """
+        Read an extinction law from an ASCII file.
 
-        e = cls()
+        This reads in two columns: the wavelength, and the opacity (in units
+        of area per unit mass).
+
+        Parameters
+        ----------
+        filename : str, optional
+            The name of the file to read the extinction law from
+        columns : tuple or list, optional
+            The columns to use for the wavelength and opacity respectively
+        wav_unit : :class:`~astropy.unit.core.Unit`
+            The units to assume for the wavelength
+        chi_unit : :class:`~astropy.unit.core.Unit`
+            The units to assume for the opacity
+        """
+
+        self = cls()
 
         f = np.loadtxt(filename, dtype=[('wav', float), ('chi', float)],
                        usecols=columns)
 
-        e.wav = f['wav']
-        e.chi = f['chi']
+        self.wav = f['wav'] * wav_unit
+        self.chi = f['chi'] * chi_unit
 
-        return e
+        return self
 
     def get_av(self, wav):
         """
@@ -56,22 +82,28 @@ class Extinction(object):
 
         Parameters
         ----------
-        wav : sequence
-            The wavelengths at which to interpolate the visual extinction
+        wav : :class:`~astropy.units.quantity.Quantity`
+            The wavelengths at which to interpolate the visual extinction.
         """
-        return -0.4 * np.interp(wav, self.wav, self.chi, left=0., right=0.) \
-            / np.interp(0.55, self.wav, self.chi)
+        if isinstance(wav, u.Quantity) and wav.unit.is_equivalent(u.m):
+            return (-0.4 * np.interp(wav.to(self.wav.unit), self.wav, self.chi, left=0., right=0.) \
+                         / np.interp(([0.55] * u.micron).to(self.wav.unit), self.wav, self.chi))
+        else:
+            raise TypeError("wav should be given as a Quantity object with units of length")
 
-    def from_table(self, table):
-        self.wav = table['wav']
-        self.chi = table['chi']
+    @classmethod
+    def from_table(cls, table):
+        self = cls()
+        self.wav = table['wav'].data * table['wav'].unit
+        self.chi = table['chi'].data * table['chi'].unit
+        return self
 
     def to_table(self):
         from astropy.table import Table, Column
         from astropy import units as u
         t = Table()
-        t.add_column(Column('wav', self.wav, units=u.micron))
-        t.add_column(Column('chi', self.chi, units=u.cm ** 2 / u.g))
+        t['wav'] = self.wav
+        t['chi'] = self.chi
         return t
 
     def __getstate__(self):

@@ -6,10 +6,9 @@
 Python SED Fitter's documentation
 =================================
 
-This package is an experimental port of the SED Fitting tool described in
+This package is an experimental Python port of the SED Fitting tool described in
 `Robitaille et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJS..169..328R>`_
-and is still under active development. It should not be considered robust at
-this stage.
+and is still under active development.
 
 .. toctree::
    :maxdepth: 1

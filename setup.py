@@ -40,7 +40,7 @@ class SEDFitterTest(Command):
         raise SystemExit(errno)
 
 setup(name='sedfitter',
-      version='0.1.2.dev',
+      version='0.9.0',
       description='SED Fitter in Python',
       author='Thomas Robitaille',
       author_email='thomas.robitaille@gmail.com',
@@ -61,7 +61,7 @@ setup(name='sedfitter',
       package_data={'sedfitter.sed.tests':['data/*.fits.gz'],
                     'sedfitter.utils.tests':['data/*.conf', 'data/*.par']},
       provides=['sedfitter'],
-      requires=['numpy', 'astropy', 'atpy', 'scipy', 'matplotlib'],
+      requires=['numpy', 'scipy', 'matplotlib', 'astropy'],
       cmdclass={'build_py': build_py, 'test':SEDFitterTest},
       keywords=['Scientific/Engineering'],
      )

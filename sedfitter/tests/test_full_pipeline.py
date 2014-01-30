@@ -12,6 +12,7 @@ source_1 0.0 0.0 1 1 1 0.2 0.1 1.3 0.2 1.5 0.3
 source_2 0.0 0.0 1 1 1 0.2 0.05 1.2 0.1 1.8 0.3
 """
 
+
 def generate_random_models(models_dir, aperture_dependent=False):
 
     # Create fake SEDs
@@ -36,7 +37,7 @@ def generate_random_models(models_dir, aperture_dependent=False):
             sed.flux = np.cumsum(np.random.random((10, 100)), axis=0) * u.mJy
         else:
             sed.apertures = None
-            sed.flux = (1 + np.random.random((1,100))) * u.mJy
+            sed.flux = (1 + np.random.random((1, 100))) * u.mJy
 
         sed.error = sed.flux * np.random.random(100) / 100.
 
@@ -57,7 +58,7 @@ def generate_random_models(models_dir, aperture_dependent=False):
     t['MODEL_NAME'] = np.array(names, dtype='S30')
     t['par1'] = np.random.random(5)
     t['par2'] = np.random.random(5)
-    t = t[[0,4,1,3,2]]
+    t = t[[0, 4, 1, 3, 2]]
     t.write(os.path.join(models_dir, 'parameters.fits'))
 
 
@@ -72,7 +73,7 @@ class BasePipelineTest(object):
 
         self.extinction = Extinction()
         self.extinction.wav = np.logspace(-2., 3.) * u.micron
-        self.extinction.chi = self.extinction.wav.value ** -2 * u.cm**2 / u.g
+        self.extinction.chi = self.extinction.wav.value ** -2 * u.cm ** 2 / u.g
 
     def teardown_class(self):
         shutil.rmtree(self.tmpdir)
@@ -156,22 +157,22 @@ class BasePipelineTest(object):
         plots_dir = tmpdir.join('plots_sed_auto').strpath
 
         plot(output_file,
-            plot_mode='A',
-            output_dir=plots_dir,
-            select_format=('F', 3.),
-            format='png')
+             plot_mode='A',
+             output_dir=plots_dir,
+             select_format=('F', 3.),
+             format='png')
 
         plots_dir = tmpdir.join('plots_sed_manual').strpath
 
         plot(output_file,
-            plot_mode='A',
-            output_dir=plots_dir,
-            select_format=('F', 3.),
-            format='png',
-            show_convolved=False, show_sed=True,
-            x_mode='M', x_range=(0.1, 2000),
-            y_mode='M', y_range=(1.e-14, 2e-8),
-            plot_max=100)
+             plot_mode='A',
+             output_dir=plots_dir,
+             select_format=('F', 3.),
+             format='png',
+             show_convolved=False, show_sed=True,
+             x_mode='M', x_range=(0.1, 2000),
+             y_mode='M', y_range=(1.e-14, 2e-8),
+             plot_max=100)
 
         from ..plot_params_1d import plot_params_1d
 
@@ -221,7 +222,6 @@ class BasePipelineTest(object):
         from ..filter_output import filter_output
 
         filter_output(output_file, output_good='auto', output_bad='auto', cpd=3.)
-
 
 
 class TestApertureIndependentPipeline(BasePipelineTest):

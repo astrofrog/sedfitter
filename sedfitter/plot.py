@@ -107,8 +107,8 @@ def plot_source_info(ax, i, info, plot_name, plot_info):
     for label in labels:
         ax.text(0.5, pos, label, horizontalalignment='center',
                 verticalalignment='center',
-                                  transform=ax.transAxes,
-                                  fontproperties=fp)
+                transform=ax.transAxes,
+                fontproperties=fp)
         pos -= 0.06
 
     return ax
@@ -164,7 +164,6 @@ def set_view_limits(ax, wav, source, x_mode, y_mode, x_range, y_range):
     ax.set_xlim((xmin, xmax))
     ax.set_ylim((ymin, ymax))
     ax.xaxis.set_major_formatter(LogFormatterMathtextAuto())
-
 
     return ax
 

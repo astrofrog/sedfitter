@@ -6,6 +6,7 @@ import shutil
 
 from ..six.moves import input
 
+
 def create_dir(dir_name):
     delete_dir(dir_name)
     os.system("mkdir " + dir_name)

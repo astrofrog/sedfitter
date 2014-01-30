@@ -15,7 +15,8 @@ UNIT_MAPPING = {}
 UNIT_MAPPING['MICRONS'] = u.micron
 UNIT_MAPPING['HZ'] = u.Hz
 UNIT_MAPPING['MJY'] = u.mJy
-UNIT_MAPPING['ergs/cm^2/s'] = u.erg / u.cm**2 / u.s
+UNIT_MAPPING['ergs/cm^2/s'] = u.erg / u.cm ** 2 / u.s
+
 
 def parse_unit_safe(unit_string):
     if unit_string in UNIT_MAPPING:
@@ -26,6 +27,7 @@ def parse_unit_safe(unit_string):
 
 def assert_allclose_quantity(q1, q2):
     np.testing.assert_allclose(q1.value, q2.to(q1.unit).value)
+
 
 class SED(object):
 
@@ -180,7 +182,7 @@ class SED(object):
 
     @classmethod
     def read(cls, filename, unit_wav=u.micron, unit_freq=u.Hz,
-             unit_flux=u.erg / u.cm**2 / u.s, order='nu'):
+             unit_flux=u.erg / u.cm ** 2 / u.s, order='nu'):
         """
         Read an SED from a FITS file.
 
@@ -356,7 +358,6 @@ class SED(object):
         # Create overall FITS file
         hdulist = fits.HDUList([hdu0, hdu1, hdu2, hdu3])
         hdulist.writeto(filename)
-
 
     def interpolate(self, apertures):
         """

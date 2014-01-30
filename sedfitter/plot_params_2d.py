@@ -22,7 +22,7 @@ from .models import load_parameter_table
 from .utils import io
 from .utils.formatter import LogFormatterMathtextAuto
 
-KERNEL = Tophat2DKernel(5.5,x_size=11,y_size=11,mode='oversample').array
+KERNEL = Tophat2DKernel(5.5, x_size=11, y_size=11, mode='oversample').array
 KERNEL /= KERNEL.max()  # normalize so maximum is 1
 
 plt.rc('text', usetex=False)
@@ -141,7 +141,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
         gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
                                           tpos[parameter_y], bins=npix,
                                           range=[[xmin, xmax],
-                                                [ymin, ymax]])
+                                                 [ymin, ymax]])
 
     gray_all = convolve(gray_all, KERNEL)
     gray_all = np.clip(gray_all, 0., 13.)

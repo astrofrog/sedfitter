@@ -10,6 +10,7 @@ from astropy.logger import log
 from ..source import Source
 from .. import six
 
+
 def list2data(file_in, file_out, models_dir=None, source_name='source'):
     """
     Convert a list-formatted data file into the standard fitting format

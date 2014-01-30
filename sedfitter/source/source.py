@@ -4,6 +4,7 @@ import numpy as np
 
 from .. import six
 
+
 def is_numpy_array(variable):
     return type(variable) in [np.ndarray,
                               np.core.records.recarray,
@@ -33,13 +34,13 @@ class Source(object):
 
     def __getstate__(self):
         return {
-                'name': self.name,
-                'x': self.x,
-                'y': self.y,
-                'valid':self.valid,
-                'flux':self.flux,
-                'error':self.error
-                }
+            'name': self.name,
+            'x': self.x,
+            'y': self.y,
+            'valid': self.valid,
+            'flux': self.flux,
+            'error': self.error
+        }
 
     def __setstate__(self, d):
         self.__init__()

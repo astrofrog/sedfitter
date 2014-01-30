@@ -45,7 +45,7 @@ class Extinction(object):
 
     @classmethod
     def from_file(cls, filename, columns=(0, 1),
-                  wav_unit=u.micron, chi_unit=u.cm**2 / u.g):
+                  wav_unit=u.micron, chi_unit=u.cm ** 2 / u.g):
         """
         Read an extinction law from an ASCII file.
 
@@ -84,8 +84,8 @@ class Extinction(object):
             The wavelengths at which to interpolate the visual extinction.
         """
         if isinstance(wav, u.Quantity) and wav.unit.is_equivalent(u.m):
-            return (-0.4 * np.interp(wav.to(self.wav.unit), self.wav, self.chi, left=0., right=0.) \
-                         / np.interp(([0.55] * u.micron).to(self.wav.unit), self.wav, self.chi))
+            return (-0.4 * np.interp(wav.to(self.wav.unit), self.wav, self.chi, left=0., right=0.)
+                    / np.interp(([0.55] * u.micron).to(self.wav.unit), self.wav, self.chi))
         else:
             raise TypeError("wav should be given as a Quantity object with units of length")
 
@@ -106,9 +106,9 @@ class Extinction(object):
 
     def __getstate__(self):
         return {
-                'wav': self.wav,
-                'chi': self.chi,
-                }
+            'wav': self.wav,
+            'chi': self.chi,
+        }
 
     def __setstate__(self, d):
         self.__init__()

@@ -15,6 +15,7 @@ from ..sed import SED
 from ..models import load_parameter_table
 from .. import six
 
+
 def convolve_model_dir(model_dir, filters, overwrite=False):
     """
     Convolve all the model SEDs in a model directory

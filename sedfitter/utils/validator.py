@@ -2,8 +2,8 @@ import numpy as np
 from astropy import units as u
 from .. import six
 
-u.def_physical_type(u.cm**2 / u.g, 'area per unit mass')
-u.def_physical_type(u.erg/u.cm**2/u.s, 'flux')
+u.def_physical_type(u.cm ** 2 / u.g, 'area per unit mass')
+u.def_physical_type(u.erg / u.cm ** 2 / u.s, 'flux')
 
 
 def validate_physical_type(name, value, physical_type):

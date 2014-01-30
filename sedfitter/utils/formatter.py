@@ -1,5 +1,6 @@
 from matplotlib.ticker import LogFormatterMathtext
 
+
 class LogFormatterMathtextAuto(LogFormatterMathtext):
 
     def __call__(self, x, pos=None):

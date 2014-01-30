@@ -184,7 +184,7 @@ class Models(object):
 
             if ifilt == 0:
                 if m.n_distances is None:
-                    model_fluxes = np.zeros((conv.n_models,len(filters))) * u.mJy
+                    model_fluxes = np.zeros((conv.n_models, len(filters))) * u.mJy
                     extended = None
                 else:
                     model_fluxes = np.zeros((conv.n_models, m.n_distances, len(filters))) * u.mJy
@@ -198,11 +198,10 @@ class Models(object):
                 conv.flux = conv.flux * (u.kpc / m.distances) ** 2
                 m.logd = np.log10(m.distances.to(u.kpc).value)
                 if remove_resolved:
-                    extended[:, :, ifilt] = apertures_au[np.newaxis, :] < conv.radius_sigma_50[:, np.newaxis]
+                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.radius_sigma_50[:, np.newaxis]
                 model_fluxes[:, :, ifilt] = conv.flux
             else:
-                model_fluxes[:, ifilt] = conv.flux[:,0]
-
+                model_fluxes[:, ifilt] = conv.flux[:, 0]
 
         try:
             m.names = np.char.strip(conv.model_names)
@@ -237,7 +236,7 @@ class Models(object):
             sc_best[reset] = f.optimal_scaling(residual[reset] - av_best[reset][:, np.newaxis] * av_law[np.newaxis, :], weight, sc_law)
 
             # Compute best-fit model in each case
-            model = av_best[:, np.newaxis] * av_law[np.newaxis, :] + sc_best[:, np.newaxis] * sc_law[np.newaxis, :]
+            model = av_best[:, np.newaxis] * av_law[np.newaxis, :] + sc_best[:, np.newaxis] * sc_law[np.newaxis,:]
 
             # Calculate the chi-squared value
             ch_best = f.chi_squared(source.valid, residual, log_error, weight, model)
@@ -256,7 +255,7 @@ class Models(object):
             av_best[av_best > av_max] = av_max
 
             # Compute best-fit model in each case
-            model = av_best[:, :, np.newaxis] * av_law[np.newaxis, np.newaxis, :]
+            model = av_best[:, :, np.newaxis] * av_law[np.newaxis, np.newaxis,:]
 
             # Calculate the chi-squared value
             ch_best = f.chi_squared(source.valid, residual, log_error, weight, model)

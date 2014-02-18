@@ -43,7 +43,7 @@ These are models that were published in `Robitaille et al. (2006)
 
 *By downloading the models, you acknowledge that you have read and agree with the above disclaimer*
 
-**Download:** `models_r06_17jun08.tgz.tgz <http://link>`_ [5.3Gb]
+**Download:** `models_r06_17jun08.tgz <http://link>`_ [5.3Gb]
 
 Castelli & Kurucz (2004) stellar photosphere models
 ===================================================

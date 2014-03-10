@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Python SED Fitter's documentation
-=================================
+Python SED Fitter documentation
+===============================
 
 This package is an experimental Python port of the SED Fitting tool described in
 `Robitaille et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJS..169..328R>`_

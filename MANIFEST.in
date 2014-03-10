@@ -3,5 +3,6 @@ include LICENSE
 include README.md
 recursive-include docs *
 recursive-include examples *
-recursive-include sedfitter/utils/tests/data *
 recursive-include sedfitter/sed/tests/data *
+recursive-include sedfitter/filter/tests/data *
+recursive-include sedfitter/utils/tests/data *

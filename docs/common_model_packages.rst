@@ -4,8 +4,6 @@ Available Model Packages
 
 Below you will find links to existing model packages that can be downloaded.
 
-.. note:: The download links are not yet active.
-
 Robitaille et al. (2006) YSO SED Models
 =======================================
 
@@ -43,7 +41,7 @@ These are models that were published in `Robitaille et al. (2006)
 
 *By downloading the models, you acknowledge that you have read and agree with the above disclaimer*
 
-**Download:** `models_r06_17jun08.tgz <http://link>`_ [5.3Gb]
+**Download:** `models_r06_17jun08.tgz <ftp://ftp.astro.wisc.edu/outgoing/tom/model_packages/models_r06_17jun08.tgz>`_ [5.3Gb]
 
 Castelli & Kurucz (2004) stellar photosphere models
 ===================================================
@@ -64,4 +62,4 @@ format as a convenience.
 
 *By downloading the models, you acknowledge that you have read and agree with the above disclaimer*
 
-**Download:** `models_kurucz_05sep11.tgz <http://link>`_ [87Mb]
+**Download:** `models_kurucz_05sep11.tgz <ftp://ftp.astro.wisc.edu/outgoing/tom/model_packages/models_kurucz_05sep11.tgz>`_ [87Mb]

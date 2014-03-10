@@ -10,7 +10,8 @@ from sedfitter.extinction import Extinction
 # Define path to models
 model_dir = '/Volumes/Data/models/models_r06'
 
-# Read in extinction law)
+# Read in extinction law. We read in columns 1 (the wavelength in microns) and
+# 4 (the opacity in cm^2/g)
 extinction = Extinction.from_file('kmh94.par', columns=[0, 3],
                                   wav_unit=u.micron, chi_unit=u.cm**2 / u.g)
 

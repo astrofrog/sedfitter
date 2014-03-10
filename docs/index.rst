@@ -16,6 +16,9 @@ and is still under active development.
   responsible for ensuring that the results are reasonable and that they
   understand all the limitations inherent to SED fitting.
 
+Please report any issues with the package `here
+<https://github.com/astrofrog/sedfitter/issues>`_ (not by email).
+
 User documentation
 ------------------
 

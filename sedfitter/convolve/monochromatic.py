@@ -23,16 +23,16 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
 
     Parameters
     ----------
-    model_dir: str
+    model_dir : str
         The path to the model directory
-    overwrite: bool, optional
+    overwrite : bool, optional
         Whether to overwrite the output files
-    max_ram: float, optional
+    max_ram : float, optional
         The maximum amount of RAM that can be used (in Gb)
-    wav_min: float, optional
+    wav_min : float, optional
         The minimum wavelength to consider. Only wavelengths above this value
         will be output.
-    wav_max: float, optional
+    wav_max : float, optional
         The maximum wavelength to consider. Only wavelengths below this value
         will be output.
     """
@@ -109,7 +109,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
             # Convolve
             for j in range(chunk_size):
 
-                fluxes[j].wavelength = wavelengths[j + jmin]
+                fluxes[j].central_wavelength = wavelengths[j + jmin]
                 fluxes[j].apertures = apertures
                 fluxes[j].model_names[im] = s.name
 

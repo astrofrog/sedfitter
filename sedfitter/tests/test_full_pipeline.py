@@ -84,28 +84,31 @@ class BasePipelineTest(object):
 
         from ..filter import Filter
 
+        f1_wav = np.linspace(5., 1., 100) * u.micron
+
         f1 = Filter()
         f1.name = 'alice'
-        f1.wavelength = 7. * u.micron
-        f1.wav = np.linspace(5., 1., 100) * u.micron
-        f1.nu = f1.wav.to(u.Hz, equivalencies=u.spectral())
-        f1.r = np.random.random(100)
+        f1.central_wavelength = 7. * u.micron
+        f1.nu = f1_wav.to(u.Hz, equivalencies=u.spectral())
+        f1.response = np.random.random(100)
         f1.normalize()
+
+        f2_wav = np.linspace(15., 10., 100) * u.micron
 
         f2 = Filter()
         f2.name = 'bob'
-        f2.wavelength = 12. * u.micron
-        f2.wav = np.linspace(15., 10., 100) * u.micron
-        f2.nu = f2.wav.to(u.Hz, equivalencies=u.spectral())
-        f2.r = np.random.random(100)
+        f2.central_wavelength = 12. * u.micron
+        f2.nu = f2_wav.to(u.Hz, equivalencies=u.spectral())
+        f2.response = np.random.random(100)
         f2.normalize()
+
+        f3_wav = np.linspace(25., 15., 100) * u.micron
 
         f3 = Filter()
         f3.name = 'eve'
-        f3.wavelength = 20. * u.micron
-        f3.wav = np.linspace(25., 15., 100) * u.micron
-        f3.nu = f3.wav.to(u.Hz, equivalencies=u.spectral())
-        f3.r = np.random.random(100)
+        f3.central_wavelength = 20. * u.micron
+        f3.nu = f3_wav.to(u.Hz, equivalencies=u.spectral())
+        f3.response = np.random.random(100)
         f3.normalize()
 
         from ..convolve import convolve_model_dir

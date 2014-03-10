@@ -16,23 +16,23 @@ def test_init():
 
 def test_wavelength():
     c = ConvolvedFluxes()
-    c.wavelength = 3.14 * u.micron
+    c.central_wavelength = 3.14 * u.micron
 
 
 @pytest.mark.parametrize('value', ['string', object(), np.array([1, 2, 3])])
 def test_wavelength_invalid_type(value):
     c = ConvolvedFluxes()
     with pytest.raises(TypeError) as exc:
-        c.wavelength = value
-    assert exc.value.args[0] == 'wavelength should be given as a Quantity object'
+        c.central_wavelength = value
+    assert exc.value.args[0] == 'central_wavelength should be given as a Quantity object'
 
 
 @pytest.mark.parametrize('unit', [u.arcsec, u.kg, u.Jy])
 def test_wavelength_invalid_unit(unit):
     c = ConvolvedFluxes()
     with pytest.raises(TypeError) as exc:
-        c.wavelength = [1., 2., 3.] * unit
-    assert exc.value.args[0] == 'wavelength should be given in units of length'
+        c.central_wavelength = [1., 2., 3.] * unit
+    assert exc.value.args[0] == 'central_wavelength should be given in units of length'
 
 
 def test_aperture_none():

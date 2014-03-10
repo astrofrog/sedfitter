@@ -22,18 +22,19 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
     Parameters
     ----------
-    model_dir: str
+    model_dir : str
         The path to the model directory
-    filters: list
-        A list of Filter objects to use for the convolution
-    overwrite: bool, optional
+    filters : list
+        A list of :class:`sedfitter.filter.Filter` objects to use for the
+        convolution
+    overwrite : bool, optional
         Whether to overwrite the output files
     """
 
     for f in filters:
         if f.name is None:
             raise Exception("filter name needs to be set")
-        if f.wavelength is None:
+        if f.central_wavelength is None:
             raise Exception("filter central wavelength needs to be set")
 
     # Create 'convolved' sub-directory if needed
@@ -90,16 +91,16 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         # Convolve
         for i, f in enumerate(binned_filters):
 
-            fluxes[i].wavelength = f.wavelength
+            fluxes[i].central_wavelength = f.central_wavelength
             fluxes[i].apertures = apertures
             fluxes[i].model_names[im] = s.name
 
             if n_ap == 1:
-                fluxes[i].flux[im] = np.sum(s.flux * f.r)
-                fluxes[i].error[im] = np.sqrt(np.sum((s.error * f.r) ** 2))
+                fluxes[i].flux[im] = np.sum(s.flux * f.response)
+                fluxes[i].error[im] = np.sqrt(np.sum((s.error * f.response) ** 2))
             else:
-                fluxes[i].flux[im, :] = np.sum(s.flux * f.r, axis=1)
-                fluxes[i].error[im] = np.sqrt(np.sum((s.error * f.r) ** 2, axis=1))
+                fluxes[i].flux[im, :] = np.sum(s.flux * f.response, axis=1)
+                fluxes[i].error[im] = np.sqrt(np.sum((s.error * f.response) ** 2, axis=1))
 
     for i, f in enumerate(binned_filters):
         fluxes[i].sort_to_match(par_table['MODEL_NAME'])

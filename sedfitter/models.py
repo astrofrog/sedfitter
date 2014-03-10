@@ -190,7 +190,7 @@ class Models(object):
                     model_fluxes = np.zeros((conv.n_models, m.n_distances, len(filters))) * u.mJy
                     extended = np.zeros((conv.n_models, m.n_distances, len(filters)), dtype=bool)
 
-            m.wavelengths[ifilt] = conv.wavelength
+            m.wavelengths[ifilt] = conv.central_wavelength
 
             if m.n_distances is not None:
                 apertures_au = filt['aperture_arcsec'] * m.distances.to(u.pc).value * u.au

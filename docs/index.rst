@@ -10,6 +10,10 @@ This package is an experimental Python port of the SED Fitting tool described in
 `Robitaille et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJS..169..328R>`_
 and is still under active development.
 
+.. note:: No guarantees are made about the accuracy of the results, and users 
+          are responsible for ensuring that the results are reasonable and
+          that they understand all the limitations inherent to SED fitting.
+
 User documentation
 ------------------
 
@@ -19,6 +23,7 @@ User documentation
    introduction.rst
    installation.rst
    fitting.rst
+   convolution.rst
 
 Appendices
 ----------

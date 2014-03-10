@@ -28,7 +28,7 @@ class ConvolvedFluxes(object):
 
         self.model_names = model_names
         self.apertures = apertures
-        self.wavelength = wavelength
+        self.central_wavelength = wavelength
 
         if initialize_arrays:
 
@@ -54,18 +54,18 @@ class ConvolvedFluxes(object):
             self.error = error
 
     @property
-    def wavelength(self):
+    def central_wavelength(self):
         """
         The central or characteristic wavelength of the filter
         """
         return self._wavelength
 
-    @wavelength.setter
-    def wavelength(self, value):
+    @central_wavelength.setter
+    def central_wavelength(self, value):
         if value is None:
             self._wavelength = None
         else:
-            self._wavelength = validate_scalar('wavelength', value, domain='strictly-positive', physical_type='length')
+            self._wavelength = validate_scalar('central_wavelength', value, domain='strictly-positive', physical_type='length')
 
     @property
     def model_names(self):
@@ -150,7 +150,7 @@ class ConvolvedFluxes(object):
             return len(self.apertures)
 
     def __eq__(self, other):
-        return self.wavelength == other.wavelength \
+        return self.central_wavelength == other.central_wavelength \
             and np.all(self.model_names == other.model_names) \
             and np.all(self.apertures == other.apertures) \
             and np.all(self.flux == other.flux) \
@@ -200,9 +200,9 @@ class ConvolvedFluxes(object):
 
         # Try and read in the wavelength of the filter
         if 'FILTWAV' in keywords:
-            conv.wavelength = keywords['FILTWAV'] * u.micron
+            conv.central_wavelength = keywords['FILTWAV'] * u.micron
         else:
-            conv.wavelength = None
+            conv.central_wavelength = None
 
         # Read in apertures, if present
         try:
@@ -282,8 +282,8 @@ class ConvolvedFluxes(object):
 
         # Primary HDU (for metadata)
         hdu0 = fits.PrimaryHDU()
-        if self.wavelength is not None:
-            hdu0.header['FILTWAV'] = self.wavelength.to(u.micron).value
+        if self.central_wavelength is not None:
+            hdu0.header['FILTWAV'] = self.central_wavelength.to(u.micron).value
         hdu0.header['NMODELS'] = self.n_models
         hdu0.header['NAP'] = self.n_ap
 
@@ -319,7 +319,7 @@ class ConvolvedFluxes(object):
         c = ConvolvedFluxes()
 
         # Set wavelength
-        c.wavelength = self.wavelength
+        c.central_wavelength = self.central_wavelength
 
         # Save requested apertures
         c.apertures = apertures[:]

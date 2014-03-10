@@ -1,5 +1,5 @@
-Using the SED fitting tool
-==========================
+Fitting SEDs to sources
+=======================
 
 Typical workflow
 ----------------

@@ -44,11 +44,12 @@ In order to fit the data, you will need to make use of the
 
 At a minimum, you will need to call the function with the following input:
 
-* The file containing the data
-* The list of filters and apertures for which the data is given
-* The directory containing the moedls
+* The file containing the data (see :doc:`data`).
+* The list of filters and aperture radii for which the data is given (see :doc:`filter_names`).
+* The directory containing the models (see :doc:`common_model_packages` and :doc:`creating_model_packages`).
 * The name of the output file
 * The range of Av and distances to assume for the fits
+* An extinction law, given as a opacities to extinction (in cm^2/g or equivalent) versus wavelength.
 
 The :func:`~sedfitter.fit` page describes in detail how each of these inputs
 should be specified, and also lists additional options to further fine-tune the

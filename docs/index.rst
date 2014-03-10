@@ -10,23 +10,27 @@ This package is an experimental Python port of the SED Fitting tool described in
 `Robitaille et al. (2007) <http://adsabs.harvard.edu/abs/2007ApJS..169..328R>`_
 and is still under active development.
 
+User documentation
+------------------
+
 .. toctree::
    :maxdepth: 1
 
    introduction.rst
    installation.rst
-   data.rst
    fitting.rst
-   model_packages.rst
-   filter_names.rst
+
+Appendices
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   data.rst
    select_syntax.rst
+   common_model_packages.rst
+   creating_model_packages.rst
+   filter_names.rst
    api/api.rst
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
 

@@ -17,13 +17,25 @@ class Filter(object):
 
     Parameters
     ----------
-    nu
+    name : str
+        The name of the filter (typically short and with no spaces, such as
+        ``2K`` or 2MASS K-band or ``I1`` for IRAC 3.6 microns).
+    central_wavelength : :class:`~astropy.units.quantity.Quantity`
+        The central wavelength (in units of length)
+    nu : :class:`~astropy.units.quantity.Quantity`
+        The frequencies at which the filter is defined.
+    response : `numpy.ndarray`
+        The relative response at the different frequencies. Note that this
+        should already take into account the assumptions about whether this is
+        the response per photon or energy, and any other assumptions about
+        converting the SED to a monochromatic flux. See the documentation for
+        more details.
     """
-    def __init__(self, nu=None, r=None):
-        self.name = None
-        self.central_wavelength = None
-        self.nu = None
-        self.response = None
+    def __init__(self, name=None, central_wavelength=None, nu=None, response=None):
+        self.name = name
+        self.central_wavelength = central_wavelength
+        self.nu = nu
+        self.response = response
 
     @classmethod
     def read(cls, filename):

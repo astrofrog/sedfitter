@@ -25,7 +25,7 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     model_dir : str
         The path to the model directory
     filters : list
-        A list of :class:`sedfitter.filter.Filter` objects to use for the
+        A list of :class:`~sedfitter.filter.Filter` objects to use for the
         convolution
     overwrite : bool, optional
         Whether to overwrite the output files

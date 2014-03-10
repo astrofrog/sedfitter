@@ -1,9 +1,9 @@
 About
 -----
 
-This is a Python port of the SED fitter from Robitaille et al. (2006).
+This is a Python port of the SED fitter from Robitaille et al., 2006, ApJS 169 328
 
-It is highly experimental - if you are interested in using it, please contact me.
+At this stage, it should be used cautiously as it is still beta-quality software and may contain bugs. Please make sure that you verify your results using an independent method if at all possible (for example using the fitting tool from http://caravan.astro.wisc.edu/protostars/ which uses an independent Fortran code).
 
 Status
 ------

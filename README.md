@@ -8,9 +8,7 @@ original Fortran code which can be found
 
 At this stage, it should be used cautiously as it is still beta-quality
 software and may contain bugs. Please make sure that you verify your results
-using an independent method if at all possible (for example using the fitting
-tool from http://caravan.astro.wisc.edu/protostars/ which uses an independent
-Fortran code).
+using an independent method if at all possible.
 
 The documentation is available at http://sedfitter.readthedocs.org
 

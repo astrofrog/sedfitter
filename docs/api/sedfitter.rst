@@ -34,3 +34,12 @@ Classes
 
 .. autoclass:: sedfitter.convolved_fluxes.ConvolvedFluxes
    :members:
+
+.. autoclass:: sedfitter.fit_info.FitInfo
+   :members:
+
+.. autoclass:: sedfitter.fit.Fitter
+   :members:
+
+.. autoclass:: sedfitter.source.Source
+   :members:

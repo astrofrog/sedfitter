@@ -44,6 +44,10 @@ class FitInfoFile(object):
 
             self._fits = fits
 
+        else:
+
+            raise TypeError('fits should be a string, FitInfo instance, or iterable of FitInfo instances')
+
     @property
     def meta(self):
         if self._fits is None:
@@ -68,7 +72,7 @@ class FitInfoFile(object):
             pickle.dump(info.meta.extinction_law, self._handle, 2)
             self._first_meta = info.meta
         else:
-            if info.meta != self._first_meta:
+            if not info.meta == self._first_meta:
                 raise ValueError("meta does not match previously written value")
 
         pickle.dump(info, self._handle, 2)

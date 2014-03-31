@@ -10,7 +10,7 @@ from .convolved_fluxes import ConvolvedFluxes
 from . import fitting_routines as f
 from .utils import parfile
 from .utils.validator import validate_array
-
+from .fit_info import FitInfo
 
 class Models(object):
 
@@ -215,7 +215,7 @@ class Models(object):
 
         return m
 
-    def fit(self, source, av_law, sc_law, av_min, av_max):
+    def fit(self, source, av_law, sc_law, av_min, av_max, output_convolved=False):
 
         weight, log_flux, log_error = source.get_log_fluxes()
 
@@ -280,7 +280,16 @@ class Models(object):
 
             raise Exception("Unexpected number of dimensions in flux array")
 
-        return av_best, sc_best, ch_best, self.names, model_fluxes
+        info = FitInfo()
+        info.source = source
+        info.av = av_best
+        info.sc = sc_best
+        info.chi2 = ch_best
+        info.model_name = self.names
+        info.model_fluxes = model_fluxes
+        info.sort()
+
+        return info
 
 
 def load_parameter_table(model_dir):

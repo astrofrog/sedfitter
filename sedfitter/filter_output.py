@@ -1,11 +1,6 @@
 from __future__ import print_function, division
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-from .fit_info import FitInfo
+from .fit_info import FitInfoFile
 from .extinction import Extinction
 
 
@@ -40,48 +35,27 @@ def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=No
         threshold.
     """
 
-    fin = open(input_file, 'rb')
+    fin = FitInfoFile.open(input_file, 'r')
 
     if output_good == 'auto':
-        fout_good = open(input_file + '_good', 'wb')
+        fout_good = FitInfoFile.open(input_file + '_good', 'w')
     else:
-        fout_good = open(output_good, 'wb')
+        fout_good = FitInfoFile.open(output_good, 'w')
 
     if output_bad == 'auto':
-        fout_bad = open(input_file + '_bad', 'wb')
+        fout_bad = FitInfoFile.open(input_file + '_bad', 'w')
     else:
-        fout_bad = open(output_bad, 'wb')
+        fout_bad = FitInfoFile.open(output_bad, 'w')
 
-    # Read in header of output file
-    model_dir = pickle.load(fin)
-    filters = pickle.load(fin)
-    extinction_law = pickle.load(fin)
-
-    # Output header to good fits file
-    pickle.dump(model_dir, fout_good, 2)
-    pickle.dump(filters, fout_good, 2)
-    pickle.dump(extinction_law, fout_good, 2)
-
-    # Output header to bad fits file
-    pickle.dump(model_dir, fout_bad, 2)
-    pickle.dump(filters, fout_bad, 2)
-    pickle.dump(extinction_law, fout_bad, 2)
-
-    while True:
-
-        # Read in next fit
-        try:
-            info = pickle.load(fin)
-        except EOFError:
-            break
+    for info in fin:
 
         bestchi = info.chi2[0]
         bestcpd = info.chi2[0] / float(info.source.n_data)
 
         if (chi and bestchi < chi) or (cpd and bestcpd < cpd):
-            pickle.dump(info, fout_good, 2)
+            fout_good.write(info)
         else:
-            pickle.dump(info, fout_bad, 2)
+            fout_bad.write(info)
 
     # Close input and output files
     fin.close()

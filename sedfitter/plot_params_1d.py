@@ -1,10 +1,6 @@
 from __future__ import print_function, division
 
 import os
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 from copy import deepcopy
 
 from astropy.table import Table
@@ -15,7 +11,7 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Polygon
 from matplotlib.ticker import LogFormatterMathtext
 
-from .fit_info import FitInfo
+from .fit_info import FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 from .utils import io
@@ -86,15 +82,10 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     io.create_dir(output_dir)
 
     # Open output file
-    fin = open(input_file, 'rb')
-
-    # Read in header of output file
-    model_dir = pickle.load(fin)
-    filters = pickle.load(fin)
-    extinction = pickle.load(fin)
+    fin = FitInfoFile.open(input_file, 'r')
 
     # Read in table of parameters for model grid
-    t = load_parameter_table(model_dir)
+    t = load_parameter_table(fin.meta.model_dir)
 
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
@@ -147,13 +138,7 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     pfits = None
     source_label = None
 
-    while True:  # Loop over the fits
-
-        # Read in next fit
-        try:
-            info = pickle.load(fin)
-        except EOFError:
-            break
+    for info in fin:
 
         # Remove previous histogram
         if pfits is not None:

@@ -18,11 +18,6 @@ from __future__ import print_function, division
 # Optimization:
 # - Compute interpolating functions as little as possible
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
 import numpy as np
 from astropy import units as u
 
@@ -32,7 +27,7 @@ from matplotlib.font_manager import FontProperties
 import matplotlib.ticker as ticker
 
 from .extinction import Extinction
-from .fit_info import FitInfo
+from .fit_info import FitInfo, FitInfoFile
 from .sed import SED
 from .utils import io
 from .utils import parfile
@@ -238,28 +233,18 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
     else:
         figures = {}
 
-    fin = open(input_file, 'rb')
+    fin = FitInfoFile.open(input_file, 'r')
 
-    model_dir = pickle.load(fin)
-    filters = pickle.load(fin)
-    extinction = pickle.load(fin)
-
-    wav = np.array([f['wav'].to(u.micron).value for f in filters])
-    ap = np.array([f['aperture_arcsec'] for f in filters])
+    wav = np.array([f['wav'].to(u.micron).value for f in fin.meta.filters])
+    ap = np.array([f['aperture_arcsec'] for f in fin.meta.filters])
 
     unique_ap = np.unique(ap)
     unique_ap.sort()
 
     # Read in model parameters
-    modpar = parfile.read("%s/models.conf" % model_dir, 'conf')
+    modpar = parfile.read("%s/models.conf" % fin.meta.model_dir, 'conf')
 
-    while True:
-
-        # Read in next fit
-        try:
-            info = pickle.load(fin)
-        except EOFError:
-            break
+    for info in fin:
 
         # Filter fits
         info.keep(select_format[0], select_format[1])
@@ -295,12 +280,12 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
                     color_type = 'faded'
 
             if modpar['length_subdir'] == 0:
-                s = SED.read(model_dir + '/seds/' + info.model_name[i] + '_sed.fits')
+                s = SED.read(info.meta.model_dir + '/seds/' + info.model_name[i] + '_sed.fits')
             else:
-                s = SED.read(model_dir + '/seds/%s/%s_sed.fits' % (info.model_name[i][:modpar['length_subdir']], info.model_name[i]))
+                s = SED.read(info.meta.model_dir + '/seds/%s/%s_sed.fits' % (info.model_name[i][:modpar['length_subdir']], info.model_name[i]))
 
             s = s.scale_to_distance(10. ** info.sc[i] * KPC)
-            s = s.scale_to_av(info.av[i], extinction.get_av)
+            s = s.scale_to_av(info.av[i], info.meta.extinction_law.get_av)
 
             if sed_type == 'interp':
                 apertures = ap * 10. ** info.sc[i] * 1000.
@@ -335,7 +320,7 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
                     for j in range(len(conv)):
                         ax.plot(wav, conv[j], color=colors[j], linestyle='solid', marker='o', markerfacecolor='none', markeredgecolor=colors[j])
 
-                ax = plot_source_data(ax, info.source, filters)
+                ax = plot_source_data(ax, info.source, info.meta.filters)
 
                 if plot_mode == 'A':
                     ax = plot_source_info(ax, 0, info, plot_name, plot_info)
@@ -355,7 +340,9 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
                     fig.savefig(filename, bbox_inches='tight')
                     plt.close(fig)
                 else:
-                    figures[info.source.name] = {'source': info.source, 'filters': filters, 'lines': LineCollection(lines, colors=colors)}
+                    figures[info.source.name] = {'source': info.source, 'filters': info.meta.filters, 'lines': LineCollection(lines, colors=colors)}
+
+    fin.close()
 
     if not output_dir:
         return figures

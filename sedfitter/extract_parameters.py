@@ -1,15 +1,11 @@
 from __future__ import print_function, division
 
 import os
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 from astropy.table import Table
 import numpy as np
 
-from .fit_info import FitInfo
+from .fit_info import FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 
@@ -17,15 +13,10 @@ from .models import load_parameter_table
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,
                        parameters='all', select_format=("N", 1), header=True):
 
-    fin = open(input, 'rb')
-
-    # Read in header of output file
-    model_dir = pickle.load(fin)
-    filters = pickle.load(fin)
-    extinction_law = pickle.load(fin)
+    fin = FitInfoFile.open(input, 'r')
 
     # Read in table of parameters for model grid
-    t = load_parameter_table(model_dir)
+    t = load_parameter_table(fin.meta.model_dir)
 
     format = {}
     for par in t.dtype.names:
@@ -37,13 +28,7 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     if parameters == 'all':
         parameters = t.dtype.names
 
-    while True:
-
-        # Read in next fit
-        try:
-            info = pickle.load(fin)
-        except EOFError:
-            break
+    for info in fin:
 
         # Filter fits
         info.keep(select_format[0], select_format[1])

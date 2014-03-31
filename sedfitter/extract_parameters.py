@@ -5,7 +5,8 @@ import os
 from astropy.table import Table
 import numpy as np
 
-from .fit_info import FitInfoFile
+from . import six
+from .fit_info import FitInfo, FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 
@@ -13,7 +14,10 @@ from .models import load_parameter_table
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,
                        parameters='all', select_format=("N", 1), header=True):
 
-    fin = FitInfoFile.open(input, 'r')
+    if isinstance(input, FitInfo):
+        fin = [input]
+    elif isinstance(input, six.string_types):
+        fin = FitInfoFile.open(input, 'r')
 
     # Read in table of parameters for model grid
     t = load_parameter_table(fin.meta.model_dir)

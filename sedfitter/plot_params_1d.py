@@ -11,7 +11,8 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Polygon
 from matplotlib.ticker import LogFormatterMathtext
 
-from .fit_info import FitInfoFile
+from . import six
+from .fit_info import FitInfo, FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 from .utils import io
@@ -38,7 +39,7 @@ def get_axes(fig):
     return fig.add_axes(rect)
 
 
-def plot_params_1d(input_file, parameter, output_dir=None,
+def plot_params_1d(input_fits, parameter, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
                    label=None, bins=30, additional={}, plot_name=True,
                    format='pdf'):
@@ -47,8 +48,10 @@ def plot_params_1d(input_file, parameter, output_dir=None,
 
     Parameters
     ----------
-    input_file : str
-        File containing the fit information
+    input_fits : str or :class:`sedfitter.fit_info.FitInfo` or iterable
+        This should be either a file containing the fit information, a
+        :class:`sedfitter.fit_info.FitInfo` instance, or an iterable containing
+        :class:`sedfitter.fit_info.FitInfo` instances.
     parameter : str
         The parameter to plot a histogram of
     output_dir : str, optional
@@ -81,8 +84,11 @@ def plot_params_1d(input_file, parameter, output_dir=None,
     # Create output directory
     io.create_dir(output_dir)
 
-    # Open output file
-    fin = FitInfoFile.open(input_file, 'r')
+    # Open input file
+    if isinstance(input_fits, FitInfo):
+        fin = [input_fits]
+    elif isinstance(input_fits, six.string_types):
+        fin = FitInfoFile.open(input_fits, 'r')
 
     # Read in table of parameters for model grid
     t = load_parameter_table(fin.meta.model_dir)

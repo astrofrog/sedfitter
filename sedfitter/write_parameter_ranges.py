@@ -5,19 +5,22 @@ import os
 import numpy as np
 from astropy.table import Table
 
-from .fit_info import FitInfoFile
+from . import six
+from .fit_info import FitInfo, FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 
 
-def write_parameter_ranges(input_file, output_file, select_format=("N", 1), additional={}):
+def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}):
     """
     Write out an ASCII file with ranges of paramters for each source.
 
     Parameters
     ----------
-    input_file : str
-        File containing the fit information
+    input_fits : str or :class:`sedfitter.fit_info.FitInfo` or iterable
+        This should be either a file containing the fit information, a
+        :class:`sedfitter.fit_info.FitInfo` instance, or an iterable containing
+        :class:`sedfitter.fit_info.FitInfo` instances.
     output_file : str, optional
         The output ASCII file containing the parameter ranges
     select_format : tuple, optional
@@ -30,7 +33,10 @@ def write_parameter_ranges(input_file, output_file, select_format=("N", 1), addi
     """
 
     # Open input and output file
-    fin = FitInfoFile.open(input_file, 'r')
+    if isinstance(input_fits, FitInfo):
+        fin = [input_fits]
+    elif isinstance(input_fits, six.string_types):
+        fin = FitInfoFile.open(input_fits, 'r')
     fout = open(output_file, 'w')
 
     # Read in table of parameters for model grid

@@ -37,16 +37,6 @@ class FitInfoFile(object):
             raise ValueError("meta property is only available in read mode")
         return self._first_meta
 
-    def read_single(self):
-
-        if self._mode != 'r':
-            raise ValueError("File not open for reading")
-
-        info = pickle.load(self._handle)
-        info.meta = self._first_meta
-
-        return info
-
     def write(self, info):
 
         if self._mode != 'w':
@@ -71,10 +61,14 @@ class FitInfoFile(object):
         self._handle.close()
 
     def __iter__(self):
+        if self._mode != 'r':
+            raise ValueError("File not open for reading")
         try:
-            yield self.read_single()
+            info = pickle.load(self._handle)
         except EOFError:
-            pass
+            return
+        info.meta = self._first_meta
+        yield info
 
 
 class FitInfoMeta(object):

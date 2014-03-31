@@ -26,6 +26,7 @@ from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
 import matplotlib.ticker as ticker
 
+from . import six
 from .extinction import Extinction
 from .fit_info import FitInfo, FitInfoFile
 from .sed import SED
@@ -171,7 +172,7 @@ def get_axes(fig):
     return fig.add_axes(rect)
 
 
-def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
+def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
          plot_name=True, plot_info=True, format='pdf'):
@@ -180,8 +181,10 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
 
     Parameters
     ----------
-    input_file : str
-        File containing the fit information
+    input_fits : str or :class:`sedfitter.fit_info.FitInfo` or iterable
+        This should be either a file containing the fit information, a
+        :class:`sedfitter.fit_info.FitInfo` instance, or an iterable containing
+        :class:`sedfitter.fit_info.FitInfo` instances.
     output_dir : str, optional
         If specified, plots are written to that directory
     select_format : tuple, optional
@@ -233,7 +236,10 @@ def plot(input_file, output_dir=None, select_format=("N", 1), plot_max=None,
     else:
         figures = {}
 
-    fin = FitInfoFile.open(input_file, 'r')
+    if isinstance(input_fits, FitInfo):
+        fin = [input_fits]
+    elif isinstance(input_fits, six.string_types):
+        fin = FitInfoFile.open(input_fits, 'r')
 
     wav = np.array([f['wav'].to(u.micron).value for f in fin.meta.filters])
     ap = np.array([f['aperture_arcsec'] for f in fin.meta.filters])

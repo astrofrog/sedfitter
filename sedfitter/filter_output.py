@@ -4,7 +4,7 @@ from .fit_info import FitInfoFile
 from .extinction import Extinction
 
 
-def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=None,
+def filter_output(input_fits=None, output_good='auto', output_bad='auto', chi=None,
                   cpd=None):
     """
     Filter an output file into well and badly fit sources.
@@ -16,8 +16,10 @@ def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=No
 
     Parameters
     ----------
-    input_file : str
-        File containing the fit information
+    input_fits : str or :class:`sedfitter.fit_info.FitInfo` or iterable
+        This should be either a file containing the fit information, a
+        :class:`sedfitter.fit_info.FitInfo` instance, or an iterable containing
+        :class:`sedfitter.fit_info.FitInfo` instances.
     output_good : str, optional
         The name of the file containing information about well-fit sources. If
         set to 'auto', then the output file will be set to the same as the
@@ -35,15 +37,15 @@ def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=No
         threshold.
     """
 
-    fin = FitInfoFile.open(input_file, 'r')
+    fin = FitInfoFile.open(input_fits, 'r')
 
     if output_good == 'auto':
-        fout_good = FitInfoFile.open(input_file + '_good', 'w')
+        fout_good = FitInfoFile.open(input_fits + '_good', 'w')
     else:
         fout_good = FitInfoFile.open(output_good, 'w')
 
     if output_bad == 'auto':
-        fout_bad = FitInfoFile.open(input_file + '_bad', 'w')
+        fout_bad = FitInfoFile.open(input_fits + '_bad', 'w')
     else:
         fout_bad = FitInfoFile.open(output_bad, 'w')
 

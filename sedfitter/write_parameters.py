@@ -1,27 +1,26 @@
 from __future__ import print_function, division
 
 import os
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 import numpy as np
 from astropy.table import Table
 
-from .fit_info import FitInfo
+from . import six
+from .fit_info import FitInfo, FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 
 
-def write_parameters(input_file, output_file, select_format=("N", 1), additional={}):
+def write_parameters(input_fits, output_file, select_format=("N", 1), additional={}):
     """
     Write out an ASCII file with the paramters for each source.
 
     Parameters
     ----------
-    input_file : str
-        File containing the fit information
+    input_fits : str or :class:`sedfitter.fit_info.FitInfo` or iterable
+        This should be either a file containing the fit information, a
+        :class:`sedfitter.fit_info.FitInfo` instance, or an iterable containing
+        :class:`sedfitter.fit_info.FitInfo` instances.
     output_file : str, optional
         The output ASCII file containing the parameters
     select_format : tuple, optional
@@ -34,16 +33,11 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
     """
 
     # Open input and output file
-    fin = open(input_file, 'rb')
+    fin = FitInfoFile(input_fits, 'r')
     fout = open(output_file, 'w')
 
-    # Read in header of output file
-    model_dir = pickle.load(fin)
-    filters = pickle.load(fin)
-    extinction = pickle.load(fin)
-
     # Read in table of parameters for model grid
-    t = load_parameter_table(model_dir)
+    t = load_parameter_table(fin.meta.model_dir)
 
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
@@ -73,13 +67,7 @@ def write_parameters(input_file, output_file, select_format=("N", 1), additional
     fout.write('-' * (75 + 11 * (len(list(t.columns.keys()) + list(additional.keys())))))
     fout.write('\n')
 
-    while True:
-
-        # Read in next fit
-        try:
-            info = pickle.load(fin)
-        except EOFError:
-            break
+    for info in fin:
 
         # Filter fits
         info.keep(select_format[0], select_format[1])

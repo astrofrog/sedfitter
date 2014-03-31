@@ -5,9 +5,102 @@ try:
 except ImportError:
     import pickle
 
+from . import six
+
 import numpy as np
 
-from .source import Source
+
+class FitInfoFile(object):
+
+    def __init__(self, fits, mode=None):
+
+        if isinstance(fits, six.string_types):
+
+            if mode not in 'wr':
+                raise ValueError('mode should be r or w')
+
+            self._handle = open(fits, mode + 'b')
+            self._mode = mode
+
+            if mode == 'r':
+                self._first_meta = FitInfoMeta()
+                self._first_meta.model_dir = pickle.load(self._handle)
+                self._first_meta.filters = pickle.load(self._handle)
+                self._first_meta.extinction_law = pickle.load(self._handle)
+            else:
+                self._first_meta = None
+
+            self._fits = None
+
+        elif isinstance(fits, FitInfo):
+
+            self._fits = [fits]
+
+        elif isinstance(fits, (list, tuple)):
+
+            for info in self._fits[1:]:
+                if info.meta != self._fits[0].meta:
+                    raise ValueError("The meta property of all FitInfo instances should match")
+
+            self._fits = fits
+
+        else:
+
+            raise TypeError('fits should be a string, FitInfo instance, or iterable of FitInfo instances')
+
+    @property
+    def meta(self):
+        if self._fits is None:
+            if self._mode != 'r':
+                raise ValueError("meta property is only available in read mode")
+            return self._first_meta
+        else:
+            return self._fits[0].meta
+
+    def write(self, info):
+
+        if self._mode != 'w':
+            raise ValueError("File not open for writing")
+
+        # We only write the metadata for the first source, and we then check
+        # the metadata of other sources against the first one to make sure it
+        # matches.
+
+        if self._first_meta is None:
+            pickle.dump(info.meta.model_dir, self._handle, 2)
+            pickle.dump(info.meta.filters, self._handle, 2)
+            pickle.dump(info.meta.extinction_law, self._handle, 2)
+            self._first_meta = info.meta
+        else:
+            if not info.meta == self._first_meta:
+                raise ValueError("meta does not match previously written value")
+
+        pickle.dump(info, self._handle, 2)
+
+    def close(self):
+        if self._fits is None:
+            self._handle.close()
+
+    def __iter__(self):
+        if self._fits is None:
+            if self._mode != 'r':
+                raise ValueError("File not open for reading")
+            try:
+                info = pickle.load(self._handle)
+            except EOFError:
+                return
+            info.meta = self._first_meta
+            yield info
+        else:
+            for info in self._fits:
+                yield info
+
+
+class FitInfoMeta(object):
+    def __eq__(self, other):
+        return (self.model_dir == other.model_dir and
+                self.filters == other.filters and
+                self.extinction_law == other.extinction_law)
 
 
 class FitInfo(object):
@@ -21,6 +114,7 @@ class FitInfo(object):
         self.model_id = None
         self.model_name = None
         self.model_fluxes = None
+        self.meta = FitInfoMeta()
 
     def sort(self):
 

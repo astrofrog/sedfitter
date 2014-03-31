@@ -1,15 +1,11 @@
 from __future__ import print_function, division
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-from .fit_info import FitInfo
+from . import six
+from .fit_info import FitInfoFile
 from .extinction import Extinction
 
 
-def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=None,
+def filter_output(input_fits=None, output_good='auto', output_bad='auto', chi=None,
                   cpd=None):
     """
     Filter an output file into well and badly fit sources.
@@ -21,8 +17,10 @@ def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=No
 
     Parameters
     ----------
-    input_file : str
-        File containing the fit information
+    input_fits : str or :class:`sedfitter.fit_info.FitInfo` or iterable
+        This should be either a file containing the fit information, a
+        :class:`sedfitter.fit_info.FitInfo` instance, or an iterable containing
+        :class:`sedfitter.fit_info.FitInfo` instances.
     output_good : str, optional
         The name of the file containing information about well-fit sources. If
         set to 'auto', then the output file will be set to the same as the
@@ -40,48 +38,33 @@ def filter_output(input_file=None, output_good='auto', output_bad='auto', chi=No
         threshold.
     """
 
-    fin = open(input_file, 'rb')
+    fin = FitInfoFile(input_fits, 'r')
+
+    if not isinstance(input_fits, six.string_types):
+        if output_good == 'auto':
+            raise ValueError('output_good should be set if input_fits is not a filename')
+        if output_bad == 'auto':
+            raise ValueError('output_bad should be set if input_fits is not a filename')
 
     if output_good == 'auto':
-        fout_good = open(input_file + '_good', 'wb')
+        fout_good = FitInfoFile(input_fits + '_good', 'w')
     else:
-        fout_good = open(output_good, 'wb')
+        fout_good = FitInfoFile(output_good, 'w')
 
     if output_bad == 'auto':
-        fout_bad = open(input_file + '_bad', 'wb')
+        fout_bad = FitInfoFile(input_fits + '_bad', 'w')
     else:
-        fout_bad = open(output_bad, 'wb')
+        fout_bad = FitInfoFile(output_bad, 'w')
 
-    # Read in header of output file
-    model_dir = pickle.load(fin)
-    filters = pickle.load(fin)
-    extinction_law = pickle.load(fin)
-
-    # Output header to good fits file
-    pickle.dump(model_dir, fout_good, 2)
-    pickle.dump(filters, fout_good, 2)
-    pickle.dump(extinction_law, fout_good, 2)
-
-    # Output header to bad fits file
-    pickle.dump(model_dir, fout_bad, 2)
-    pickle.dump(filters, fout_bad, 2)
-    pickle.dump(extinction_law, fout_bad, 2)
-
-    while True:
-
-        # Read in next fit
-        try:
-            info = pickle.load(fin)
-        except EOFError:
-            break
+    for info in fin:
 
         bestchi = info.chi2[0]
         bestcpd = info.chi2[0] / float(info.source.n_data)
 
         if (chi and bestchi < chi) or (cpd and bestcpd < cpd):
-            pickle.dump(info, fout_good, 2)
+            fout_good.write(info)
         else:
-            pickle.dump(info, fout_bad, 2)
+            fout_bad.write(info)
 
     # Close input and output files
     fin.close()

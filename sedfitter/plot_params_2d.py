@@ -1,10 +1,6 @@
 from __future__ import print_function, division
 
 import os
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 from copy import deepcopy
 
 from astropy.table import Table
@@ -16,7 +12,8 @@ from scipy.ndimage import convolve
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
-from .fit_info import FitInfo
+from . import six
+from .fit_info import FitInfo, FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 from .utils import io
@@ -45,7 +42,7 @@ def get_axes(fig, label=None, zorder=None):
     return fig.add_axes(rect, label=label, zorder=zorder)
 
 
-def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
+def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
                    label_x=None, label_y=None, additional={}, plot_name=True,
                    format='pdf'):
@@ -54,8 +51,10 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
 
     Parameters
     ----------
-    input_file : str
-        File containing the fit information
+    input_fits : str or :class:`sedfitter.fit_info.FitInfo` or iterable
+        This should be either a file containing the fit information, a
+        :class:`sedfitter.fit_info.FitInfo` instance, or an iterable containing
+        :class:`sedfitter.fit_info.FitInfo` instances.
     parameter_x : str
         The parameter to plot on the x-axis
     parameter_y : str
@@ -93,16 +92,11 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     # Create output directory
     io.create_dir(output_dir)
 
-    # Open output file
-    fin = open(input_file, 'rb')
-
-    # Read in header of output file
-    model_dir = pickle.load(fin)
-    filters = pickle.load(fin)
-    extinction = pickle.load(fin)
+    # Open input file
+    fin = FitInfoFile(input_fits, 'r')
 
     # Read in table of parameters for model grid
-    t = load_parameter_table(model_dir)
+    t = load_parameter_table(fin.meta.model_dir)
 
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
@@ -183,13 +177,7 @@ def plot_params_2d(input_file, parameter_x, parameter_y, output_dir=None,
     pfits = None
     source_label = None
 
-    while True:  # Loop over the fits
-
-        # Read in next fit
-        try:
-            info = pickle.load(fin)
-        except EOFError:
-            break
+    for info in fin:
 
         # Remove previous histogram
         if pfits is not None:

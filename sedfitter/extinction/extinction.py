@@ -1,10 +1,5 @@
 from __future__ import print_function, division
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
 import numpy as np
 from astropy import units as u
 

@@ -29,6 +29,7 @@ User documentation
    installation.rst
    fitting.rst
    convolution.rst
+   oo.rst
 
 Appendices
 ----------

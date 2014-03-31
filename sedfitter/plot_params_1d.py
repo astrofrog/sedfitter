@@ -85,10 +85,7 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
     io.create_dir(output_dir)
 
     # Open input file
-    if isinstance(input_fits, FitInfo):
-        fin = [input_fits]
-    elif isinstance(input_fits, six.string_types):
-        fin = FitInfoFile.open(input_fits, 'r')
+    fin = FitInfoFile(input_fits, 'r')
 
     # Read in table of parameters for model grid
     t = load_parameter_table(fin.meta.model_dir)

@@ -236,10 +236,7 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
     else:
         figures = {}
 
-    if isinstance(input_fits, FitInfo):
-        fin = [input_fits]
-    elif isinstance(input_fits, six.string_types):
-        fin = FitInfoFile.open(input_fits, 'r')
+    fin = FitInfoFile(input_fits, 'r')
 
     wav = np.array([f['wav'].to(u.micron).value for f in fin.meta.filters])
     ap = np.array([f['aperture_arcsec'] for f in fin.meta.filters])

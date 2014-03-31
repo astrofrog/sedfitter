@@ -14,10 +14,7 @@ from .models import load_parameter_table
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,
                        parameters='all', select_format=("N", 1), header=True):
 
-    if isinstance(input, FitInfo):
-        fin = [input]
-    elif isinstance(input, six.string_types):
-        fin = FitInfoFile.open(input, 'r')
+    fin = FitInfoFile(input, 'r')
 
     # Read in table of parameters for model grid
     t = load_parameter_table(fin.meta.model_dir)

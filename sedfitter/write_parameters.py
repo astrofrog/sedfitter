@@ -33,10 +33,7 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
     """
 
     # Open input and output file
-    if isinstance(input_fits, FitInfo):
-        fin = [input_fits]
-    elif isinstance(input_fits, six.string_types):
-        fin = FitInfoFile.open(input_fits, 'r')
+    fin = FitInfoFile(input_fits, 'r')
     fout = open(output_file, 'w')
 
     # Read in table of parameters for model grid

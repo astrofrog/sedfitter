@@ -1,5 +1,6 @@
 from __future__ import print_function, division
 
+from . import six
 from .fit_info import FitInfoFile
 from .extinction import Extinction
 
@@ -37,17 +38,23 @@ def filter_output(input_fits=None, output_good='auto', output_bad='auto', chi=No
         threshold.
     """
 
-    fin = FitInfoFile.open(input_fits, 'r')
+    fin = FitInfoFile(input_fits, 'r')
+
+    if not isinstance(input_fits, six.string_types):
+        if output_good == 'auto':
+            raise ValueError('output_good should be set if input_fits is not a filename')
+        if output_bad == 'auto':
+            raise ValueError('output_bad should be set if input_fits is not a filename')
 
     if output_good == 'auto':
-        fout_good = FitInfoFile.open(input_fits + '_good', 'w')
+        fout_good = FitInfoFile(input_fits + '_good', 'w')
     else:
-        fout_good = FitInfoFile.open(output_good, 'w')
+        fout_good = FitInfoFile(output_good, 'w')
 
     if output_bad == 'auto':
-        fout_bad = FitInfoFile.open(input_fits + '_bad', 'w')
+        fout_bad = FitInfoFile(input_fits + '_bad', 'w')
     else:
-        fout_bad = FitInfoFile.open(output_bad, 'w')
+        fout_bad = FitInfoFile(output_bad, 'w')
 
     for info in fin:
 

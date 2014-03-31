@@ -191,7 +191,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
 
     io.delete_file(output)
 
-    fout = FitInfoFile.open(output, 'w')
+    fout = FitInfoFile(output, 'w')
 
     s = Source()
 

@@ -85,12 +85,14 @@ class FitInfoFile(object):
         if self._fits is None:
             if self._mode != 'r':
                 raise ValueError("File not open for reading")
-            try:
-                info = pickle.load(self._handle)
-            except EOFError:
-                return
-            info.meta = self._first_meta
-            yield info
+            while True:
+                try:
+                    info = pickle.load(self._handle)
+                except EOFError:
+                    return
+                else:
+                    info.meta = self._first_meta
+                    yield info
         else:
             for info in self._fits:
                 yield info

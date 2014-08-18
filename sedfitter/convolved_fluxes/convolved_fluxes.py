@@ -243,8 +243,8 @@ class ConvolvedFluxes(object):
                 tc['RADIUS_SIGMA_50'].unit = u.au
             if tc['RADIUS_CUMUL_99'].unit is None:
                 tc['RADIUS_CUMUL_99'].unit = u.au
-            conv.radius_sigma_50 = tc['RADIUS_SIGMA_50'] * tc['RADIUS_SIGMA_50'].unit
-            conv.radius_cumul_99 = tc['RADIUS_CUMUL_99'] * tc['RADIUS_CUMUL_99'].unit
+            conv.radius_sigma_50 = u.Quantity(tc['RADIUS_SIGMA_50'], unit=tc['RADIUS_SIGMA_50'].unit)
+            conv.radius_cumul_99 = u.Quantity(tc['RADIUS_CUMUL_99'], unit=tc['RADIUS_CUMUL_99'].unit)
         except KeyError:
             pass
 

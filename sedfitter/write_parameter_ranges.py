@@ -103,9 +103,9 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
         fout.write("%10i " % info.source.n_data)
         fout.write("%10i " % info.n_fits)
 
-        fout.write('%10.3f %10.3f %10.3f ' % (np.nanmin(info.chi2), info.chi2[0], np.nanmax(info.chi2)))
-        fout.write('%10.3f %10.3f %10.3f ' % (np.nanmin(info.av), info.av[0], np.nanmax(info.av)))
-        fout.write('%10.3f %10.3f %10.3f ' % (np.nanmin(info.sc), info.sc[0], np.nanmax(info.sc)))
+        fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.chi2), info.chi2[0], np.nanmax(info.chi2)))
+        fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.av), info.av[0], np.nanmax(info.av)))
+        fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.sc), info.sc[0], np.nanmax(info.sc)))
 
         for par in tsorted.columns:
             if par == 'MODEL_NAME':

@@ -260,10 +260,6 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
 
         for i in range(info.n_fits - 1, -1, -1):
 
-            if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
-                fig = plt.figure()
-                ax = get_axes(fig)
-
             # Initalize lines and colors list
             if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
                 lines = []
@@ -314,34 +310,41 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
             if show_convolved:
                 conv.append(10. ** (info.model_fluxes[i, :] - 26. + np.log10(3.e8 / (wav * 1.e-6))))
 
+            if output_dir and ((plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I'):
+                fig = plt.figure()
+                ax = get_axes(fig)
+
             if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
 
-                if show_sed:
-                    ax.add_collection(LineCollection(lines, colors=colors))
-
-                if show_convolved:
-                    for j in range(len(conv)):
-                        ax.plot(wav, conv[j], color=colors[j], linestyle='solid', marker='o', markerfacecolor='none', markeredgecolor=colors[j])
-
-                ax = plot_source_data(ax, info.source, info.meta.filters)
-
-                if plot_mode == 'A':
-                    ax = plot_source_info(ax, 0, info, plot_name, plot_info)
-                else:
-                    ax = plot_source_info(ax, i, info, plot_name, plot_info)
-
-                ax.set_xlabel('$\lambda$ ($\mu$m)')
-                ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
-
-                ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
-
                 if output_dir:
+
+                    if show_sed:
+                        ax.add_collection(LineCollection(lines, colors=colors))
+
+                    if show_convolved:
+                        for j in range(len(conv)):
+                            ax.plot(wav, conv[j], color=colors[j], linestyle='solid', marker='o', markerfacecolor='none', markeredgecolor=colors[j])
+                                
+                    ax = plot_source_data(ax, info.source, info.meta.filters)
+                                
+                    if plot_mode == 'A':
+                        ax = plot_source_info(ax, 0, info, plot_name, plot_info)
+                    else:
+                        ax = plot_source_info(ax, i, info, plot_name, plot_info)
+                        
+                    ax.set_xlabel('$\lambda$ ($\mu$m)')
+                    ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
+
+                    ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
+
                     if plot_mode == 'A':
                         filename = "%s/%s.%s" % (output_dir, info.source.name, format)
                     else:
                         filename = "%s/%s_%05i.%s" % (output_dir, info.source.name, i + 1, format)
+
                     fig.savefig(filename, bbox_inches='tight')
                     plt.close(fig)
+
                 else:
                     figures[info.source.name] = {'source': info.source, 'filters': info.meta.filters, 'lines': LineCollection(lines, colors=colors)}
 

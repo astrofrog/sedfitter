@@ -175,7 +175,7 @@ def get_axes(fig):
 def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
-         plot_name=True, plot_info=True, format='pdf'):
+         plot_name=True, plot_info=True, format='pdf', sources=None):
     """
     Make SED plots
 
@@ -229,6 +229,9 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
         Whether to show the fit information on the plot(s).
     format : str, optional
         The file format to use for the plot, if output_dir is specified.
+    sources : list, optional
+        If specified, gives the list of sources to plot. If not set, all
+        sources will be plotted
     """
 
     if output_dir:
@@ -249,6 +252,9 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
 
     for info in fin:
 
+        if sources is not None and info.source.name not in sources:
+            continue
+        
         # Filter fits
         info.keep(select_format[0], select_format[1])
 
@@ -257,6 +263,9 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
 
         if show_convolved and info.model_fluxes is None:
             raise Exception("Cannot plot convolved fluxes as these are not included in the input file")
+
+        if info.n_fits == 0 and output_dir is None:
+            figures[info.source.name] = {'source': info.source, 'filters': info.meta.filters}
 
         for i in range(info.n_fits - 1, -1, -1):
 

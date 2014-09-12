@@ -280,3 +280,29 @@ def test_roundtrip_multiple_aperture(tmpdir):
     s.write(temp_file)
     s2 = SED.read(temp_file)
     assert s == s2
+
+def test_full_roundtrip(tmpdir):
+
+    n_ap = 10
+    n_wav = 30
+
+    s = SED()
+
+    s.name = 'test'
+    s.distance = 1 * u.kpc
+    s.apertures = np.linspace(10, 100, n_ap) * u.au
+    s.wav = np.linspace(0.01, 5000, n_wav)[::-1] * u.micron
+    s.flux = np.random.random((n_ap, n_wav))[::-1] * u.mJy
+    s.error = np.random.random((n_ap, n_wav)) * u.mJy
+    s.stellar_flux = np.random.random((n_wav)) * u.Jy
+    s.linpol = np.random.random((n_ap, n_wav))* u.percent
+    s.linpol_error = np.random.random((n_ap, n_wav)) * u.percent
+    s.circpol = np.random.random((n_ap, n_wav)) * u.percent
+    s.circpol_error = np.random.random((n_ap, n_wav)) * u.percent
+
+    temp_file = tmpdir.join('test_roundtrip_multipleaperture').strpath
+
+    s.write(temp_file)
+    s2 = SED.read(temp_file, unit_flux=u.mJy)
+
+    assert s == s2

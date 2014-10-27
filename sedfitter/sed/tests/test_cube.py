@@ -32,3 +32,27 @@ def test_roundrip(tmpdir):
     s2 = SEDCube.read(temp_file)
 
     assert s == s2
+
+
+def test_roundrip_missing_optional(tmpdir):
+
+    n_models = 30
+    n_wav = 10
+
+    s = SEDCube()
+
+    s.names = ['name_{0:02d}'.format(i) for i in range(n_models)]
+
+    s.wav = np.linspace(0.01, 5000, n_wav)[::-1] * u.micron
+
+    s.distance = 1. * u.kpc
+
+    s.val = np.random.random((1, n_wav, n_models)) * u.mJy
+
+    temp_file = tmpdir.join('test_roundtrip_sedcube').strpath
+
+    s.write(temp_file)
+
+    s2 = SEDCube.read(temp_file)
+
+    assert s == s2

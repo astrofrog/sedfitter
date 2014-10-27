@@ -112,6 +112,25 @@ class BaseCube(object):
             return True
 
     @property
+    def names(self):
+        """
+        The names of the models
+        """
+        return self._names
+
+    @names.setter
+    def names(self, value):
+        if value is None:
+            self._names = None
+        else:
+            if isinstance(value, np.ndarray):
+                if value.dtype.kind == 'U':
+                    value = np.char.encode(value, 'ascii')
+            else:
+                value = np.array(value, 'S')
+            self._names = value
+
+    @property
     def wav(self):
         """
         The wavelengths at which the SEDs are defined.
@@ -279,6 +298,8 @@ class BaseCube(object):
             raise ValueError("Frequencies 'nu' are not set")
         if self.val is None:
             raise ValueError("Values 'val' are not set")
+        if self.distance is None:
+            raise ValueError("Value 'distance' is not set")
 
     def write(self, filename, overwrite=False):
         """
@@ -290,15 +311,24 @@ class BaseCube(object):
             The name of the file to write the cube to.
         """
 
+        self._check_all_set()
+
+        hdulist = fits.HDUList()
+
         # Create empty first HDU and add distance
         hdu0 = fits.PrimaryHDU()
         hdu0.header['distance'] = (self.distance.to(u.cm).value, 'Distance assumed for the values, in cm')
+        hdu0.header['NWAV'] = (self.n_wav, "Number of wavelengths")
+        if self.apertures is not None:
+            hdu0.header['NAP'] = (self.n_ap, "Number of apertures")
+        hdulist.append(hdu0)
 
         # Create names table
         t1 = Table()
-        t1['MODEL_NAME'] = np.char.encode(self.names, 'ascii')
+        t1['MODEL_NAME'] = self.names
         hdu1 = table_to_hdu(t1)
         hdu1.name = "MODEL_NAMES"
+        hdulist.append(hdu1)
 
         # Create wavelength table
         t2 = Table()
@@ -306,25 +336,30 @@ class BaseCube(object):
         t2['FREQUENCY'] = self.nu
         hdu2 = table_to_hdu(t2)
         hdu2.name = "SPECTRAL_INFO"
+        hdulist.append(hdu2)
 
         # Create aperture table
-        t3 = Table()
-        t3['APERTURE'] = self.apertures
-        hdu3 = table_to_hdu(t3)
-        hdu3.name = "APERTURES"
+        if self.apertures is not None:
+            t3 = Table()
+            t3['APERTURE'] = self.apertures
+            hdu3 = table_to_hdu(t3)
+            hdu3.name = "APERTURES"
+            hdulist.append(hdu3)
 
         # Create value HDU
         hdu4 = fits.ImageHDU(self.val.value)
-        hdu4.header['BUNIT'] = self.val.unit.to_string(format='fits')
+        hdu4.header['BUNIT'] = self.val.unit.to_string()
         hdu4.name = 'VALUES'
+        hdulist.append(hdu4)
 
         # Create uncertainty HDU
-        hdu5 = fits.ImageHDU(self.unc.value)
-        hdu5.header['BUNIT'] = self.unc.unit.to_string(format='fits')
-        hdu5.name = 'UNCERTAINTIES'
+        if self.unc is not None:
+            hdu5 = fits.ImageHDU(self.unc.value)
+            hdu5.header['BUNIT'] = self.unc.unit.to_string()
+            hdu5.name = 'UNCERTAINTIES'
+            hdulist.append(hdu5)
 
         # Write out HDUList
-        hdulist = fits.HDUList([hdu0, hdu1, hdu2, hdu3, hdu4, hdu5])
         hdulist.writeto(filename, clobber=overwrite)
 
 

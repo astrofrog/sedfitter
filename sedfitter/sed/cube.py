@@ -278,8 +278,14 @@ class BaseCube(object):
 
         # Extract wavelengths
         hdu_spectral = hdulist['SPECTRAL_INFO']
-        cube.wav = hdu_spectral.data['WAVELENGTH'] * parse_unit_safe(hdu_spectral.columns[0].unit)
-        cube.nu = hdu_spectral.data['FREQUENCY'] * parse_unit_safe(hdu_spectral.columns[1].unit)
+
+        cube.wav = u.Quantity(hdu_spectral.data['WAVELENGTH'],
+                              parse_unit_safe(hdu_spectral.columns[0].unit),
+                              copy=False)
+
+        cube.nu = u.Quantity(hdu_spectral.data['FREQUENCY'],
+                             parse_unit_safe(hdu_spectral.columns[1].unit),
+                             copy=False)
 
         # Extract apertures
         try:
@@ -287,11 +293,15 @@ class BaseCube(object):
         except KeyError:
             pass
         else:
-            cube.apertures = hdu_apertures.data['APERTURE'] * parse_unit_safe(hdu_apertures.columns[0].unit)
+            cube.apertures = u.Quantity(hdu_apertures.data['APERTURE'],
+                                        parse_unit_safe(hdu_apertures.columns[0].unit),
+                                        copy=False)
 
         # Extract value
         hdu_val = hdulist['VALUES']
-        cube.val = hdu_val.data * parse_unit_safe(hdu_val.header['BUNIT'])
+        cube.val = u.Quantity(hdu_val.data,
+                              parse_unit_safe(hdu_val.header['BUNIT']),
+                              copy=False)
 
         # Extract uncertainty
         try:
@@ -299,7 +309,9 @@ class BaseCube(object):
         except KeyError:
             pass
         else:
-            cube.unc = hdu_unc.data * parse_unit_safe(hdu_unc.header['BUNIT'])
+            cube.unc = u.Quantity(hdu_unc.data,
+                                  parse_unit_safe(hdu_unc.header['BUNIT']),
+                                  copy=False)
 
         return cube
 

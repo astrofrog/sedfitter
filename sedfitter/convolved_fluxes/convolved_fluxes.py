@@ -374,7 +374,7 @@ class ConvolvedFluxes(object):
             The fraction to use when determining the radius
         """
 
-        log.info("Calculating radii containing %g%s of the flux" % (fraction * 100., '%'))
+        log.debug("Calculating radii containing %g%s of the flux" % (fraction * 100., '%'))
 
         radius = np.zeros(self.n_models, dtype=self.flux.dtype) * u.au
 
@@ -415,7 +415,7 @@ class ConvolvedFluxes(object):
             The fraction to use when determining the radius
         """
 
-        log.info("Calculating %g%s peak surface brightness radii" % (fraction * 100., '%'))
+        log.debug("Calculating %g%s peak surface brightness radii" % (fraction * 100., '%'))
 
         sigma = np.zeros(self.flux.shape, dtype=self.flux.dtype)
         sigma[:, 0] = self.flux[:, 0] / self.apertures[0] ** 2

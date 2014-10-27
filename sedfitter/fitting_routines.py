@@ -34,37 +34,42 @@ def chi_squared(valid, data, error, weight, model):
     """
 
     # Calculate the 'default' chi^2 and handle special cases after
-    chi2_array = (data - model) ** 2 * weight
+    # chi2_array = (data - model) ** 2 * weight
 
-    # Force chi^2 to zero for valid == 0
-    if chi2_array.ndim == 2:
-        chi2_array[:, valid == 0] = 0.
-    elif chi2_array.ndim == 3:
-        chi2_array[:, :, valid == 0] = 0.
-    else:
-        raise Exception("Chi^2 array has unexpected number of dimensions: %i" % chi2_array.ndim)
+    chi2_array = data.copy()
+    np.subtract(chi2_array, model, out=chi2_array)
+    np.power(chi2_array, 2, out=chi2_array)
+    np.multiply(chi2_array, weight, out=chi2_array)
 
-    # Reset lower limits where model < data
-    if chi2_array.ndim == 2:
-        for j in np.where(valid == 2)[0]:
-            reset = model[:, j] < data[:, j]
-            chi2_array[:, j][reset] = -2. * np.log(1. - error[j])
-    else:
-        for j in np.where(valid == 2)[0]:
-            reset = model[:, :, j] < data[:, :, j]
-            chi2_array[:, :, j][reset] = -2. * np.log(1. - error[j])
-
-    # Reset upper limits where model > data
-    if chi2_array.ndim == 2:
-        for j in np.where(valid == 3)[0]:
-            reset = model[:, j] > data[:, j]
-            chi2_array[:, j][reset] = -2. * np.log(1. - error[j])
-    else:
-        for j in np.where(valid == 3)[0]:
-            reset = model[:, :, j] > data[:, :, j]
-            chi2_array[:, :, j][reset] = -2. * np.log(1. - error[j])
-
-    # Check that there are no infinities
-    chi2_array[np.isinf(chi2_array)] = 1.e30
+    # # Force chi^2 to zero for valid == 0
+    # if chi2_array.ndim == 2:
+    #     chi2_array[:, valid == 0] = 0.
+    # elif chi2_array.ndim == 3:
+    #     chi2_array[:, :, valid == 0] = 0.
+    # else:
+    #     raise Exception("Chi^2 array has unexpected number of dimensions: %i" % chi2_array.ndim)
+    #
+    # # Reset lower limits where model < data
+    # if chi2_array.ndim == 2:
+    #     for j in np.where(valid == 2)[0]:
+    #         reset = model[:, j] < data[:, j]
+    #         chi2_array[:, j][reset] = -2. * np.log(1. - error[j])
+    # else:
+    #     for j in np.where(valid == 2)[0]:
+    #         reset = model[:, :, j] < data[:, :, j]
+    #         chi2_array[:, :, j][reset] = -2. * np.log(1. - error[j])
+    #
+    # # Reset upper limits where model > data
+    # if chi2_array.ndim == 2:
+    #     for j in np.where(valid == 3)[0]:
+    #         reset = model[:, j] > data[:, j]
+    #         chi2_array[:, j][reset] = -2. * np.log(1. - error[j])
+    # else:
+    #     for j in np.where(valid == 3)[0]:
+    #         reset = model[:, :, j] > data[:, :, j]
+    #         chi2_array[:, :, j][reset] = -2. * np.log(1. - error[j])
+    #
+    # # Check that there are no infinities
+    # chi2_array[np.isinf(chi2_array)] = 1.e30
 
     return np.sum(chi2_array, axis=chi2_array.ndim - 1)

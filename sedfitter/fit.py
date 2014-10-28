@@ -68,14 +68,23 @@ class Fitter(object):
         # Construct filters dictionary
         self.filters = []
         for i in range(len(apertures)):
-            self.filters.append({'aperture_arcsec': apertures[i].to(u.arcsec).value, 'name': filter_names[i]})
+            filt = {'aperture_arcsec': apertures[i].to(u.arcsec).value}
+            if isinstance(filter_names[i], six.string_types):
+                filt['name'] = filter_names[i]
+            elif isinstance(filter_names[i], u.Quantity):
+                filt['wav'] = filter_names[i]
+            else:
+                raise ValueError("filter should be a string or a Quantity")
+
+            self.filters.append(filt)
 
         # Read in models
         self.models = Models.read(model_dir, self.filters, distance_range=distance_range, remove_resolved=remove_resolved)
 
         # Add wavelength to filters
         for i, f in enumerate(self.filters):
-            f['wav'] = self.models.wavelengths[i]
+            if 'wav' not in f:
+                f['wav'] = self.models.wavelengths[i]
 
         # Set Av law
         self.av_law = extinction_law.get_av(self.models.wavelengths)
@@ -184,7 +193,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print('     Filter    Wavelength    Aperture (")   ')
     print('    ----------------------------------------')
     for f in fitter.filters:
-        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['wav'].to(u.micron).value, f['aperture_arcsec']))
+        print('       %5s   %9.2f  %9.2f        ' % (f.get('name', ''), f['wav'].to(u.micron).value, f['aperture_arcsec']))
     print('')
 
     # Cycle through sources

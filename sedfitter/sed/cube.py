@@ -8,39 +8,9 @@ from astropy.table import Table
 
 from ..utils.validator import validate_scalar, validate_array
 
+from .helpers import parse_unit_safe, table_to_hdu, assert_allclose_quantity
 
 __all__ = ['SEDCube', 'PolarizationCube']
-
-
-UNIT_MAPPING = {}
-UNIT_MAPPING['MICRONS'] = u.micron
-UNIT_MAPPING['HZ'] = u.Hz
-UNIT_MAPPING['MJY'] = u.mJy
-UNIT_MAPPING['ergs/cm^2/s'] = u.erg / u.cm ** 2 / u.s
-
-
-def parse_unit_safe(unit_string):
-    if unit_string in UNIT_MAPPING:
-        return UNIT_MAPPING[unit_string]
-    else:
-        return u.Unit(unit_string, parse_strict=False)
-
-
-def table_to_hdu(table):
-    hdu = fits.BinTableHDU(np.array(table))
-    for i in range(len(table.columns)):
-        if table.columns[i].unit is not None:
-            hdu.columns[i].unit = table.columns[i].unit.to_string(format='fits')
-    return hdu
-
-
-def assert_allclose_quantity(q1, q2):
-    if q1 is None and q2 is None:
-        return True
-    if q1 is None or q2 is None:
-        raise AssertionError("One of q1 or q2 is None")
-    else:
-        np.testing.assert_allclose(q1.value, q2.to(q1.unit).value)
 
 
 @six.add_metaclass(abc.ABCMeta)

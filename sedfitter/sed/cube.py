@@ -390,6 +390,19 @@ class BaseCube(object):
 class SEDCube(BaseCube):
     _physical_type = ('power', 'flux', 'spectral flux density')
 
+    def get_sed(self, model_name):
+        sed_index = np.nonzero(self.names == np.char.asbytes(model_name))[0][0]
+        from .sed import SED
+        sed = SED()
+        sed.name = model_name
+        sed.distance = self.distance
+        sed.wav = self.wav
+        sed.nu = self.nu
+        sed.apertures = self.apertures
+        sed.flux = self.val[:,:,sed_index]
+        sed.error = self.unc[:,:,sed_index]
+        return sed
+
 
 class PolarizationCube(BaseCube):
     _physical_type = ('dimensionless')

@@ -255,17 +255,17 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
     if not 'version' in modpar:
         modpar['version'] = 1
 
+    model_dir = None
     sed_cube = None
 
     for info in fin:
 
-        # TODO: following isn't right if we have fits from different model
-        # grids in same file.
-        if sed_cube is None and modpar['version'] == 2:
-            sed_cube = SEDCube.read(os.path.join(info.meta.model_dir, 'flux.fits'))
-
         if sources is not None and info.source.name not in sources:
             continue
+
+        if modpar['version'] == 2 and model_dir != info.meta.model_dir:
+            sed_cube = SEDCube.read(os.path.join(info.meta.model_dir, 'flux.fits'))
+            model_dir = info.meta.model_dir
 
         # Filter fits
         info.keep(select_format[0], select_format[1])

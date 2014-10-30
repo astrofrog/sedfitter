@@ -146,8 +146,6 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
     # Set up list of binned filters
     binned_filters = [f.rebin(sed_cube.nu) for f in filters]
 
-    # TODO: make sure we get the SED cube ordered in nu in mJy and with frequency units of Hz
-
     # We do the unit conversion - if needed - at the last minute
     val_factor = sed_cube.val.unit.to(u.mJy)
     unc_factor = sed_cube.unc.unit.to(u.mJy)

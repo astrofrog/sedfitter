@@ -35,10 +35,10 @@ class Fitter(object):
         List of filter names (given as individual strings) for which the data
         is defined. The filter names should be the name of the files in the
         ``convolved`` directory for the models, without the extensions. This is
-        typically ``2J``, ``I1``, ``M1``, etc. You can also specify a
-        :class:`~astropy.units.quantity.Quantity` instance instead of a
-        filter name, and this will indicate that the SED fluxes closest to
-        the requested wavelength should be used in the fitting.
+        typically ``2J``, ``I1``, ``M1``, etc. You can also specify the
+        wavelength as a :class:`~astropy.units.quantity.Quantity` instance
+        instead of a filter name, and this will indicate that the SED fluxes
+        closest to the requested wavelength should be used in the fitting.
     apertures : :class:`~astropy.units.quantity.Quantity` array instance
         The aperture radii that the data is specified in (as an angle). The
         fluxes may not be measured from aperture photometry, but this is meant
@@ -127,10 +127,10 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         List of filter names (given as individual strings) for which the data
         is defined. The filter names should be the name of the files in the
         ``convolved`` directory for the models, without the extensions. This is
-        typically ``2J``, ``I1``, ``M1``, etc. You can also specify a
-        :class:`~astropy.units.quantity.Quantity` instance instead of a
-        filter name, and this will indicate that the SED fluxes closest to
-        the requested wavelength should be used in the fitting.
+        typically ``2J``, ``I1``, ``M1``, etc. You can also specify the
+        wavelength as a :class:`~astropy.units.quantity.Quantity` instance
+        instead of a filter name, and this will indicate that the SED fluxes
+        closest to the requested wavelength should be used in the fitting.
     apertures : :class:`~astropy.units.quantity.Quantity` array instance
         The aperture radii that the data is specified in (as an angle). The
         fluxes may not be measured from aperture photometry, but this is meant

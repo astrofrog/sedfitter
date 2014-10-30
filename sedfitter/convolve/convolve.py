@@ -129,7 +129,7 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
         os.mkdir(model_dir + '/convolved')
 
     # Find all SED files to convolve
-    sed_cube = SEDCube.read(os.path.join(model_dir, 'flux.fits'))
+    sed_cube = SEDCube.read(os.path.join(model_dir, 'flux.fits'), order='nu')
 
     par_table = load_parameter_table(model_dir)
 
@@ -148,6 +148,10 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
 
     # TODO: make sure we get the SED cube ordered in nu in mJy and with frequency units of Hz
 
+    # We do the unit conversion - if needed - at the last minute
+    val_factor = sed_cube.val.unit.to(u.mJy)
+    unc_factor = sed_cube.unc.unit.to(u.mJy)
+
     # Loop over apertures
     for i_ap in ProgressBar(range(sed_cube.n_ap)):
 
@@ -159,11 +163,11 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
             response = f.response.astype(sed_val.dtype)
 
             if sed_cube.n_ap == 1:
-                fluxes[i].flux = np.sum(sed_val * response, axis=1)
-                fluxes[i].error = np.sqrt(np.sum((sed_unc * response) ** 2), axis=1)
+                fluxes[i].flux = np.sum(sed_val * response, axis=1) * val_factor
+                fluxes[i].error = np.sqrt(np.sum((sed_unc * response) ** 2), axis=1) * unc_factor
             else:
-                fluxes[i].flux[:, i_ap] = np.sum(sed_val * response, axis=1)
-                fluxes[i].error[:, i_ap] = np.sqrt(np.sum((sed_unc * response) ** 2, axis=1))
+                fluxes[i].flux[:, i_ap] = np.sum(sed_val * response, axis=1) * val_factor
+                fluxes[i].error[:, i_ap] = np.sqrt(np.sum((sed_unc * response) ** 2, axis=1)) * unc_factor
 
     for i, f in enumerate(binned_filters):
 

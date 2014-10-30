@@ -224,7 +224,7 @@ class BaseCube(object):
             return len(self.names)
 
     @classmethod
-    def read(cls, filename):
+    def read(cls, filename, order='nu'):
         """
         Read models from a FITS file.
 
@@ -232,6 +232,9 @@ class BaseCube(object):
         ----------
         filename: str
             The name of the file to read the cube from.
+        order: str, optional
+            Whether to sort the SED by increasing wavelength (`wav`) or
+            frequency ('nu').
         """
 
         # Create class instance
@@ -252,10 +255,6 @@ class BaseCube(object):
         cube.wav = u.Quantity(hdu_spectral.data['WAVELENGTH'],
                               parse_unit_safe(hdu_spectral.columns[0].unit),
                               copy=False)
-
-        cube.nu = u.Quantity(hdu_spectral.data['FREQUENCY'],
-                             parse_unit_safe(hdu_spectral.columns[1].unit),
-                             copy=False)
 
         # Extract apertures
         try:
@@ -282,6 +281,13 @@ class BaseCube(object):
             cube.unc = u.Quantity(hdu_unc.data,
                                   parse_unit_safe(hdu_unc.header['BUNIT']),
                                   copy=False)
+
+        # The following should only use views and should therefore not be slow
+        if ((order == 'nu' and cube.nu[0] > cube.nu[-1]) or
+           (order == 'wav' and cube.wav[0] > cube.wav[-1])):
+            cube.wav = cube.wav[::-1]
+            cube.flux = cube.val[:, ::-1, :]
+            cube.error = cube.unc[:, ::-1, :]
 
         return cube
 

@@ -2,9 +2,6 @@ import numpy as np
 from astropy import units as u
 from ..cube import SEDCube
 
-# TODO:
-# - distance
-
 
 def test_roundrip(tmpdir):
 

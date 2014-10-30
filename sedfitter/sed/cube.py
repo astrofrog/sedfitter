@@ -253,8 +253,7 @@ class BaseCube(object):
         hdu_spectral = hdulist['SPECTRAL_INFO']
 
         cube.wav = u.Quantity(hdu_spectral.data['WAVELENGTH'],
-                              parse_unit_safe(hdu_spectral.columns[0].unit),
-                              copy=False)
+                              parse_unit_safe(hdu_spectral.columns[0].unit))
 
         # Extract apertures
         try:
@@ -263,8 +262,7 @@ class BaseCube(object):
             pass
         else:
             cube.apertures = u.Quantity(hdu_apertures.data['APERTURE'],
-                                        parse_unit_safe(hdu_apertures.columns[0].unit),
-                                        copy=False)
+                                        parse_unit_safe(hdu_apertures.columns[0].unit))
 
         # Extract value
         hdu_val = hdulist['VALUES']

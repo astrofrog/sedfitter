@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import pytest
 
 import numpy as np
 from astropy.table import Table
@@ -13,7 +14,10 @@ source_2 0.0 0.0 1 1 1 0.2 0.05 1.2 0.1 1.8 0.3
 """
 
 
-def generate_random_models(models_dir, aperture_dependent=False):
+def generate_random_models_1(models_dir, aperture_dependent=False):
+    """
+    Generate random models in original grid format
+    """
 
     # Create fake SEDs
     np.random.seed(12345)
@@ -62,12 +66,57 @@ def generate_random_models(models_dir, aperture_dependent=False):
     t.write(os.path.join(models_dir, 'parameters.fits'))
 
 
+def generate_random_models_2(models_dir, aperture_dependent=False):
+    """
+    Generate random models in original grid format
+    """
+
+    # Create fake SEDs
+    np.random.seed(12345)
+
+    from ..sed import SEDCube
+
+    cube = SEDCube()
+
+    cube.names = np.array(['model_{0:04d}'.format(i) for i in range(5)])
+    cube.distance = 1 * u.kpc
+
+    cube.wav = np.logspace(-2., 3., 100) * u.micron
+
+    if aperture_dependent:
+        cube.apertures = np.logspace(1., 6., 10) * u.au
+        cube.val = np.cumsum(np.random.random((10, 100, 5)), axis=0) * u.mJy
+    else:
+        cube.apertures = None
+        cube.val = (1 + np.random.random((1, 100, 5))) * u.mJy
+
+    cube.unc = cube.val * 0.01 * np.random.random(cube.val.shape)
+
+    cube.write(os.path.join(models_dir, 'flux.fits'))
+
+    # Generate model conf file
+    f = open(os.path.join(models_dir, 'models.conf'), 'w')
+    f.write("name = test\n")
+    f.write("length_subdir = 0\n")
+    f.write("aperture_dependent = {0}\n".format('yes' if aperture_dependent else 'no'))
+    f.write("logd_step = 0.02\n")
+    f.write("version = 2\n")
+    f.close()
+
+    # Generate model parameter file
+    t = Table()
+    t['MODEL_NAME'] = np.array(cube.names, dtype='S')
+    t['par1'] = np.random.random(5)
+    t['par2'] = np.random.random(5)
+    t.write(os.path.join(models_dir, 'parameters.fits'))
+
+
 class BasePipelineTest(object):
 
     def setup_class(self):
 
         self.tmpdir = tempfile.mkdtemp()
-        generate_random_models(self.tmpdir, aperture_dependent=self.aperture_dependent)
+        self.model_generator(self.tmpdir, aperture_dependent=self.aperture_dependent)
 
         from ..extinction import Extinction
 
@@ -134,8 +183,14 @@ class BasePipelineTest(object):
     def test_monochromatic(self, tmpdir):
 
         from ..convolve import convolve_model_dir_monochromatic
-
-        convolve_model_dir_monochromatic(self.tmpdir)
+        if self.model_version == 1:
+            convolve_model_dir_monochromatic(self.tmpdir)
+            filters = ['MO001', 'MO002', 'MO020']
+        else:
+            with pytest.raises(ValueError) as exc:
+                convolve_model_dir_monochromatic(self.tmpdir)
+            assert exc.value.args[0] == "monochromatic filters are no longer used for new-style model directories"
+            filters = [3.4 * u.micron, 8.0 * u.micron, 15. * u.micron]
 
         from ..fit import fit
 
@@ -144,7 +199,7 @@ class BasePipelineTest(object):
 
         output_file = tmpdir.join('output').strpath
 
-        fit(data_file, ['MO001', 'MO002', 'MO020'], [1., 3., 3.] * u.arcsec, self.tmpdir, output_file,
+        fit(data_file, filters, [1., 3., 3.] * u.arcsec, self.tmpdir, output_file,
             extinction_law=self.extinction,
             distance_range=[1., 2.] * u.kpc,
             av_range=[0., 0.1],
@@ -227,9 +282,29 @@ class BasePipelineTest(object):
         filter_output(output_file, output_good='auto', output_bad='auto', cpd=3.)
 
 
-class TestApertureIndependentPipeline(BasePipelineTest):
+class TestApertureIndependentPipeline1(BasePipelineTest):
+
     aperture_dependent = False
+    model_version = 1
+    model_generator = generate_random_models_1
 
 
-class TestApertureDependentPipeline(BasePipelineTest):
+class TestApertureIndependentPipeline2(BasePipelineTest):
+
+    aperture_dependent = False
+    model_version = 2
+    model_generator = generate_random_models_2
+
+
+class TestApertureDependentPipeline1(BasePipelineTest):
+
     aperture_dependent = True
+    model_version = 1
+    model_generator = generate_random_models_1
+
+
+class TestApertureDependentPipeline2(BasePipelineTest):
+
+    aperture_dependent = True
+    model_version = 2
+    model_generator = generate_random_models_2

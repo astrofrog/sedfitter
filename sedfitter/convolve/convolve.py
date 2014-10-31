@@ -133,7 +133,7 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
 
     par_table = load_parameter_table(model_dir)
 
-    if not np.all(np.array(par_table['MODEL_NAME'], dtype='S') == sed_cube.names):
+    if not np.all(par_table['MODEL_NAME'] == sed_cube.names):
         raise ValueError("Model names in SED cube and parameter file do not match")
 
     log.info("{0} SEDs found in {1}".format(sed_cube.n_models, model_dir))
@@ -160,12 +160,8 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
 
             response = f.response.astype(sed_val.dtype)
 
-            if sed_cube.n_ap == 1:
-                fluxes[i].flux = np.sum(sed_val * response, axis=1) * val_factor
-                fluxes[i].error = np.sqrt(np.sum((sed_unc * response) ** 2), axis=1) * unc_factor
-            else:
-                fluxes[i].flux[:, i_ap] = np.sum(sed_val * response, axis=1) * val_factor
-                fluxes[i].error[:, i_ap] = np.sqrt(np.sum((sed_unc * response) ** 2, axis=1)) * unc_factor
+            fluxes[i].flux[:, i_ap] = np.sum(sed_val * response, axis=1) * val_factor
+            fluxes[i].error[:, i_ap] = np.sqrt(np.sum((sed_unc * response) ** 2, axis=1)) * unc_factor
 
     for i, f in enumerate(binned_filters):
 

@@ -35,9 +35,6 @@ class ConvolvedFluxes(object):
             if model_names is None:
                 raise ValueError("model_names is required when using initialize_arrays=True")
 
-            if apertures is None:
-                raise ValueError("apertures is required when using initialize_arrays=True")
-
             if flux is None:
                 self.flux = np.zeros((self.n_models, self.n_ap)) * initialize_units
             else:

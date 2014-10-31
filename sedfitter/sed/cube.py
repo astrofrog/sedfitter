@@ -93,11 +93,8 @@ class BaseCube(object):
         if value is None:
             self._names = None
         else:
-            if isinstance(value, np.ndarray):
-                if value.dtype.kind == 'U':
-                    value = np.char.encode(value, 'ascii')
-            else:
-                value = np.array(value, 'S')
+            if not isinstance(value, np.ndarray):
+                value = np.array(value)
             self._names = value
 
     @property
@@ -247,7 +244,7 @@ class BaseCube(object):
         cube.distance = hdulist[0].header['DISTANCE'] * u.cm
 
         # Extract model names
-        cube.names = hdulist['MODEL_NAMES'].data['MODEL_NAME']
+        cube.names = hdulist['MODEL_NAMES'].data['MODEL_NAME'].astype(str)
 
         # Extract wavelengths
         hdu_spectral = hdulist['SPECTRAL_INFO']
@@ -323,7 +320,7 @@ class BaseCube(object):
 
         # Create names table
         t1 = Table()
-        t1['MODEL_NAME'] = self.names
+        t1['MODEL_NAME'] = np.array(self.names, 'S')
         hdu1 = table_to_hdu(t1)
         hdu1.name = "MODEL_NAMES"
         hdulist.append(hdu1)
@@ -365,7 +362,12 @@ class SEDCube(BaseCube):
     _physical_type = ('power', 'flux', 'spectral flux density')
 
     def get_sed(self, model_name):
-        sed_index = np.nonzero(self.names == np.char.asbytes(model_name))[0][0]
+
+        try:
+            sed_index = np.nonzero(self.names == model_name)[0][0]
+        except IndexError:
+            raise ValueError("Model '{0}' not found in SED cube".format(model_name))
+
         from .sed import SED
         sed = SED()
         sed.name = model_name

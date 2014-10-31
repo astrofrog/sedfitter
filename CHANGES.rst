@@ -1,3 +1,9 @@
+0.9.2 (unreleased)
+------------------
+
+- Added support for a new model directory format that stores all SEDs in a
+  single file. [#16]
+
 0.9.1 (2014-03-10)
 ------------------
 

@@ -116,7 +116,13 @@ class BasePipelineTest(object):
     def setup_class(self):
 
         self.tmpdir = tempfile.mkdtemp()
-        self.model_generator(self.tmpdir, aperture_dependent=self.aperture_dependent)
+
+        if self.model_version == 1:
+            model_generator = generate_random_models_1
+        else:
+            model_generator = generate_random_models_2
+
+        model_generator(self.tmpdir, aperture_dependent=self.aperture_dependent)
 
         from ..extinction import Extinction
 
@@ -286,25 +292,21 @@ class TestApertureIndependentPipeline1(BasePipelineTest):
 
     aperture_dependent = False
     model_version = 1
-    model_generator = generate_random_models_1
 
 
 class TestApertureIndependentPipeline2(BasePipelineTest):
 
     aperture_dependent = False
     model_version = 2
-    model_generator = generate_random_models_2
 
 
 class TestApertureDependentPipeline1(BasePipelineTest):
 
     aperture_dependent = True
     model_version = 1
-    model_generator = generate_random_models_1
 
 
 class TestApertureDependentPipeline2(BasePipelineTest):
 
     aperture_dependent = True
     model_version = 2
-    model_generator = generate_random_models_2

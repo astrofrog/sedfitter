@@ -294,11 +294,6 @@ def test_full_roundtrip(tmpdir):
     s.wav = np.linspace(0.01, 5000, n_wav)[::-1] * u.micron
     s.flux = np.random.random((n_ap, n_wav))[::-1] * u.mJy
     s.error = np.random.random((n_ap, n_wav)) * u.mJy
-    s.stellar_flux = np.random.random((n_wav)) * u.Jy
-    s.linpol = np.random.random((n_ap, n_wav))* u.percent
-    s.linpol_error = np.random.random((n_ap, n_wav)) * u.percent
-    s.circpol = np.random.random((n_ap, n_wav)) * u.percent
-    s.circpol_error = np.random.random((n_ap, n_wav)) * u.percent
 
     temp_file = tmpdir.join('test_roundtrip_multipleaperture').strpath
 

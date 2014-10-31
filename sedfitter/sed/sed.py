@@ -11,53 +11,7 @@ from astropy import units as u
 
 from ..utils.validator import validate_array
 
-UNIT_MAPPING = {}
-UNIT_MAPPING['MICRONS'] = u.micron
-UNIT_MAPPING['HZ'] = u.Hz
-UNIT_MAPPING['MJY'] = u.mJy
-UNIT_MAPPING['ergs/cm^2/s'] = u.erg / u.cm ** 2 / u.s
-
-
-def parse_unit_safe(unit_string):
-    if unit_string in UNIT_MAPPING:
-        return UNIT_MAPPING[unit_string]
-    else:
-        return u.Unit(unit_string, parse_strict=False)
-
-
-def assert_allclose_quantity(q1, q2):
-    if q1 is None and q2 is None:
-        return True
-    if q1 is None or q2 is None:
-        raise AssertionError()
-    else:
-        np.testing.assert_allclose(q1.value, q2.to(q1.unit).value)
-
-
-def convert_flux(nu, flux, target_unit):
-    """
-    Convert flux to a target unit
-    """
-
-    curr_unit = flux.unit
-
-    if curr_unit.is_equivalent(u.erg / u.s):
-        flux = flux / sed.distance ** 2
-    elif curr_unit.is_equivalent(u.Jy):
-        flux = flux * nu
-    elif not curr_unit.is_equivalent(u.erg / u.cm ** 2 / u.s):
-        raise Exception("Don't know how to convert {0} to ergs/cm^2/s" % (flux.unit))
-
-    # Convert to requested unit
-
-    if target_unit.is_equivalent(u.erg / u.s):
-        flux = flux * sed.distance ** 2
-    elif target_unit.is_equivalent(u.Jy):
-        flux = flux / nu
-    elif not target_unit.is_equivalent(u.erg / u.cm ** 2 / u.s):
-        raise Exception("Don't know how to convert %s to %s" % (curr_unit, unit_flux))
-
-    return flux.to(target_unit)
+from .helpers import parse_unit_safe, table_to_hdu, assert_allclose_quantity, convert_flux
 
 
 class SED(object):
@@ -76,15 +30,8 @@ class SED(object):
         self.apertures = None
 
         # Fluxes
-        self.stellar_flux = None
         self.flux = None
         self.error = None
-
-        # Polarizations
-        self.linpol = None
-        self.linpol_error = None
-        self.circpol = None
-        self.circpol_error = None
 
     def __eq__(self, other):
 
@@ -96,17 +43,11 @@ class SED(object):
 
             assert_allclose_quantity(self.wav, other.wav)
             assert_allclose_quantity(self.nu, other.nu)
-            assert_allclose_quantity(self.stellar_flux, other.stellar_flux)
 
             assert_allclose_quantity(self.apertures, other.apertures)
 
             assert_allclose_quantity(self.flux, other.flux)
             assert_allclose_quantity(self.error, other.error)
-
-            assert_allclose_quantity(self.linpol, other.linpol)
-            assert_allclose_quantity(self.linpol_error, other.linpol_error)
-            assert_allclose_quantity(self.circpol, other.circpol)
-            assert_allclose_quantity(self.circpol_error, other.circpol_error)
 
         except AssertionError:
             raise
@@ -230,86 +171,6 @@ class SED(object):
                                          physical_type=('power', 'flux', 'spectral flux density'))
 
     @property
-    def stellar_flux(self):
-        """
-        The fluxes from the central object
-        """
-        return self._stellar_flux
-
-    @stellar_flux.setter
-    def stellar_flux(self, value):
-        if value is None:
-            self._stellar_flux = value
-        else:
-            self._stellar_flux = validate_array('stellar_flux', value, ndim=1,
-                                                shape=(self.n_wav,),
-                                                physical_type=('power', 'flux', 'spectral flux density'))
-
-    @property
-    def linpol(self):
-        """
-        The linear polarization values
-        """
-        return self._linpol
-
-    @linpol.setter
-    def linpol(self, value):
-        if value is None:
-            self._linpol = value
-        else:
-            self._linpol = validate_array('linpol', value, ndim=2,
-                                          shape=(self.n_ap, self.n_wav),
-                                          physical_type=('dimensionless'))
-
-    @property
-    def linpol_error(self):
-        """
-        The linear polarization error values
-        """
-        return self._linpol_error
-
-    @linpol_error.setter
-    def linpol_error(self, value):
-        if value is None:
-            self._linpol_error = value
-        else:
-            self._linpol_error = validate_array('linpol_error', value, ndim=2,
-                                                shape=(self.n_ap, self.n_wav),
-                                                physical_type=('dimensionless'))
-
-    @property
-    def circpol(self):
-        """
-        The circular polarization values
-        """
-        return self._circpol
-
-    @circpol.setter
-    def circpol(self, value):
-        if value is None:
-            self._circpol = value
-        else:
-            self._circpol = validate_array('circpol', value, ndim=2,
-                                          shape=(self.n_ap, self.n_wav),
-                                          physical_type=('dimensionless'))
-
-    @property
-    def circpol_error(self):
-        """
-        The circular polarization error values
-        """
-        return self._circpol_error
-
-    @circpol_error.setter
-    def circpol_error(self, value):
-        if value is None:
-            self._circpol_error = value
-        else:
-            self._circpol_error = validate_array('circpol_error', value, ndim=2,
-                                                shape=(self.n_ap, self.n_wav),
-                                                physical_type=('dimensionless'))
-
-    @property
     def n_ap(self):
         if self.apertures is None:
             return 1
@@ -379,26 +240,8 @@ class SED(object):
         sed.nu = nu.to(unit_freq)
 
         # Set fluxes
-        sed.flux = convert_flux(nu, flux, unit_flux)
-        sed.error = convert_flux(nu, error, unit_flux)
-
-        # Set stellar flux (if present)
-        if 'STELLAR_FLUX' in hdulist[1].data.dtype.names:
-            stellar_flux = hdulist[1].data.field('STELLAR_FLUX') * parse_unit_safe(hdulist[1].columns[2].unit)
-            sed.stellar_flux = convert_flux(nu, stellar_flux, unit_flux)
-        else:
-            stellar_flux = None
-
-        # Set polarization (if present)
-        if len(hdulist) > 4:
-            if 'LINPOL' in hdulist[4].data.dtype.names:
-                sed.linpol = hdulist[4].data.field('LINPOL') * u.percent
-            if 'LINPOL_ERROR' in hdulist[4].data.dtype.names:
-                sed.linpol_error = hdulist[4].data.field('LINPOL_ERROR') * u.percent
-            if 'CIRCPOL' in hdulist[4].data.dtype.names:
-                sed.circpol = hdulist[4].data.field('CIRCPOL') * u.percent
-            if 'CIRCPOL_ERROR' in hdulist[4].data.dtype.names:
-                sed.circpol_error = hdulist[4].data.field('CIRCPOL_ERROR') * u.percent
+        sed.flux = convert_flux(nu, flux, unit_flux, distance=sed.distance)
+        sed.error = convert_flux(nu, error, unit_flux, distance=sed.distance)
 
         # Sort SED
 
@@ -450,8 +293,6 @@ class SED(object):
             raise ValueError("Frequencies are not set")
         else:
             twav['FREQUENCY'] = self.nu
-        if self.stellar_flux is not None:
-            twav['STELLAR_FLUX'] = self.stellar_flux
         twav.sort('FREQUENCY')
 
         # TODO: here sorting needs to be applied to fluxes too?
@@ -459,8 +300,6 @@ class SED(object):
         hdu1 = fits.BinTableHDU(np.array(twav))
         hdu1.columns[0].unit = self.wav.unit.to_string(format='fits')
         hdu1.columns[1].unit = self.nu.unit.to_string(format='fits')
-        if self.stellar_flux is not None:
-            hdu1.columns[2].unit = self.stellar_flux.unit.to_string(format='fits')
         hdu1.header['EXTNAME'] = "WAVELENGTHS"
 
         # Create aperture table
@@ -493,24 +332,6 @@ class SED(object):
         hdu3.header['EXTNAME'] = "SEDS"
 
         hdus = [hdu0, hdu1, hdu2, hdu3]
-
-        if self.linpol is not None or self.circpol is not None:
-
-            tflux = Table()
-
-            if self.linpol is not None:
-                tflux['LINPOL'] = self.linpol
-            if self.linpol_error is not None:
-                tflux['LINPOL_ERROR'] = self.linpol_error
-            if self.circpol is not None:
-                tflux['CIRCPOL'] = self.circpol
-            if self.circpol_error is not None:
-                tflux['CIRCPOL_ERROR'] = self.circpol_error
-
-            hdu4 = fits.BinTableHDU(np.array(tflux))
-            hdu4.header['EXTNAME'] = "POLARIZATION"
-
-            hdus.append(hdu4)
 
         # Create overall FITS file
         hdulist = fits.HDUList(hdus)

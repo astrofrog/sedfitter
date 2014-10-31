@@ -4,7 +4,6 @@ import os
 import glob
 
 import numpy as np
-from astropy.io import fits
 from astropy.logger import log
 from astropy.table import Table
 from astropy import units as u
@@ -14,6 +13,7 @@ from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
 from ..models import load_parameter_table
 from .. import six
+from ..utils import parfile
 
 
 def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
@@ -36,6 +36,10 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         The maximum wavelength to consider. Only wavelengths below this value
         will be output.
     """
+
+    modpar = parfile.read(os.path.join(model_dir, 'models.conf'), 'conf')
+    if modpar.get('version', 1) > 1:
+        raise ValueError("monochromatic filters are no longer used for new-style model directories")
 
     # Create 'convolved' sub-directory if needed
     if not os.path.exists(model_dir + '/convolved'):

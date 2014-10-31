@@ -5,15 +5,15 @@ import glob
 
 import numpy as np
 
-from astropy.io import fits
 from astropy.logger import log
 from astropy import units as u
 from astropy.utils.console import ProgressBar
 
 from ..convolved_fluxes import ConvolvedFluxes
-from ..sed import SED
+from ..sed import SED, SEDCube
 from ..models import load_parameter_table
 from .. import six
+from ..utils import parfile
 
 
 def convolve_model_dir(model_dir, filters, overwrite=False):
@@ -30,6 +30,14 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
     overwrite : bool, optional
         Whether to overwrite the output files
     """
+    modpar = parfile.read(os.path.join(model_dir, 'models.conf'), 'conf')
+    if modpar.get('version', 1) == 1:
+        return _convolve_model_dir_1(model_dir, filters, overwrite=overwrite)
+    else:
+        return _convolve_model_dir_2(model_dir, filters, overwrite=overwrite)
+
+
+def _convolve_model_dir_1(model_dir, filters, overwrite=False):
 
     for f in filters:
         if f.name is None:
@@ -104,5 +112,62 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
 
     for i, f in enumerate(binned_filters):
         fluxes[i].sort_to_match(par_table['MODEL_NAME'])
+        fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits',
+                        overwrite=overwrite)
+
+
+def _convolve_model_dir_2(model_dir, filters, overwrite=False):
+
+    for f in filters:
+        if f.name is None:
+            raise Exception("filter name needs to be set")
+        if f.central_wavelength is None:
+            raise Exception("filter central wavelength needs to be set")
+
+    # Create 'convolved' sub-directory if needed
+    if not os.path.exists(model_dir + '/convolved'):
+        os.mkdir(model_dir + '/convolved')
+
+    # Find all SED files to convolve
+    sed_cube = SEDCube.read(os.path.join(model_dir, 'flux.fits'), order='nu')
+
+    par_table = load_parameter_table(model_dir)
+
+    if not np.all(par_table['MODEL_NAME'] == sed_cube.names):
+        raise ValueError("Model names in SED cube and parameter file do not match")
+
+    log.info("{0} SEDs found in {1}".format(sed_cube.n_models, model_dir))
+
+    # Set up convolved fluxes
+    fluxes = [ConvolvedFluxes(model_names=sed_cube.names,
+                              apertures=sed_cube.apertures,
+                              initialize_arrays=True) for i in range(len(filters))]
+
+    # Set up list of binned filters
+    binned_filters = [f.rebin(sed_cube.nu) for f in filters]
+
+    # We do the unit conversion - if needed - at the last minute
+    val_factor = sed_cube.val.unit.to(u.mJy)
+    unc_factor = sed_cube.unc.unit.to(u.mJy)
+
+    # Loop over apertures
+    for i_ap in ProgressBar(range(sed_cube.n_ap)):
+
+        sed_val = sed_cube.val[i_ap].transpose()
+        sed_unc = sed_cube.val[i_ap].transpose()
+
+        for i, f in enumerate(binned_filters):
+
+            response = f.response.astype(sed_val.dtype)
+
+            fluxes[i].flux[:, i_ap] = np.sum(sed_val * response, axis=1) * val_factor
+            fluxes[i].error[:, i_ap] = np.sqrt(np.sum((sed_unc * response) ** 2, axis=1)) * unc_factor
+
+    for i, f in enumerate(binned_filters):
+
+        fluxes[i].central_wavelength = f.central_wavelength
+        fluxes[i].apertures = sed_cube.apertures
+        fluxes[i].model_names = sed_cube.names
+
         fluxes[i].write(model_dir + '/convolved/' + f.name + '.fits',
                         overwrite=overwrite)

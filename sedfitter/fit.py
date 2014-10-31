@@ -35,7 +35,10 @@ class Fitter(object):
         List of filter names (given as individual strings) for which the data
         is defined. The filter names should be the name of the files in the
         ``convolved`` directory for the models, without the extensions. This is
-        typically ``2J``, ``I1``, ``M1``, etc.
+        typically ``2J``, ``I1``, ``M1``, etc. You can also specify the
+        wavelength as a :class:`~astropy.units.quantity.Quantity` instance
+        instead of a filter name, and this will indicate that the SED fluxes
+        closest to the requested wavelength should be used in the fitting.
     apertures : :class:`~astropy.units.quantity.Quantity` array instance
         The aperture radii that the data is specified in (as an angle). The
         fluxes may not be measured from aperture photometry, but this is meant
@@ -68,14 +71,23 @@ class Fitter(object):
         # Construct filters dictionary
         self.filters = []
         for i in range(len(apertures)):
-            self.filters.append({'aperture_arcsec': apertures[i].to(u.arcsec).value, 'name': filter_names[i]})
+            filt = {'aperture_arcsec': apertures[i].to(u.arcsec).value}
+            if isinstance(filter_names[i], six.string_types):
+                filt['name'] = filter_names[i]
+            elif isinstance(filter_names[i], u.Quantity):
+                filt['wav'] = filter_names[i]
+            else:
+                raise ValueError("filter should be a string or a Quantity")
+
+            self.filters.append(filt)
 
         # Read in models
         self.models = Models.read(model_dir, self.filters, distance_range=distance_range, remove_resolved=remove_resolved)
 
         # Add wavelength to filters
         for i, f in enumerate(self.filters):
-            f['wav'] = self.models.wavelengths[i]
+            if 'wav' not in f:
+                f['wav'] = self.models.wavelengths[i]
 
         # Set Av law
         self.av_law = extinction_law.get_av(self.models.wavelengths)
@@ -115,7 +127,10 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         List of filter names (given as individual strings) for which the data
         is defined. The filter names should be the name of the files in the
         ``convolved`` directory for the models, without the extensions. This is
-        typically ``2J``, ``I1``, ``M1``, etc.
+        typically ``2J``, ``I1``, ``M1``, etc. You can also specify the
+        wavelength as a :class:`~astropy.units.quantity.Quantity` instance
+        instead of a filter name, and this will indicate that the SED fluxes
+        closest to the requested wavelength should be used in the fitting.
     apertures : :class:`~astropy.units.quantity.Quantity` array instance
         The aperture radii that the data is specified in (as an angle). The
         fluxes may not be measured from aperture photometry, but this is meant
@@ -184,7 +199,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print('     Filter    Wavelength    Aperture (")   ')
     print('    ----------------------------------------')
     for f in fitter.filters:
-        print('       %5s   %9.2f  %9.2f        ' % (f['name'], f['wav'].to(u.micron).value, f['aperture_arcsec']))
+        print('       %5s   %9.2f  %9.2f        ' % (f.get('name', ''), f['wav'].to(u.micron).value, f['aperture_arcsec']))
     print('')
 
     # Cycle through sources

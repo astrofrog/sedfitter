@@ -6,11 +6,14 @@ import numpy as np
 from astropy.table import Table
 from astropy import units as u
 
-from .convolved_fluxes import ConvolvedFluxes
+from .convolved_fluxes import ConvolvedFluxes, MonochromaticFluxes
 from . import fitting_routines as f
 from .utils import parfile
 from .utils.validator import validate_array
 from .fit_info import FitInfo
+from .filter import Filter
+from . import six
+
 
 class Models(object):
 
@@ -132,6 +135,18 @@ class Models(object):
 
     @classmethod
     def read(cls, directory, filters, distance_range=None, remove_resolved=False):
+        modpar = parfile.read("%s/models.conf" % directory, 'conf')
+        if modpar.get('version', 1) == 1:
+            return cls._read_version_1(directory, filters,
+                                       distance_range=distance_range,
+                                       remove_resolved=remove_resolved)
+        else:
+            return cls._read_version_2(directory, filters,
+                                       distance_range=distance_range,
+                                       remove_resolved=remove_resolved)
+
+    @classmethod
+    def _read_version_1(cls, directory, filters, distance_range=None, remove_resolved=None):
 
         m = cls()
 
@@ -198,7 +213,113 @@ class Models(object):
                 conv.flux = conv.flux * (u.kpc / m.distances) ** 2
                 m.logd = np.log10(m.distances.to(u.kpc).value)
                 if remove_resolved:
-                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.radius_sigma_50[:, np.newaxis]
+                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.get_radius_sigma(0.5)[:, np.newaxis]
+                model_fluxes[:, :, ifilt] = conv.flux
+            else:
+                model_fluxes[:, ifilt] = conv.flux[:, 0]
+
+        try:
+            m.names = np.char.strip(conv.model_names)
+        except:
+            m.names = np.array([x.strip() for x in conv.model_names], dtype=conv.model_names.dtype)
+
+        m.fluxes = model_fluxes
+
+        if extended is not None:
+            m.extended = extended
+
+        return m
+
+    @classmethod
+    def _read_version_2(cls, directory, filters, distance_range=None, remove_resolved=None):
+
+        m = cls()
+
+        # Read in model parameters
+        modpar = parfile.read("%s/models.conf" % directory, 'conf')
+
+        print(" ------------------------------------------------------------")
+        print("  => Model parameters")
+        print(" ------------------------------------------------------------")
+        print("")
+        print("   Models              :  %s" % modpar['name'])
+        print("   Log[d] stepping     :  %g" % modpar['logd_step'])
+
+        if modpar['aperture_dependent']:
+
+            distance_range_kpc = distance_range.to(u.kpc).value
+
+            if distance_range:
+                if distance_range_kpc[0] == distance_range_kpc[1]:
+                    n_distances = 1
+                    m.distances = np.array([distance_range_kpc[0]]) * u.kpc
+                else:
+                    n_distances = 1 + (np.log10(distance_range_kpc[1]) - np.log10(distance_range_kpc[0])) / modpar['logd_step']
+                    m.distances = np.logspace(np.log10(distance_range_kpc[0]), np.log10(distance_range_kpc[1]), n_distances) * u.kpc
+                print("   Number of distances :  %i" % m.n_distances)
+            else:
+                raise Exception("For aperture-dependent models, a distange range is required")
+
+        print("")
+        print(" ------------------------------------------------------------")
+        print("  => Reading in convolved fluxes")
+        print(" ------------------------------------------------------------")
+        print("")
+
+        # Start off by reading in main flux cube
+        from .sed.cube import SEDCube
+        cube = SEDCube.read(os.path.join(directory, 'flux.fits'))
+
+        # Initialize model flux array and array to indicate whether models are
+        # extended
+        if m.n_distances is None:
+            model_fluxes = np.zeros((cube.n_models, len(filters))) * u.mJy
+            extended = None
+        else:
+            model_fluxes = np.zeros((cube.n_models, m.n_distances, len(filters))) * u.mJy
+            extended = np.zeros((cube.n_models, m.n_distances, len(filters)), dtype=bool)
+
+        # Define empty wavelength array
+        m.wavelengths = np.zeros(len(filters)) * u.micron
+
+        for ifilt, filt in enumerate(filters):
+
+            if 'name' in filt:
+
+                filename = '%s/convolved/%s.fits' % (directory, filt['name'])
+
+                if not os.path.exists(filename):
+                    if os.path.exists(filename + '.gz'):
+                        filename += '.gz'
+                    else:
+                        raise Exception("File not found: " + filename)
+
+                print("   Reading " + filename)
+
+                conv = ConvolvedFluxes.read(filename)
+
+                m.wavelengths[ifilt] = conv.central_wavelength
+
+            elif 'wav' in filt:
+
+                # Find wavelength index
+                wavelength_index = np.argmin(np.abs(cube.wav - filt['wav']))
+
+                print("   Reading fluxes at {0}".format(filt['wav']))
+
+                conv = MonochromaticFluxes.from_sed_cube(cube, wavelength_index)
+
+                m.wavelengths[ifilt] = filt['wav']
+
+            if m.n_distances is not None:
+                apertures_au = filt['aperture_arcsec'] * m.distances.to(u.pc).value * u.au
+                conv = conv.interpolate(apertures_au)
+                conv.flux = conv.flux * (u.kpc / m.distances) ** 2
+                m.logd = np.log10(m.distances.to(u.kpc).value)
+                # TODO: rather than compute the radius for each model, just
+                # check directly the condition.
+                if remove_resolved:
+                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.get_radius_sigma(0.5)[:, np.newaxis]
                 model_fluxes[:, :, ifilt] = conv.flux
             else:
                 model_fluxes[:, ifilt] = conv.flux[:, 0]

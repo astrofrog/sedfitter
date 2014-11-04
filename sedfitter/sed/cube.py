@@ -281,8 +281,8 @@ class BaseCube(object):
         if ((order == 'nu' and cube.nu[0] > cube.nu[-1]) or
            (order == 'wav' and cube.wav[0] > cube.wav[-1])):
             cube.wav = cube.wav[::-1]
-            cube.flux = cube.val[:, ::-1, :]
-            cube.error = cube.unc[:, ::-1, :]
+            cube.val = cube.val[:, ::-1, :]
+            cube.unc = cube.unc[:, ::-1, :]
 
         return cube
 

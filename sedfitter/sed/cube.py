@@ -41,8 +41,11 @@ class BaseCube(object):
 
     _physical_type = None
 
-    def __init__(self, names=None, distance=None, wav=None, nu=None,
-                 apertures=None, val=None, unc=None):
+    def __init__(self, valid=None, names=None, distance=None, wav=None,
+                 nu=None, apertures=None, val=None, unc=None):
+
+        # Which models are valid
+        self.valid = valid
 
         # The names of all the models
         self.names = names
@@ -63,6 +66,8 @@ class BaseCube(object):
 
         try:
 
+            assert np.all(self.valid == other.valid)
+
             assert np.all(self.names == other.names)
 
             assert_allclose_quantity(self.distance, other.distance)
@@ -80,6 +85,24 @@ class BaseCube(object):
             return False
         else:
             return True
+
+    @property
+    def valid(self):
+        """
+        Which models are valid
+        """
+        if self.n_models is None or self._valid is not None:
+            return self._valid
+        else:
+            return np.ones(len(self.n_models))
+
+    @valid.setter
+    def valid(self, value):
+        if value is None:
+            self._valid = None
+        else:
+            self._valid = validate_array('valid', value, ndim=1,
+                                       shape=None if self.n_models is None else (self.n_models,))
 
     @property
     def names(self):
@@ -243,6 +266,9 @@ class BaseCube(object):
         # Extract distance
         cube.distance = hdulist[0].header['DISTANCE'] * u.cm
 
+        # Get validity
+        cube.valid = hdulist[0].data.astype(bool)
+
         # Extract model names
         cube.names = hdulist['MODEL_NAMES'].data['MODEL_NAME'].astype(str)
 
@@ -296,7 +322,7 @@ class BaseCube(object):
         if self.distance is None:
             raise ValueError("Value 'distance' is not set")
 
-    def write(self, filename, overwrite=False):
+    def write(self, filename, overwrite=False, meta={}):
         """
         Write the models to a FITS file.
 
@@ -311,11 +337,13 @@ class BaseCube(object):
         hdulist = fits.HDUList()
 
         # Create empty first HDU and add distance
-        hdu0 = fits.PrimaryHDU()
+        hdu0 = fits.PrimaryHDU(data=self.valid.astype(int))
         hdu0.header['distance'] = (self.distance.to(u.cm).value, 'Distance assumed for the values, in cm')
         hdu0.header['NWAV'] = (self.n_wav, "Number of wavelengths")
         if self.apertures is not None:
             hdu0.header['NAP'] = (self.n_ap, "Number of apertures")
+        for key in meta:
+            hdu0.header[key] = meta[key]
         hdulist.append(hdu0)
 
         # Create names table

@@ -94,7 +94,7 @@ class BaseCube(object):
         if self.n_models is None or self._valid is not None:
             return self._valid
         else:
-            return np.ones(len(self.n_models))
+            return np.ones(self.n_models)
 
     @valid.setter
     def valid(self, value):

@@ -213,7 +213,7 @@ class Models(object):
                 conv.flux = conv.flux * (u.kpc / m.distances) ** 2
                 m.logd = np.log10(m.distances.to(u.kpc).value)
                 if remove_resolved:
-                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.get_radius_sigma(0.5)[:, np.newaxis]
+                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.find_radius_sigma(0.5)[:, np.newaxis]
                 model_fluxes[:, :, ifilt] = conv.flux
             else:
                 model_fluxes[:, ifilt] = conv.flux[:, 0]
@@ -319,7 +319,7 @@ class Models(object):
                 # TODO: rather than compute the radius for each model, just
                 # check directly the condition.
                 if remove_resolved:
-                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.get_radius_sigma(0.5)[:, np.newaxis]
+                    extended[:, :, ifilt] = apertures_au[np.newaxis,:] < conv.find_radius_sigma(0.5)[:, np.newaxis]
                 model_fluxes[:, :, ifilt] = conv.flux
             else:
                 model_fluxes[:, ifilt] = conv.flux[:, 0]

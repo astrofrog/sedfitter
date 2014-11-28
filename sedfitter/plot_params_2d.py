@@ -3,7 +3,7 @@ from __future__ import print_function, division
 import os
 from copy import deepcopy
 
-from astropy.table import Table
+from astropy.table import Table, join
 from astropy.convolution import Tophat2DKernel
 
 import numpy as np
@@ -43,8 +43,8 @@ def get_axes(fig, label=None, zorder=None):
 
 
 def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
-                   select_format=("N", 1), log_x=False, log_y=True,
-                   label_x=None, label_y=None, additional={}, plot_name=True,
+                   select_format=("N", 1), log_x=False, log_y=True, bounds=None,
+                   label_x=None, label_y=None, additional=None, plot_name=True,
                    format='pdf'):
     """
     Make histogram plots of parameters
@@ -72,7 +72,7 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         The x-axis label (if not specified, the parameter name is used)
     label_y : str, optional
         The y-axis label (if not specified, the parameter name is used)
-    additional : dict, optional
+    additional : Table
         A dictionary specifying additional parameters not listed in the
         parameter list for the models. Each item of the dictionary should
         itself be a dictionary giving the values for each model (where the key
@@ -97,6 +97,8 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
 
     # Read in table of parameters for model grid
     t = load_parameter_table(fin.meta.model_dir)
+    if additional is not None:
+        t = join(t, additional)
 
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
@@ -112,8 +114,11 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
     ax = get_axes(fig, label='main', zorder=0)
 
     # Find range of values
-    xmin, xmax = tpos[parameter_x].min(), tpos[parameter_x].max()
-    ymin, ymax = tpos[parameter_y].min(), tpos[parameter_y].max()
+    if bounds is None:
+        xmin, xmax = tpos[parameter_x].min(), tpos[parameter_x].max()
+        ymin, ymax = tpos[parameter_y].min(), tpos[parameter_y].max()
+    else:
+        xmin, xmax, ymin, ymax = bounds
 
     # Compute histogram
     if log_x and log_y:
@@ -189,7 +194,7 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         info.keep(select_format[0], select_format[1])
 
         # Get filtered and sorted table of parameters
-        tsorted = info.filter_table(t, additional=additional)
+        tsorted = info.filter_table(t)
 
         pfits = ax.scatter(tsorted[parameter_x], tsorted[parameter_y], c='black', s=10)
 

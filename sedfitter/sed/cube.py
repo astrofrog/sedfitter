@@ -244,7 +244,7 @@ class BaseCube(object):
             return len(self.names)
 
     @classmethod
-    def read(cls, filename, order='nu'):
+    def read(cls, filename, order='nu', memmap=True):
         """
         Read models from a FITS file.
 
@@ -261,7 +261,7 @@ class BaseCube(object):
         cube = cls()
 
         # Open FILE file
-        hdulist = fits.open(filename, memmap=True)
+        hdulist = fits.open(filename, memmap=memmap)
 
         # Extract distance
         cube.distance = hdulist[0].header['DISTANCE'] * u.cm

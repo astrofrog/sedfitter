@@ -178,7 +178,7 @@ def get_axes(fig):
 def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
-         plot_name=True, plot_info=True, format='pdf', sources=None):
+         plot_name=True, plot_info=True, format='pdf', sources=None, memmap=True):
     """
     Make SED plots
 
@@ -264,7 +264,7 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
             continue
 
         if modpar['version'] == 2 and model_dir != info.meta.model_dir:
-            sed_cube = SEDCube.read(os.path.join(info.meta.model_dir, 'flux.fits'))
+            sed_cube = SEDCube.read(os.path.join(info.meta.model_dir, 'flux.fits'), memmap=memmap)
             model_dir = info.meta.model_dir
 
         # Filter fits

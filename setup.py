@@ -40,7 +40,7 @@ class SEDFitterTest(Command):
         raise SystemExit(errno)
 
 setup(name='sedfitter',
-      version='0.9.2',
+      version='0.9.3.dev',
       description='SED Fitter in Python',
       author='Thomas Robitaille',
       author_email='thomas.robitaille@gmail.com',

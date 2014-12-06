@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from ez_setup import use_setuptools
+use_setuptools()
+
 from setuptools import setup, Command
 
 from distutils.command.build_py import build_py
@@ -67,4 +70,3 @@ setup(name='sedfitter',
       cmdclass={'build_py': build_py, 'test':SEDFitterTest},
       keywords=['Scientific/Engineering'],
      )
-

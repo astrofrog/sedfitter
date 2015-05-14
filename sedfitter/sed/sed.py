@@ -11,48 +11,46 @@ from astropy import units as u
 
 from ..utils.validator import validate_array
 
-UNIT_MAPPING = {}
-UNIT_MAPPING['MICRONS'] = u.micron
-UNIT_MAPPING['HZ'] = u.Hz
-UNIT_MAPPING['MJY'] = u.mJy
-UNIT_MAPPING['ergs/cm^2/s'] = u.erg / u.cm ** 2 / u.s
-
-
-def parse_unit_safe(unit_string):
-    if unit_string in UNIT_MAPPING:
-        return UNIT_MAPPING[unit_string]
-    else:
-        return u.Unit(unit_string, parse_strict=False)
-
-
-def assert_allclose_quantity(q1, q2):
-    np.testing.assert_allclose(q1.value, q2.to(q1.unit).value)
+from .helpers import parse_unit_safe, table_to_hdu, assert_allclose_quantity, convert_flux
 
 
 class SED(object):
 
     def __init__(self):
 
+        # Metadata
         self.name = None
         self.distance = None
+
+        # Spectral info
         self.wav = None
         self.nu = None
+
+        # Apertures
         self.apertures = None
+
+        # Fluxes
         self.flux = None
         self.error = None
 
     def __eq__(self, other):
 
         try:
+
             assert self.name == other.name
+
             assert_allclose_quantity(self.distance, other.distance)
-            assert_allclose_quantity(self.distance, other.distance)
+
             assert_allclose_quantity(self.wav, other.wav)
             assert_allclose_quantity(self.nu, other.nu)
+
             assert_allclose_quantity(self.apertures, other.apertures)
+
             assert_allclose_quantity(self.flux, other.flux)
             assert_allclose_quantity(self.error, other.error)
+
         except AssertionError:
+            raise
             return False
         else:
             return True
@@ -92,7 +90,10 @@ class SED(object):
         """
         The wavelengths at which the SED is defined
         """
-        return self._wav
+        if self._wav is None and self._nu is not None:
+            return self._nu.to(u.micron, equivalencies=u.spectral())
+        else:
+            return self._wav
 
     @wav.setter
     def wav(self, value):
@@ -108,7 +109,10 @@ class SED(object):
         """
         The frequencies at which the SED is defined
         """
-        return self._nu
+        if self._nu is None and self._wav is not None:
+            return self._wav.to(u.Hz, equivalencies=u.spectral())
+        else:
+            return self._nu
 
     @nu.setter
     def nu(self, value):
@@ -222,57 +226,22 @@ class SED(object):
             sed.distance = 1. * u.kpc
 
         # Extract SED values
-        wav = hdulist[1].data.field('WAVELENGTH')
-        nu = hdulist[1].data.field('FREQUENCY')
-        ap = hdulist[2].data.field('APERTURE')
-        flux = hdulist[3].data.field('TOTAL_FLUX')
-        error = hdulist[3].data.field('TOTAL_FLUX_ERR')
+        wav = hdulist[1].data.field('WAVELENGTH') * parse_unit_safe(hdulist[1].columns[0].unit)
+        nu = hdulist[1].data.field('FREQUENCY') * parse_unit_safe(hdulist[1].columns[1].unit)
+        ap = hdulist[2].data.field('APERTURE') * parse_unit_safe(hdulist[2].columns[0].unit)
+        flux = hdulist[3].data.field('TOTAL_FLUX') * parse_unit_safe(hdulist[3].columns[0].unit)
+        error = hdulist[3].data.field('TOTAL_FLUX_ERR') * parse_unit_safe(hdulist[3].columns[1].unit)
 
-        # Set units
-
-        wav = wav * parse_unit_safe(hdulist[1].columns[0].unit)
-        nu = nu * parse_unit_safe(hdulist[1].columns[1].unit)
-        ap = ap * parse_unit_safe(hdulist[2].columns[0].unit)
-        flux = flux * parse_unit_safe(hdulist[3].columns[0].unit)
-        error = error * parse_unit_safe(hdulist[3].columns[1].unit)
-
+        # Set SED attributes
         sed.apertures = ap
-
-        if flux.unit != error.unit:
-            raise ValueError("flux and flux error unit should match")
 
         # Convert wavelength and frequencies to requested units
         sed.wav = wav.to(unit_wav)
         sed.nu = nu.to(unit_freq)
 
-        # Convert flux and error
-
-        if not unit_flux.is_equivalent(flux.unit):
-
-            # Convert to ergs / cm^2 / s
-
-            if flux.unit.is_equivalent(u.erg / u.s):
-                flux = flux / sed.distance ** 2
-                error = error / sed.distance ** 2
-            elif flux.unit.is_equivalent(u.Jy):
-                flux = flux * nu
-                error = error * nu
-            elif not flux.unit.is_equivalent(u.erg / u.cm ** 2 / u.s):
-                raise Exception("Don't know how to convert {0} to ergs/cm^2/s" % (flux.unit))
-
-            # Convert to requested unit
-
-            if unit_flux.is_equivalent(u.erg / u.s):
-                flux = flux * sed.distance ** 2
-                error = error * sed.distance ** 2
-            elif unit_flux.is_equivalent(u.Jy):
-                flux = flux / nu
-                error = error / nu
-            elif not flux.unit.is_equivalent(u.erg / u.cm ** 2 / u.s):
-                raise Exception("Don't know how to convert %s to %s" % (curr_unit_flux, unit_flux))
-
-        sed.flux = flux.to(unit_flux)
-        sed.error = error.to(unit_flux)
+        # Set fluxes
+        sed.flux = convert_flux(nu, flux, unit_flux, distance=sed.distance)
+        sed.error = convert_flux(nu, error, unit_flux, distance=sed.distance)
 
         # Sort SED
 
@@ -288,7 +257,7 @@ class SED(object):
 
         return sed
 
-    def write(self, filename):
+    def write(self, filename, overwrite=False):
         """
         Write an SED to a FITS file.
 
@@ -325,9 +294,13 @@ class SED(object):
         else:
             twav['FREQUENCY'] = self.nu
         twav.sort('FREQUENCY')
+
+        # TODO: here sorting needs to be applied to fluxes too?
+
         hdu1 = fits.BinTableHDU(np.array(twav))
         hdu1.columns[0].unit = self.wav.unit.to_string(format='fits')
         hdu1.columns[1].unit = self.nu.unit.to_string(format='fits')
+        hdu1.header['EXTNAME'] = "WAVELENGTHS"
 
         # Create aperture table
         tap = Table()
@@ -340,24 +313,29 @@ class SED(object):
             hdu2.columns[0].unit = 'cm'
         else:
             hdu2.columns[0].unit = self.apertures.unit.to_string(format='fits')
+        hdu2.header['EXTNAME'] = "APERTURES"
 
         # Create flux table
         tflux = Table()
+        tflux['TOTAL_FLUX'] = self.flux
         if self.flux is None:
             raise ValueError("Fluxes are not set")
         else:
             tflux['TOTAL_FLUX'] = self.flux
         if self.error is None:
-            raise ValueError("Wavelengths are not set")
+            raise ValueError("Errors are not set")
         else:
             tflux['TOTAL_FLUX_ERR'] = self.error
         hdu3 = fits.BinTableHDU(np.array(tflux))
         hdu3.columns[0].unit = self.flux.unit.to_string(format='fits')
         hdu3.columns[1].unit = self.error.unit.to_string(format='fits')
+        hdu3.header['EXTNAME'] = "SEDS"
+
+        hdus = [hdu0, hdu1, hdu2, hdu3]
 
         # Create overall FITS file
-        hdulist = fits.HDUList([hdu0, hdu1, hdu2, hdu3])
-        hdulist.writeto(filename)
+        hdulist = fits.HDUList(hdus)
+        hdulist.writeto(filename, clobber=overwrite)
 
     def interpolate(self, apertures):
         """

@@ -35,9 +35,6 @@ class ConvolvedFluxes(object):
             if model_names is None:
                 raise ValueError("model_names is required when using initialize_arrays=True")
 
-            if apertures is None:
-                raise ValueError("apertures is required when using initialize_arrays=True")
-
             if flux is None:
                 self.flux = np.zeros((self.n_models, self.n_ap)) * initialize_units
             else:
@@ -237,17 +234,6 @@ class ConvolvedFluxes(object):
         else:
             conv.error = tc['TOTAL_FLUX_ERR'].data * tc['TOTAL_FLUX_ERR'].unit
 
-        # Read in 99% cumulative and 50% surface brightness radii
-        try:
-            if tc['RADIUS_SIGMA_50'].unit is None:
-                tc['RADIUS_SIGMA_50'].unit = u.au
-            if tc['RADIUS_CUMUL_99'].unit is None:
-                tc['RADIUS_CUMUL_99'].unit = u.au
-            conv.radius_sigma_50 = u.Quantity(tc['RADIUS_SIGMA_50'], unit=tc['RADIUS_SIGMA_50'].unit)
-            conv.radius_cumul_99 = u.Quantity(tc['RADIUS_CUMUL_99'], unit=tc['RADIUS_CUMUL_99'].unit)
-        except KeyError:
-            pass
-
         return conv
 
     def write(self, filename, overwrite=False):
@@ -271,12 +257,6 @@ class ConvolvedFluxes(object):
         tc['TOTAL_FLUX_ERR'] = self.error
 
         if self.apertures is not None:
-            radius_sigma_50 = self.find_radius_sigma(0.50)
-            tc['RADIUS_SIGMA_50'] = radius_sigma_50
-            radius_cumul_99 = self.find_radius_cumul(0.99)
-            tc['RADIUS_CUMUL_99'] = radius_cumul_99
-
-        if self.apertures is not None:
             ta = Table()
             ta['APERTURE'] = self.apertures
 
@@ -291,9 +271,6 @@ class ConvolvedFluxes(object):
         hdu1 = fits.BinTableHDU(np.array(tc), name='CONVOLVED FLUXES')
         hdu1.columns[1].unit = self.flux.unit.to_string(format='fits')
         hdu1.columns[2].unit = self.error.unit.to_string(format='fits')
-        if self.apertures is not None:
-            hdu1.columns[3].unit = radius_sigma_50.unit.to_string(format='fits')
-            hdu1.columns[4].unit = radius_cumul_99.unit.to_string(format='fits')
 
         # Apertures
         if self.apertures is not None:
@@ -355,13 +332,6 @@ class ConvolvedFluxes(object):
             c.flux = np.repeat(self.flux, len(c.apertures)).reshape(c.n_models, len(c.apertures))
             c.error = np.repeat(self.error, len(c.apertures)).reshape(c.n_models, len(c.apertures))
 
-        try:
-            # TODO: is this actually correct?!
-            c.radius_sigma_50 = self.radius_sigma_50[:]
-            c.radius_cumul_99 = self.radius_cumul_99[:]
-        except AttributeError:
-            pass
-
         return c
 
     def find_radius_cumul(self, fraction):
@@ -374,7 +344,7 @@ class ConvolvedFluxes(object):
             The fraction to use when determining the radius
         """
 
-        log.info("Calculating radii containing %g%s of the flux" % (fraction * 100., '%'))
+        log.debug("Calculating radii containing %g%s of the flux" % (fraction * 100., '%'))
 
         radius = np.zeros(self.n_models, dtype=self.flux.dtype) * u.au
 
@@ -415,7 +385,7 @@ class ConvolvedFluxes(object):
             The fraction to use when determining the radius
         """
 
-        log.info("Calculating %g%s peak surface brightness radii" % (fraction * 100., '%'))
+        log.debug("Calculating %g%s peak surface brightness radii" % (fraction * 100., '%'))
 
         sigma = np.zeros(self.flux.shape, dtype=self.flux.dtype)
         sigma[:, 0] = self.flux[:, 0] / self.apertures[0] ** 2
@@ -438,3 +408,20 @@ class ConvolvedFluxes(object):
         radius[calc] = self.apertures[-1]
 
         return radius
+
+
+class MonochromaticFluxes(ConvolvedFluxes):
+
+    @classmethod
+    def from_sed_cube(cls, cube, wavelength_index):
+
+        conv = cls()
+
+        conv.central_wavelength = cube.wav[wavelength_index]
+        conv.apertures = cube.apertures
+        conv.model_names = cube.names
+
+        conv.flux = cube.val[:, wavelength_index, :].transpose()
+        conv.error = cube.unc[:, wavelength_index, :].transpose()
+
+        return conv

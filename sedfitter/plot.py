@@ -18,6 +18,8 @@ from __future__ import print_function, division
 # Optimization:
 # - Compute interpolating functions as little as possible
 
+import os
+
 import numpy as np
 from astropy import units as u
 
@@ -30,6 +32,7 @@ from . import six
 from .extinction import Extinction
 from .fit_info import FitInfo, FitInfoFile
 from .sed import SED
+from .sed.cube import SEDCube
 from .utils import io
 from .utils import parfile
 from .utils.formatter import LogFormatterMathtextAuto
@@ -175,7 +178,7 @@ def get_axes(fig):
 def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
-         plot_name=True, plot_info=True, format='pdf'):
+         plot_name=True, plot_info=True, format='pdf', sources=None, memmap=True):
     """
     Make SED plots
 
@@ -229,6 +232,9 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
         Whether to show the fit information on the plot(s).
     format : str, optional
         The file format to use for the plot, if output_dir is specified.
+    sources : list, optional
+        If specified, gives the list of sources to plot. If not set, all
+        sources will be plotted
     """
 
     if output_dir:
@@ -246,8 +252,20 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
 
     # Read in model parameters
     modpar = parfile.read("%s/models.conf" % fin.meta.model_dir, 'conf')
+    if not 'version' in modpar:
+        modpar['version'] = 1
+
+    model_dir = None
+    sed_cube = None
 
     for info in fin:
+
+        if sources is not None and info.source.name not in sources:
+            continue
+
+        if modpar['version'] == 2 and model_dir != info.meta.model_dir:
+            sed_cube = SEDCube.read(os.path.join(info.meta.model_dir, 'flux.fits'), memmap=memmap)
+            model_dir = info.meta.model_dir
 
         # Filter fits
         info.keep(select_format[0], select_format[1])
@@ -258,11 +276,10 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
         if show_convolved and info.model_fluxes is None:
             raise Exception("Cannot plot convolved fluxes as these are not included in the input file")
 
-        for i in range(info.n_fits - 1, -1, -1):
+        if info.n_fits == 0 and output_dir is None:
+            figures[info.source.name] = {'source': info.source, 'filters': info.meta.filters}
 
-            if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
-                fig = plt.figure()
-                ax = get_axes(fig)
+        for i in range(info.n_fits - 1, -1, -1):
 
             # Initalize lines and colors list
             if (plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I':
@@ -282,10 +299,16 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
                 else:
                     color_type = 'faded'
 
-            if modpar['length_subdir'] == 0:
-                s = SED.read(info.meta.model_dir + '/seds/' + info.model_name[i] + '_sed.fits')
-            else:
-                s = SED.read(info.meta.model_dir + '/seds/%s/%s_sed.fits' % (info.model_name[i][:modpar['length_subdir']], info.model_name[i]))
+            if modpar['version'] == 1:
+                if modpar['length_subdir'] == 0:
+                    s = SED.read(info.meta.model_dir + '/seds/' + info.model_name[i] + '_sed.fits')
+                else:
+                    s = SED.read(info.meta.model_dir + '/seds/%s/%s_sed.fits' % (info.model_name[i][:modpar['length_subdir']], info.model_name[i]))
+            elif modpar['version'] == 2:
+                s = sed_cube.get_sed(info.model_name[i])
+
+            # Convert to ergs/cm^2/s
+            s.flux = s.flux.to(u.erg / u.cm**2 / u.s, equivalencies=u.spectral_density(s.nu))
 
             s = s.scale_to_distance(10. ** info.sc[i] * KPC)
             s = s.scale_to_av(info.av[i], info.meta.extinction_law.get_av)
@@ -314,34 +337,41 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
             if show_convolved:
                 conv.append(10. ** (info.model_fluxes[i, :] - 26. + np.log10(3.e8 / (wav * 1.e-6))))
 
+            if output_dir and ((plot_mode == 'A' and i == info.n_fits - 1) or plot_mode == 'I'):
+                fig = plt.figure()
+                ax = get_axes(fig)
+
             if (plot_mode == 'A' and i == 0) or plot_mode == 'I':
 
-                if show_sed:
-                    ax.add_collection(LineCollection(lines, colors=colors))
-
-                if show_convolved:
-                    for j in range(len(conv)):
-                        ax.plot(wav, conv[j], color=colors[j], linestyle='solid', marker='o', markerfacecolor='none', markeredgecolor=colors[j])
-
-                ax = plot_source_data(ax, info.source, info.meta.filters)
-
-                if plot_mode == 'A':
-                    ax = plot_source_info(ax, 0, info, plot_name, plot_info)
-                else:
-                    ax = plot_source_info(ax, i, info, plot_name, plot_info)
-
-                ax.set_xlabel('$\lambda$ ($\mu$m)')
-                ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
-
-                ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
-
                 if output_dir:
+
+                    if show_sed:
+                        ax.add_collection(LineCollection(lines, colors=colors))
+
+                    if show_convolved:
+                        for j in range(len(conv)):
+                            ax.plot(wav, conv[j], color=colors[j], linestyle='solid', marker='o', markerfacecolor='none', markeredgecolor=colors[j])
+
+                    ax = plot_source_data(ax, info.source, info.meta.filters)
+
+                    if plot_mode == 'A':
+                        ax = plot_source_info(ax, 0, info, plot_name, plot_info)
+                    else:
+                        ax = plot_source_info(ax, i, info, plot_name, plot_info)
+
+                    ax.set_xlabel('$\lambda$ ($\mu$m)')
+                    ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
+
+                    ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
+
                     if plot_mode == 'A':
                         filename = "%s/%s.%s" % (output_dir, info.source.name, format)
                     else:
                         filename = "%s/%s_%05i.%s" % (output_dir, info.source.name, i + 1, format)
+
                     fig.savefig(filename, bbox_inches='tight')
                     plt.close(fig)
+
                 else:
                     figures[info.source.name] = {'source': info.source, 'filters': info.meta.filters, 'lines': LineCollection(lines, colors=colors)}
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from ez_setup import use_setuptools
+use_setuptools()
+
 from setuptools import setup, Command
 
 from distutils.command.build_py import build_py
@@ -40,7 +43,7 @@ class SEDFitterTest(Command):
         raise SystemExit(errno)
 
 setup(name='sedfitter',
-      version='0.9.2.dev',
+      version='0.9.3.dev',
       description='SED Fitter in Python',
       author='Thomas Robitaille',
       author_email='thomas.robitaille@gmail.com',
@@ -67,4 +70,3 @@ setup(name='sedfitter',
       cmdclass={'build_py': build_py, 'test':SEDFitterTest},
       keywords=['Scientific/Engineering'],
      )
-

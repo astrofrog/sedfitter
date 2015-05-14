@@ -80,6 +80,10 @@ The following is a complete example showing how to use the
         distance_range=[1., 2.] * u.kpc,
         av_range=[0., 40.])
 
+.. note:: in the filter list, you can also specify wavelengths as Astropy
+          :class:`~astropy.units.Quantity` instances. If you do this, the SED
+          wavelength closest to that specified will be used in the fitting.
+
 .. note:: if you do not specify the columns and units when reading in the
           extinction, the first two columns are read and are assumed to be in
           c.g.s.. If you have previously used the Fortran version of the SED

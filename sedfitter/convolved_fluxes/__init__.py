@@ -1,1 +1,1 @@
-from .convolved_fluxes import ConvolvedFluxes
+from .convolved_fluxes import ConvolvedFluxes, MonochromaticFluxes

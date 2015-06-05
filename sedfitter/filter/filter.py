@@ -81,7 +81,7 @@ class Filter(object):
             raise ValueError("nu has not been set")
         if self.response is None:
             raise ValueError("response has not been set")
-        self.response /= integrate(self.nu.to(u.Hz).value, self.response)
+        self.response = self.response / np.abs(integrate(self.nu.to(u.Hz).value, self.response))
 
     def rebin(self, nu_new):
         """

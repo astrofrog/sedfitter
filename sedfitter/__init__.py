@@ -15,3 +15,6 @@ from . import filter
 from . import utils
 
 __version__ = '0.9.3.dev'
+
+from .plot_helpers import set_rc_params
+set_rc_params()

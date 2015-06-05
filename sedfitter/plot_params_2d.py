@@ -18,18 +18,10 @@ from .extinction import Extinction
 from .models import load_parameter_table
 from .utils import io
 from .utils.formatter import LogFormatterMathtextAuto
+from .plot_helpers import tex_friendly
 
 KERNEL = Tophat2DKernel(5.5, x_size=11, y_size=11, mode='oversample').array
 KERNEL /= KERNEL.max()  # normalize so maximum is 1
-
-plt.rc('text', usetex=False)
-plt.rc('axes', titlesize='small')
-plt.rc('axes', labelsize='small')
-plt.rc('xtick', labelsize='x-small')
-plt.rc('ytick', labelsize='x-small')
-plt.rc('font', family='serif')
-plt.rc('axes', linewidth=0.5)
-plt.rc('patch', linewidth=0.5)
 
 fp = FontProperties(size='small')
 
@@ -199,7 +191,7 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         pfits = ax.scatter(tsorted[parameter_x], tsorted[parameter_y], c='black', s=10)
 
         if plot_name:
-            source_label = ax.text(0.5, 0.95, info.source.name,
+            source_label = ax.text(0.5, 0.95, tex_friendly(info.source.name),
                                    horizontalalignment='center',
                                    verticalalignment='center',
                                    transform=ax.transAxes,

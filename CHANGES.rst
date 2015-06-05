@@ -1,7 +1,7 @@
-0.9.4 (unreleased)
+0.9.4 (2015-06-05)
 ------------------
 
-- No changes yet.
+- Added missing ez_setup.py file.
 
 0.9.3 (2015-06-05)
 ------------------

@@ -1,7 +1,10 @@
-0.9.3 (unreleased)
+0.9.3 (2015-06-05)
 ------------------
 
-- No changes yet
+- Fixed a bug with filter normalization if filter was given in increasing
+  wavelength. [#26]
+
+- Fixed plotting of source names when using Latex. [#25]
 
 0.9.2 (2014-12-01)
 ------------------

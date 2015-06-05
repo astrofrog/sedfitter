@@ -36,17 +36,9 @@ from .sed.cube import SEDCube
 from .utils import io
 from .utils import parfile
 from .utils.formatter import LogFormatterMathtextAuto
+from .plot_helpers import tex_friendly
 
 KPC = 3.086e21
-
-plt.rc('text', usetex=True)
-plt.rc('axes', titlesize='small')
-plt.rc('axes', labelsize='small')
-plt.rc('xtick', labelsize='x-small')
-plt.rc('ytick', labelsize='x-small')
-plt.rc('font', family='serif')
-plt.rc('axes', linewidth=0.5)
-plt.rc('patch', linewidth=0.5)
 
 fp = FontProperties(size='x-small')
 
@@ -80,11 +72,6 @@ color['faded'].append((1.00, 0.70, 0.80))
 color['faded'].append((0.90, 0.80, 0.70))
 color['faded'].append((0.90, 0.90, 0.70))
 color['faded'].append((0.50, 0.90, 0.50))
-
-
-def tex_friendly(string):
-    return string
-    # return string.replace('_', '\_').replace('%', '\%')
 
 
 def plot_source_info(ax, i, info, plot_name, plot_info):

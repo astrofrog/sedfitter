@@ -52,3 +52,27 @@ def test_read(filename):
         assert len(f.nu) == 391
     else:
         assert len(f.nu) == 21
+        
+        
+def test_norm():
+    f = Filter()
+    f.nu = [1.,2.,3.] * u.Hz
+    f.response = [1.,2.,1.]
+    f.normalize()
+    np.testing.assert_allclose(f.response,[1/3., 2./3., 1./3.])
+
+    
+def test_norm_int():
+    f = Filter()
+    f.nu = [1,2,3] * u.Hz
+    f.response = [1,2,1]
+    f.normalize()
+    np.testing.assert_allclose(f.response,[1/3., 2./3., 1./3.])
+    
+    
+def test_norm_inverted():
+    f = Filter()
+    f.nu = [3.,2.,1.] * u.Hz
+    f.response = [1.,2.,1.]
+    f.normalize()
+    np.testing.assert_allclose(f.response,[1/3., 2./3., 1./3.])

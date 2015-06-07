@@ -83,8 +83,8 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
 
     # Figure out range of wavelength indices to use
     # (wavelengths array is sorted in reverse order)
-    jlo = n_wav - wavelengths[::-1].searchsorted(wav_max)
-    jhi = n_wav - wavelengths[::-1].searchsorted(wav_min)
+    jlo = n_wav - 1 - (wavelengths[::-1].searchsorted(wav_max) - 1)
+    jhi = n_wav - 1 - wavelengths[::-1].searchsorted(wav_min)
     chunk_size = min(chunk_size, jhi - jlo + 1)
 
     # Loop over wavelength chunks

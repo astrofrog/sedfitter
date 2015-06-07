@@ -1,4 +1,4 @@
-0.9.5 (unreleased)
+0.9.5 (2015-06-07)
 ------------------
 
 - Fixed calculation of indices for monochromatic 'convolution'.

@@ -41,7 +41,7 @@ def test_source_position_invalid(value):
     assert exc.value.args[0] == "y should be a scalar floating point value"
 
 
-@pytest.mark.parametrize('value', [[1, 0, 1, 1, 2], (0, 1, 2, 3, 4), np.array([1., 2., 3.])])
+@pytest.mark.parametrize('value', [[1, 0, 1, 1, 2, 9], (0, 1, 2, 3, 4), np.array([1., 2., 3.])])
 def test_source_valid(value):
     s = Source()
     s.valid = value
@@ -66,7 +66,7 @@ def test_source_valid_range():
     s = Source()
     with pytest.raises(ValueError) as exc:
         s.valid = [-1, 2, 3]
-    assert exc.value.args[0] == "valid values should be in the range [0,4]"
+    assert exc.value.args[0] == "valid values should be in the range [0:4] or set to 9"
 
 
 @pytest.mark.parametrize(('attribute', 'value'), list(zip(['flux', 'error'], [[1., 2., 3., 4., 5], (1, 2, 3), np.array([1, 2, 3, 4])])))

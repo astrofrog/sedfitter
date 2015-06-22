@@ -106,8 +106,8 @@ class Source(object):
             else:
                 if np.any(value.astype(int) != value):
                     raise ValueError("valid values should be integers")
-                elif np.any(value < 0) or np.any(value > 4):
-                    raise ValueError("valid values should be in the range [0,4]")
+                elif np.any((value < 0) | ((value > 4) & (value != 9))):
+                    raise ValueError("valid values should be in the range [0:4] or set to 9")
                 else:
                     self._valid = value
         else:

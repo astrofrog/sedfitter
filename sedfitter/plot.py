@@ -165,7 +165,7 @@ def get_axes(fig):
 def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
-         plot_name=True, plot_info=True, format='pdf', sources=None, memmap=True):
+         plot_name=True, plot_info=True, format='pdf', sources=None, memmap=True, dpi=None):
     """
     Make SED plots
 
@@ -222,6 +222,8 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
     sources : list, optional
         If specified, gives the list of sources to plot. If not set, all
         sources will be plotted
+    dpi : int, optional
+        The resolution of the figure to save
     """
 
     if output_dir:
@@ -356,7 +358,7 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
                     else:
                         filename = "%s/%s_%05i.%s" % (output_dir, info.source.name, i + 1, format)
 
-                    fig.savefig(filename, bbox_inches='tight')
+                    fig.savefig(filename, bbox_inches='tight', dpi=dpi)
                     plt.close(fig)
 
                 else:

@@ -10,6 +10,8 @@ from .fit_info import FitInfo, FitInfoFile
 from .extinction import Extinction
 from .models import load_parameter_table
 
+NODATA = '-'.center(10)
+
 
 def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}):
     """
@@ -103,14 +105,22 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
         fout.write("%10i " % info.source.n_data)
         fout.write("%10i " % info.n_fits)
 
-        fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.chi2), info.chi2[0], np.nanmax(info.chi2)))
-        fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.av), info.av[0], np.nanmax(info.av)))
-        fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.sc), info.sc[0], np.nanmax(info.sc)))
+        if len(info.chi2) == 0:
+            fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
+            fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
+            fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
+        else:
+            fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.chi2), info.chi2[0], np.nanmax(info.chi2)))
+            fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.av), info.av[0], np.nanmax(info.av)))
+            fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.sc), info.sc[0], np.nanmax(info.sc)))
 
         for par in tsorted.columns:
             if par == 'MODEL_NAME':
                 continue
-            fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(tsorted[par]), tsorted[par][0], np.nanmax(tsorted[par])))
+            if len(info.chi2) == 0:
+                fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
+            else:
+                fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(tsorted[par]), tsorted[par][0], np.nanmax(tsorted[par])))
 
         fout.write('\n')
 

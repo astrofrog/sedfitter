@@ -113,5 +113,5 @@ def test_extinction_numpy_io(tmpdir):
 
     e2 = Extinction.from_file(filename)
 
-    assert_allclose(wav, e2.wav)
-    assert_allclose(chi, e2.chi)
+    assert_allclose(wav, e2.wav.to(u.micron).value)
+    assert_allclose(chi, e2.chi.to(u.cm**2 / u.g).value)

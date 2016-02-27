@@ -131,7 +131,9 @@ class FitInfo(object):
 
     def keep(self, form, number):
 
-        if form == 'A':
+        if len(self.chi2) == 0:
+            n_fits = 0
+        elif form == 'A':
             n_fits = len(self.chi2)
         elif form == 'N' or not form:  # Form N is parsed as boolean
             n_fits = int(number)

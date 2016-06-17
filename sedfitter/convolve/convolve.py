@@ -153,8 +153,8 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
     # Loop over apertures
     for i_ap in ProgressBar(range(sed_cube.n_ap)):
 
-        sed_val = sed_cube.val[i_ap].transpose()
-        sed_unc = sed_cube.val[i_ap].transpose()
+        sed_val = sed_cube.val[:, i_ap, :]
+        sed_unc = sed_cube.val[:, i_ap, :]
 
         for i, f in enumerate(binned_filters):
 

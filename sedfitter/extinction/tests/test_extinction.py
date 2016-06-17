@@ -1,14 +1,11 @@
 import pytest
 import numpy as np
-from numpy.testing import assert_allclose
 
+from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
 
 from .. import Extinction
 
-
-def assert_allclose_quantity(q1, q2):
-    np.testing.assert_allclose(q1.value, q2.to(q1.unit).value)
 
 
 def test_extinction_init():
@@ -99,8 +96,8 @@ def test_extinction_table():
 
     e2 = Extinction.from_table(table)
 
-    assert_allclose_quantity(e.wav, e2.wav)
-    assert_allclose_quantity(e.chi, e2.chi)
+    assert_quantity_allclose(e.wav, e2.wav)
+    assert_quantity_allclose(e.chi, e2.chi)
 
 
 def test_extinction_numpy_io(tmpdir):

@@ -19,8 +19,8 @@ def test_roundrip(tmpdir):
 
     s.distance = 1. * u.kpc
 
-    s.val = np.random.random((n_ap, n_wav, n_models)) * u.mJy
-    s.unc = np.random.random((n_ap, n_wav, n_models)) * u.mJy
+    s.val = np.random.random((n_models, n_ap, n_wav)) * u.mJy
+    s.unc = np.random.random((n_models, n_ap, n_wav)) * u.mJy
 
     temp_file = tmpdir.join('test_roundtrip_sedcube').strpath
 
@@ -44,7 +44,7 @@ def test_roundrip_missing_optional(tmpdir):
 
     s.distance = 1. * u.kpc
 
-    s.val = np.random.random((1, n_wav, n_models)) * u.mJy
+    s.val = np.random.random((n_models, 1, n_wav)) * u.mJy
 
     temp_file = tmpdir.join('test_roundtrip_sedcube').strpath
 

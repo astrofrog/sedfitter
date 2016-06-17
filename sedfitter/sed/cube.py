@@ -203,7 +203,7 @@ class BaseCube(object):
             self._val = value
         else:
             self._val = validate_array('val', value, ndim=3,
-                                       shape=(self.n_ap, self.n_wav, self.n_models),
+                                       shape=(self.n_models, self.n_ap, self.n_wav),
                                        physical_type=self._physical_type)
 
     @property
@@ -219,7 +219,7 @@ class BaseCube(object):
             self._unc = value
         else:
             self._unc = validate_array('unc', value, ndim=3,
-                                       shape=(self.n_ap, self.n_wav, self.n_models),
+                                       shape=(self.n_models, self.n_ap, self.n_wav),
                                        physical_type=self._physical_type)
 
     @property
@@ -403,8 +403,8 @@ class SEDCube(BaseCube):
         sed.wav = self.wav
         sed.nu = self.nu
         sed.apertures = self.apertures
-        sed.flux = self.val[:,:,sed_index]
-        sed.error = self.unc[:,:,sed_index]
+        sed.flux = self.val[sed_index, :,:]
+        sed.error = self.unc[sed_index, :,:]
         return sed
 
 

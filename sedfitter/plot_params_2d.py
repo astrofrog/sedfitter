@@ -37,7 +37,7 @@ def get_axes(fig, label=None, zorder=None):
 def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True, bounds=None,
                    label_x=None, label_y=None, additional=None, plot_name=True,
-                   format='pdf'):
+                   format='pdf', dpi=None):
     """
     Make histogram plots of parameters
 
@@ -73,7 +73,8 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         Whether to show the source name on the plot(s).
     format: str, optional
         The file format to use for the plot, if output_dir is specified.
-
+    dpi : int, optional 
+        The resolution of the figure to save
     """
 
     npix = 1024
@@ -198,7 +199,7 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
                                    fontproperties=fp, zorder=200)
         # Save to file
         filename = "%s/%s.%s" % (output_dir, info.source.name, format)
-        fig.savefig(filename, bbox_inches='tight', facecolor='none', dpi=300)
+        fig.savefig(filename, bbox_inches='tight', facecolor='none', dpi=dpi)
 
     # Close input and output files
     fin.close()

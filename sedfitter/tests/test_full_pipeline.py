@@ -85,10 +85,10 @@ def generate_random_models_2(models_dir, aperture_dependent=False):
 
     if aperture_dependent:
         cube.apertures = np.logspace(1., 6., 10) * u.au
-        cube.val = np.cumsum(np.random.random((10, 100, 5)), axis=0) * u.mJy
+        cube.val = np.cumsum(np.random.random((5, 10, 100)), axis=0) * u.mJy
     else:
         cube.apertures = None
-        cube.val = (1 + np.random.random((1, 100, 5))) * u.mJy
+        cube.val = (1 + np.random.random((5, 1, 100))) * u.mJy
 
     cube.unc = cube.val * 0.01 * np.random.random(cube.val.shape)
 

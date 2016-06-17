@@ -421,7 +421,7 @@ class MonochromaticFluxes(ConvolvedFluxes):
         conv.apertures = cube.apertures
         conv.model_names = cube.names
 
-        conv.flux = cube.val[:, wavelength_index, :].transpose()
-        conv.error = cube.unc[:, wavelength_index, :].transpose()
+        conv.flux = cube.val[:, :, wavelength_index]
+        conv.error = cube.unc[:, :, wavelength_index]
 
         return conv

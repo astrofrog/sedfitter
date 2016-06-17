@@ -32,8 +32,8 @@ def get_axes(fig):
 
 def plot_params_1d(input_fits, parameter, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
-                   label=None, bins=30, additional={}, plot_name=True,
-                   format='pdf'):
+                   label=None, bins=30, hist_range=None, additional={}, plot_name=True,
+                   format='pdf', dpi=None):
     """
     Make histogram plots of parameters
 
@@ -58,6 +58,8 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
         The x-axis label (if not specified, the parameter name is used)
     bins : int, optional
         The number of bins for the histogram
+    hist_range : tuple, optional
+        The range of values to show
     additional : dict, optional
         A dictionary specifying additional parameters not listed in the
         parameter list for the models. Each item of the dictionary should
@@ -67,7 +69,8 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
         Whether to show the source name on the plot(s).
     format: str, optional
         The file format to use for the plot, if output_dir is specified.
-
+    dpi : int, optional 
+        The resolution of the figure to save
     """
 
     if output_dir is None:
@@ -93,7 +96,10 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
     ax = get_axes(fig)
 
     # Find range of values
-    pmin, pmax = tpos[parameter].min(), tpos[parameter].max()
+    if hist_range is None:
+        pmin, pmax = tpos[parameter].min(), tpos[parameter].max()
+    else:
+        pmin, pmax = hist_range
 
     # Compute histogram
     if log_x:
@@ -171,7 +177,7 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
 
         # Save to file
         filename = "%s/%s.%s" % (output_dir, info.source.name, format)
-        fig.savefig(filename, bbox_inches='tight')
+        fig.savefig(filename, bbox_inches='tight', dpi=dpi)
         plt.close(fig)
 
     # Close input and output files

@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 
 from astropy.tests.helper import assert_quantity_allclose
 from astropy import units as u
@@ -9,7 +10,7 @@ from .. import Extinction
 
 
 def test_extinction_init():
-    e = Extinction()
+    Extinction()
 
 
 @pytest.mark.parametrize('value', [[1, 0, 1, 1, 2], (0, 1, 2, 3, 4), np.array([1., 2., 3.])])

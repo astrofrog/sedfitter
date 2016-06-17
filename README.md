@@ -15,6 +15,5 @@ The documentation is available at http://sedfitter.readthedocs.org
 Status
 ------
 
-[![Build Status](https://travis-ci.org/astrofrog/sedfitter.png?branch=refactor-non-affiliated)](https://travis-ci.org/astrofrog/sedfitter)
-
-[![Coverage Status](https://coveralls.io/repos/astrofrog/sedfitter/badge.png)](https://coveralls.io/r/astrofrog/sedfitter)
+[![Build Status](https://travis-ci.org/astrofrog/sedfitter.svg?branch=master)](https://travis-ci.org/astrofrog/sedfitter)
+[![Coverage Status](https://coveralls.io/repos/astrofrog/sedfitter/badge.svg)](https://coveralls.io/r/astrofrog/sedfitter)

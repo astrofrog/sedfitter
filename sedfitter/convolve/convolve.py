@@ -16,7 +16,7 @@ from .. import six
 from ..utils import parfile
 
 
-def convolve_model_dir(model_dir, filters, overwrite=False):
+def convolve_model_dir(model_dir, filters, overwrite=False, memmap=True):
     """
     Convolve all the model SEDs in a model directory
 
@@ -29,12 +29,18 @@ def convolve_model_dir(model_dir, filters, overwrite=False):
         convolution
     overwrite : bool, optional
         Whether to overwrite the output files
+    memmap : bool, optional
+        Whether to use memory mapping when using the SED cubes. If you have
+        enough memory, the convolution will be much faster to set this to
+        False, since the whole cube will need to be read in, so it's faster to
+        do it in one go than many small reads. This option is ignored if
+        not using SED cubes.
     """
     modpar = parfile.read(os.path.join(model_dir, 'models.conf'), 'conf')
     if modpar.get('version', 1) == 1:
         return _convolve_model_dir_1(model_dir, filters, overwrite=overwrite)
     else:
-        return _convolve_model_dir_2(model_dir, filters, overwrite=overwrite)
+        return _convolve_model_dir_2(model_dir, filters, overwrite=overwrite, memmap=memmap)
 
 
 def _convolve_model_dir_1(model_dir, filters, overwrite=False):
@@ -116,7 +122,7 @@ def _convolve_model_dir_1(model_dir, filters, overwrite=False):
                         overwrite=overwrite)
 
 
-def _convolve_model_dir_2(model_dir, filters, overwrite=False):
+def _convolve_model_dir_2(model_dir, filters, overwrite=False, memmap=True):
 
     for f in filters:
         if f.name is None:
@@ -129,7 +135,8 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False):
         os.mkdir(model_dir + '/convolved')
 
     # Find all SED files to convolve
-    sed_cube = SEDCube.read(os.path.join(model_dir, 'flux.fits'), order='nu')
+    sed_cube = SEDCube.read(os.path.join(model_dir, 'flux.fits'), order='nu',
+                            memmap=memmap)
 
     par_table = load_parameter_table(model_dir)
 

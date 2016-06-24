@@ -28,7 +28,7 @@ import sys, os
 extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
-              'astropy.sphinx.ext.numpydoc',
+              'astropy_helpers.sphinx.ext.numpydoc',
               'sphinx.ext.pngmath']
 
 autosummary_generate = True

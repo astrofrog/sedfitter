@@ -1,5 +1,6 @@
 numpy
 scipy
 Cython
+astropy-helpers
 astropy
 matplotlib

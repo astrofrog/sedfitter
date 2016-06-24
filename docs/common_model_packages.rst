@@ -46,9 +46,9 @@ These are models that were published in `Robitaille et al. (2006)
 .. note:: the default ``parameters.fits`` file contained in the above model
           package does not include the envelope mass. If you are interested
           in this parameter, you will need to download
-          `this <ftp://ftp.astro.wisc.edu/outgoing/tom/model_packages/parameters.fits>`_
-          file then put it inside the ``models_r06`` directory and make sure
-          it is named ``parameters.fits``.
+          `this <ftp://ftp.astro.wisc.edu/outgoing/tom/model_packages/parameters.fits.gz>`_
+          file, decompress it, then put it inside the ``models_r06``
+          directory and make sure it is named ``parameters.fits``.
 
 Castelli & Kurucz (2004) stellar photosphere models
 ===================================================

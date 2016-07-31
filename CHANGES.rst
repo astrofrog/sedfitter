@@ -1,7 +1,22 @@
 0.9.6 (unreleased)
 ------------------
 
-- No changes yet.
+- A valid flag of '9' can now be used to denote a flux that should be plotted
+  but not fit. [#32]
+
+- Fix issues that occurred if no valid fits were present for a given source.
+  [#38]
+
+- Switch the order of the dimensions in SED flux cubes to optimize performance.
+  This means that this version of the SED fitter will be incompatible with flux
+  cubes generated with earlier versions, but will result in significant
+  performance improvements when plotting SEDs. [#44]
+
+- Add a ``memmap`` option to ``convolve_model_dir`` that controls whether
+  memory mapping is used to read the flux cubes (in the case where SEDs are
+  stored in cubes rather than individual files). If the cubes can fit in
+  memory, the convolution is much faster if the memory mapping is explicitly
+  turned off.
 
 0.9.5 (2015-06-07)
 ------------------

@@ -1,4 +1,4 @@
-0.9.6 (unreleased)
+0.9.6 (2016-07-31)
 ------------------
 
 - A valid flag of '9' can now be used to denote a flux that should be plotted

@@ -1,14 +1,11 @@
 from __future__ import print_function, division
 
-import os
-
-from astropy.table import Table
 import numpy as np
 
-from . import six
-from .fit_info import FitInfo, FitInfoFile
-from .extinction import Extinction
+from .fit_info import FitInfoFile
 from .models import load_parameter_table
+
+__all__ = ['extract_parameters']
 
 
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,

@@ -15,6 +15,8 @@ from ..models import load_parameter_table
 from .. import six
 from ..utils import parfile
 
+__all__ = ['convolve_model_dir_monochromatic', ]
+
 
 def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
                                      wav_min=-np.inf * u.micron, wav_max=np.inf * u.micron):

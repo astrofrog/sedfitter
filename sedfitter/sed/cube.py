@@ -10,7 +10,7 @@ from ..utils.validator import validate_scalar, validate_array
 
 from .helpers import parse_unit_safe, table_to_hdu, assert_allclose_quantity
 
-__all__ = ['SEDCube', 'PolarizationCube']
+__all__ = ['BaseCube', 'SEDCube', 'PolarizationCube']
 
 
 @six.add_metaclass(abc.ABCMeta)

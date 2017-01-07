@@ -26,17 +26,16 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
-import matplotlib.ticker as ticker
 
-from . import six
-from .extinction import Extinction
-from .fit_info import FitInfo, FitInfoFile
+from .fit_info import FitInfoFile
 from .sed import SED
 from .sed.cube import SEDCube
 from .utils import io
 from .utils import parfile
 from .utils.formatter import LogFormatterMathtextAuto
 from .plot_helpers import tex_friendly
+
+__all__ = ['plot_source_data', 'plot']
 
 KPC = 3.086e21
 

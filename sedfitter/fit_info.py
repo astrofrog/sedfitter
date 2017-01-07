@@ -106,6 +106,9 @@ class FitInfoMeta(object):
 
 
 class FitInfo(object):
+    """
+    Results from a fit of a set of models to a source.
+    """
 
     def __init__(self, source=None):
 
@@ -119,6 +122,9 @@ class FitInfo(object):
         self.meta = FitInfoMeta()
 
     def sort(self):
+        """
+        Sort the fit results from best to worst based on the chi^2 value.
+        """
 
         order = np.argsort(self.chi2)
         self.av = self.av[order]
@@ -129,7 +135,18 @@ class FitInfo(object):
             self.model_fluxes = self.model_fluxes[order, :]
         self.model_id = order
 
-    def keep(self, form, number):
+    def keep(self, select_format):
+        """
+        Keep only a fraction of fits.
+
+        Parameters
+        ----------
+        select_format : tuple, optional
+            Tuple specifying which fits should be output. See the documentation
+            for a description of the tuple syntax.
+        """
+
+        form, number = select_format
 
         if len(self.chi2) == 0:
             n_fits = 0
@@ -185,7 +202,17 @@ class FitInfo(object):
 
     def filter_table(self, input_table, additional={}):
         """
-        Given an input table, return only the rows matching the FitInfo object, and in the same order.
+        Given an input table, return only the rows matching the FitInfo object,
+        and in the same order.
+
+        Parameters
+        ----------
+        input_table : `~astropy.table.Table`
+            The input table to filter and sort
+        additional : dict, optional
+            Additional columns to include in the table. This can be specified
+            as a dictionary of Numpy arrays, where the key of the dictionary
+            is the name of the column to add to the table.
         """
 
         if not "MODEL_NAME" in input_table.dtype.names:

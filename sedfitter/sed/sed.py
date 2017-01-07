@@ -11,7 +11,9 @@ from astropy import units as u
 
 from ..utils.validator import validate_array
 
-from .helpers import parse_unit_safe, table_to_hdu, assert_allclose_quantity, convert_flux
+from .helpers import parse_unit_safe, assert_allclose_quantity, convert_flux
+
+__all__ = ['SED']
 
 
 class SED(object):

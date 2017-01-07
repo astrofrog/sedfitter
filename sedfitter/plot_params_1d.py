@@ -1,23 +1,20 @@
 from __future__ import print_function, division
 
-import os
 from copy import deepcopy
 
-from astropy.table import Table
 import numpy as np
 
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Polygon
-from matplotlib.ticker import LogFormatterMathtext
 
-from . import six
-from .fit_info import FitInfo, FitInfoFile
-from .extinction import Extinction
+from .fit_info import FitInfoFile
 from .models import load_parameter_table
 from .utils import io
 from .utils.formatter import LogFormatterMathtextAuto
 from .plot_helpers import tex_friendly
+
+__all__ = ['plot_params_1d']
 
 fp = FontProperties(size='small')
 
@@ -69,7 +66,7 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
         Whether to show the source name on the plot(s).
     format: str, optional
         The file format to use for the plot, if output_dir is specified.
-    dpi : int, optional 
+    dpi : int, optional
         The resolution of the figure to save
     """
 

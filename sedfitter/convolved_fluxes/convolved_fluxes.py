@@ -7,11 +7,14 @@ from scipy.interpolate import interp1d
 
 from astropy.logger import log
 from astropy import units as u
-from astropy.utils.misc import isiterable
+from astropy.io import fits
+from astropy.table import Table
 
 from ..utils.validator import validate_scalar, validate_array
 
 # TODO: get rid of use of interp1d
+
+__all__ = ['ConvolvedFluxes', 'MonochromaticFluxes']
 
 
 def is_numpy_array(variable):
@@ -185,9 +188,6 @@ class ConvolvedFluxes(object):
             The name of the FITS file to read the convolved fluxes from
         """
 
-        from astropy.io import fits
-        from astropy.table import Table
-
         conv = cls()
 
         # Open the convolved flux FITS file
@@ -247,9 +247,6 @@ class ConvolvedFluxes(object):
         overwrite: bool, optional
             Whether to overwrite the output file
         """
-
-        from astropy.io import fits
-        from astropy.table import Table, Column
 
         tc = Table()
         tc['MODEL_NAME'] = self.model_names.astype('S30')

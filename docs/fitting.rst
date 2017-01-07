@@ -5,7 +5,7 @@ Typical workflow
 ----------------
 
 Once the data has been prepared following the description in :doc:`data`, and
-that you have a set of models in the format described in :doc:`model_packages`
+that you have a set of models in the format described in :doc:`creating_model_packages`
 the typical workflow to follow when using the SED fitting tool is:
 
 * Fit a given set of models to the data

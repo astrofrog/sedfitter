@@ -239,7 +239,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
             if not output_convolved:
                 info.model_fluxes = None
 
-            info.keep(output_format[0], output_format[1])
+            info.keep(output_format)
 
             fout.write(info)
 

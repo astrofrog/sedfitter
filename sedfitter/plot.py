@@ -256,10 +256,10 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
             model_dir = info.meta.model_dir
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         if plot_max:
-            info.keep('N', plot_max)
+            info.keep(('N', plot_max))
 
         if show_convolved and info.model_fluxes is None:
             raise Exception("Cannot plot convolved fluxes as these are not included in the input file")

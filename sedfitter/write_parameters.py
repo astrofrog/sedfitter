@@ -67,7 +67,7 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
     for info in fin:
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t, additional=additional)

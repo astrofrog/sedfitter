@@ -144,7 +144,7 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
             source_label.remove()
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t, additional=additional)

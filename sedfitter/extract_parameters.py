@@ -29,7 +29,7 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     for info in fin:
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         output = ""
         if output_prefix:

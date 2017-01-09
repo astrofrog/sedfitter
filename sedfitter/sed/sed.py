@@ -337,7 +337,28 @@ class SED(object):
 
         # Create overall FITS file
         hdulist = fits.HDUList(hdus)
-        hdulist.writeto(filename, clobber=overwrite)
+
+        # if filename.endswith('.gz'):
+        #     g = gzip.open(filename, 'wb')
+        #     hdulist.writeto(g, clobber=overwrite)
+        #     g.close()
+        # else:
+        #     hdulist.writeto(filename, clobber=overwrite)
+
+        if '.gz' in filename:
+            import gzip
+            from tempfile import NamedTemporaryFile
+            f = NamedTemporaryFile()
+            hdulist.writeto(f)
+            g = gzip.open(filename, 'wb')
+            content = open(f.name, 'rb').read()
+            g.write(content)
+            g.close()
+            f.close()
+        else:
+            hdulist.writeto(filename, clobber=overwrite)
+
+
 
     def interpolate(self, apertures):
         """

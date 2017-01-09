@@ -126,12 +126,14 @@ class Models(object):
         else:
             return self.fluxes != 0
 
-    @property
+    @property  # TODO - avoid recomputing this every time
     def log_fluxes_mJy(self):
-        values = np.zeros(self.fluxes.shape)
-        values[~self.valid] = -np.inf
-        values[self.valid] = np.log10(self.fluxes[self.valid].to(u.mJy).value)
-        return values
+        if not hasattr(self, '_log_fluxes'):
+            values = np.zeros(self.fluxes.shape)
+            values[~self.valid] = -np.inf
+            values[self.valid] = np.log10(self.fluxes[self.valid].to(u.mJy).value)
+            self._log_fluxes = values
+        return self._log_fluxes
 
     @classmethod
     def read(cls, directory, filters, distance_range=None, remove_resolved=False):

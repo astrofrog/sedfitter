@@ -5,6 +5,7 @@
   the number of valid data points (valid flag 1 or 4) but instead was using
   the total number of valid and invalid points.
 
+- Fixed compatibility with Python 3.6.
 
 0.9.6 (2016-07-31)
 ------------------

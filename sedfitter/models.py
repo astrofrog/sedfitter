@@ -11,8 +11,8 @@ from . import fitting_routines as f
 from .utils import parfile
 from .utils.validator import validate_array
 from .fit_info import FitInfo
-from .filter import Filter
-from . import six
+
+__all__ = ['Models']
 
 
 class Models(object):

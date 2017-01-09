@@ -26,17 +26,16 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 from matplotlib.font_manager import FontProperties
-import matplotlib.ticker as ticker
 
-from . import six
-from .extinction import Extinction
-from .fit_info import FitInfo, FitInfoFile
+from .fit_info import FitInfoFile
 from .sed import SED
 from .sed.cube import SEDCube
 from .utils import io
 from .utils import parfile
 from .utils.formatter import LogFormatterMathtextAuto
 from .plot_helpers import tex_friendly
+
+__all__ = ['plot_source_data', 'plot']
 
 KPC = 3.086e21
 
@@ -257,10 +256,10 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
             model_dir = info.meta.model_dir
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         if plot_max:
-            info.keep('N', plot_max)
+            info.keep(('N', plot_max))
 
         if show_convolved and info.model_fluxes is None:
             raise Exception("Cannot plot convolved fluxes as these are not included in the input file")

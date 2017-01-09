@@ -1,14 +1,11 @@
 from __future__ import print_function, division
 
-import os
-
-from astropy.table import Table
 import numpy as np
 
-from . import six
-from .fit_info import FitInfo, FitInfoFile
-from .extinction import Extinction
+from .fit_info import FitInfoFile
 from .models import load_parameter_table
+
+__all__ = ['extract_parameters']
 
 
 def extract_parameters(input=None, output_prefix=None, output_suffix=None,
@@ -32,7 +29,7 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     for info in fin:
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         output = ""
         if output_prefix:

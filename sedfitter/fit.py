@@ -100,6 +100,19 @@ class Fitter(object):
         self.extinction_law = extinction_law
 
     def fit(self, source):
+        """
+        Fit the specified source.
+
+        Parameters
+        ----------
+        source : `~sedfitter.source.Source`
+            The source to fit.
+
+        Returns
+        -------
+        fit_info : `sedfitter.fit_info.FitInfo`
+            The results of the fit.
+        """
 
         info = self.models.fit(source, self.av_law, self.sc_law,
                                self.av_range[0], self.av_range[1])
@@ -116,7 +129,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
         output_format=('F', 6.), output_convolved=False,
         remove_resolved=False):
     """
-    Fit a set of sources with models
+    Fit a set of sources with models.
 
     Parameters
     ----------
@@ -226,7 +239,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
             if not output_convolved:
                 info.model_fluxes = None
 
-            info.keep(output_format[0], output_format[1])
+            info.keep(output_format)
 
             fout.write(info)
 

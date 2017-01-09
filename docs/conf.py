@@ -11,8 +11,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -28,8 +26,10 @@ import sys, os
 extensions = ['sphinx.ext.autosummary',
               'sphinx.ext.autodoc',
               'sphinx.ext.intersphinx',
-              'astropy_helpers.sphinx.ext.numpydoc',
-              'sphinx.ext.pngmath']
+              'sphinx_automodapi.automodapi',
+              'sphinx_automodapi.smart_resolver',
+              'numpydoc',
+              'sphinx.ext.imgmath']
 
 autosummary_generate = True
 numpydoc_show_class_members = False

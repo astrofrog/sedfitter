@@ -1,14 +1,11 @@
 from __future__ import print_function, division
 
-import os
-
 import numpy as np
-from astropy.table import Table
 
-from . import six
-from .fit_info import FitInfo, FitInfoFile
-from .extinction import Extinction
+from .fit_info import FitInfoFile
 from .models import load_parameter_table
+
+__all__ = ['write_parameter_ranges']
 
 NODATA = '-'.center(10)
 
@@ -96,7 +93,7 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
     for info in fin:
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t, additional=additional)

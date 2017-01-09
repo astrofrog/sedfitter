@@ -1,9 +1,8 @@
 from __future__ import print_function, division
 
-import os
 from copy import deepcopy
 
-from astropy.table import Table, join
+from astropy.table import join
 from astropy.convolution import Tophat2DKernel
 
 import numpy as np
@@ -12,13 +11,13 @@ from scipy.ndimage import convolve
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
-from . import six
-from .fit_info import FitInfo, FitInfoFile
-from .extinction import Extinction
+from .fit_info import FitInfoFile
 from .models import load_parameter_table
 from .utils import io
 from .utils.formatter import LogFormatterMathtextAuto
 from .plot_helpers import tex_friendly
+
+__all__ = ['plot_params_2d']
 
 KERNEL = Tophat2DKernel(5.5, x_size=11, y_size=11, mode='oversample').array
 KERNEL /= KERNEL.max()  # normalize so maximum is 1
@@ -73,7 +72,7 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         Whether to show the source name on the plot(s).
     format: str, optional
         The file format to use for the plot, if output_dir is specified.
-    dpi : int, optional 
+    dpi : int, optional
         The resolution of the figure to save
     """
 
@@ -142,7 +141,9 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
     # create a 'ghost' axis which is already in log space.
     ax_log = get_axes(fig, label='log', zorder=-100)
     ax_log.axis('off')
-    ax_log.imshow(gray_all.transpose(), cmap='binary', vmin=0, vmax=40., extent=[ex[0], ex[-1], ey[0], ey[-1]], aspect='auto', zorder=-100, origin='lower')
+    ax_log.imshow(gray_all.transpose(), cmap='binary', vmin=0, vmax=40.,
+                  extent=[ex[0], ex[-1], ey[0], ey[-1]], aspect='auto',
+                  zorder=-100, origin='lower')
 
     ax.patch.set_facecolor('none')
 
@@ -184,7 +185,7 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
             source_label.remove()
 
         # Filter fits
-        info.keep(select_format[0], select_format[1])
+        info.keep(select_format)
 
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t)

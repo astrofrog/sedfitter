@@ -1,9 +1,13 @@
 from __future__ import print_function, division
 
 import numpy as np
+
 from astropy import units as u
+from astropy.table import Table
 
 from ..utils.validator import validate_array
+
+__all__ = ['Extinction']
 
 
 class Extinction(object):
@@ -92,8 +96,6 @@ class Extinction(object):
         return self
 
     def to_table(self):
-        from astropy.table import Table, Column
-        from astropy import units as u
         t = Table()
         t['wav'] = self.wav
         t['chi'] = self.chi

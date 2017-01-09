@@ -14,7 +14,7 @@ from . import convolve
 from . import filter
 from . import utils
 
-__version__ = '0.9.7.dev'
+__version__ = '1.0'
 
 from .plot_helpers import set_rc_params
 set_rc_params()

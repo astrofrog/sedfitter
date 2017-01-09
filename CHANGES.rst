@@ -1,5 +1,5 @@
-0.9.7 (unreleased)
-------------------
+1.0 (2016-01-09)
+----------------
 
 - Fixed a bug in the calculation of the reduced chi^2: this should have used
   the number of valid data points (valid flag 1 or 4) but instead was using

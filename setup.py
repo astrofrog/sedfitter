@@ -7,6 +7,8 @@ from setuptools import setup, Command
 
 from distutils.command.build_py import build_py
 
+from sedfitter import __version__
+
 class SEDFitterTest(Command):
 
     user_options = []
@@ -43,7 +45,7 @@ class SEDFitterTest(Command):
         raise SystemExit(errno)
 
 setup(name='sedfitter',
-      version='0.9.7.dev',
+      version=__version__,
       description='SED Fitter in Python',
       author='Thomas Robitaille',
       author_email='thomas.robitaille@gmail.com',

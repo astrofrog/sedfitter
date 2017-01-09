@@ -1,7 +1,0 @@
-numpy
-scipy
-Cython
-astropy
-matplotlib
-numpydoc
-sphinx-automodapi

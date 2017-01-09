@@ -1,0 +1,11 @@
+name: rtd
+
+dependencies:
+  - numpy
+  - scipy
+  - matplotlib
+  - astropy
+  - pip:
+    - numpydoc
+    - sphinx-automodapi
+

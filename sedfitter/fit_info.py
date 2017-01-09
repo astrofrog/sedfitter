@@ -159,9 +159,9 @@ class FitInfo(object):
         elif form == 'D':
             n_fits = np.sum(self.chi2 - self.chi2[0] <= number)
         elif form == 'E':
-            n_fits = np.sum((self.chi2 / self.source.n_wav) <= number)
+            n_fits = np.sum((self.chi2 / self.source.n_data) <= number)
         elif form == 'F':
-            n_fits = np.sum((self.chi2 - self.chi2[0]) / self.source.n_wav <= number)
+            n_fits = np.sum((self.chi2 - self.chi2[0]) / self.source.n_data <= number)
         else:
             raise Exception("Unknown format: %s" % form)
 

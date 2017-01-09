@@ -7,8 +7,10 @@ env:
     - PYTHON_VERSION=3.3
     - PYTHON_VERSION=3.4
     - PYTHON_VERSION=3.5
+    - PYTHON_VERSION=3.6
   global:
     - SETUP_XVFB=True
+    - CONDA_CHANNELS=conda-forge
     - CONDA_DEPENDENCIES="numpy scipy astropy matplotlib pytest coverage"
     - PIP_DEPENDENCIES="coverage coveralls pytest-cov"
 

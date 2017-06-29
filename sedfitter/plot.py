@@ -43,8 +43,8 @@ fp = FontProperties(size='x-small')
 
 color = {}
 
-color['gray'] = '0.75'
-color['black'] = '0.00'
+color['gray'] = (0.75, 0.75, 0.75)
+color['black'] = (0.00, 0.00, 0.00)
 
 color['full'] = []
 color['full'].append((0.65, 0.00, 0.00))

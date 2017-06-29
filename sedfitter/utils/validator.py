@@ -65,6 +65,9 @@ def validate_array(name, value, domain=None, ndim=1, shape=None, physical_type=N
         if ndim == 1:
             raise ValueError("{0} has incorrect length (expected {1} but found {2})".format(name, shape[0], value.shape[0]))
         else:
+            # On Windows, shapes can contain long integers, so we fix this to
+            # have consistent error messages across platforms.
+            shape = tuple(int(x) for x in shape)
             raise ValueError("{0} has incorrect shape (expected {1} but found {2})".format(name, shape, value.shape))
 
     return value

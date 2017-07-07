@@ -23,4 +23,8 @@ class Timer(object):
             else:
                 print("    %7i       %10.1f        %7.2f" % (self.n, self.time2 - self.time1, self.n / (self.time2 - self.time1)))
         elif force:
-            print("    %7i       %10.1f        %7.2f" % (self.n, self.time2 - self.time1, self.n / (self.time2 - self.time1)))
+            self.time2 = time.time()
+            if self.time2 == self.time1:
+                print("    %7i       %10.1f         -------" % (self.n, self.time2 - self.time1))
+            else:
+                print("    %7i       %10.1f        %7.2f" % (self.n, self.time2 - self.time1, self.n / (self.time2 - self.time1)))

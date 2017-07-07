@@ -67,7 +67,8 @@ def validate_array(name, value, domain=None, ndim=1, shape=None, physical_type=N
         else:
             # On Windows, shapes can contain long integers, so we fix this to
             # have consistent error messages across platforms.
-            shape = tuple(int(x) for x in shape)
-            raise ValueError("{0} has incorrect shape (expected {1} but found {2})".format(name, shape, value.shape))
+            expected_shape = tuple(int(x) for x in shape)
+            actual_shape = tuple(int(x) for x in value.shape)
+            raise ValueError("{0} has incorrect shape (expected {1} but found {2})".format(name, expected_shape, actual_shape))
 
     return value

@@ -1,5 +1,5 @@
-Convoling models with new filters
-=================================
+Convolving models with new filters
+==================================
 
 Preparing filters
 -----------------

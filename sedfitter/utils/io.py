@@ -4,7 +4,11 @@ import os
 import sys
 import shutil
 
+from astropy.table import Table
+
 from ..six.moves import input
+
+__all__ = ['create_dir', 'delete_dir', 'delete_file', 'read_table']
 
 
 def create_dir(dir_name):
@@ -34,3 +38,10 @@ def delete_file(file_name):
             print("Aborting...")
             sys.exit()
         print("")
+
+
+def read_table(file_name):
+    try:
+        return Table.read(file_name, format='fits', character_as_bytes=False)
+    except TypeError:  # older versions of Astropy
+        return Table.read(file_name, format='fits')

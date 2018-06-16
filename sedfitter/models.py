@@ -11,6 +11,7 @@ from . import fitting_routines as f
 from .utils import parfile
 from .utils.validator import validate_array
 from .fit_info import FitInfo
+from .utils.io import read_table
 
 __all__ = ['Models']
 
@@ -416,9 +417,9 @@ class Models(object):
 def load_parameter_table(model_dir):
 
     if os.path.exists(model_dir + '/parameters.fits'):
-        t = Table.read(model_dir + '/parameters.fits')
+        t = read_table(model_dir + '/parameters.fits')
     elif os.path.exists(model_dir + '/parameters.fits.gz'):
-        t = Table.read(model_dir + '/parameters.fits.gz')
+        t = read_table(model_dir + '/parameters.fits.gz')
     else:
         raise Exception("Parameter file not found in %s" % model_dir)
 

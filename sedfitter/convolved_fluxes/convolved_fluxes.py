@@ -11,6 +11,7 @@ from astropy.io import fits
 from astropy.table import Table
 
 from ..utils.validator import validate_scalar, validate_array
+from ..utils.io import read_table
 
 # TODO: get rid of use of interp1d
 
@@ -203,7 +204,7 @@ class ConvolvedFluxes(object):
 
         # Read in apertures, if present
         try:
-            ta = Table.read(convolved['APERTURES'])
+            ta = read_table(convolved['APERTURES'])
             if ta['APERTURE'].unit is None:
                 ta['APERTURE'].unit = u.au
             conv.apertures = ta['APERTURE'].data * ta['APERTURE'].unit
@@ -211,7 +212,7 @@ class ConvolvedFluxes(object):
             pass
 
         # Create shortcuts to table
-        tc = Table.read(convolved['CONVOLVED FLUXES'])
+        tc = read_table(convolved['CONVOLVED FLUXES'])
 
         # Read in model names
         conv.model_names = tc['MODEL_NAME']

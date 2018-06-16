@@ -1,7 +1,11 @@
 1.1 (unreleased)
 ----------------
 
-- No changes yet.
+- Fix color of lines in SED plots. [#52]
+
+- Fix Windows compatibility. [#53]
+
+- Fix compatibility with Astropy 2.x and above. [#60]
 
 1.0 (2016-01-09)
 ----------------

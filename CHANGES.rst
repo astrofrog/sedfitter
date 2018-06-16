@@ -1,4 +1,4 @@
-1.1 (unreleased)
+1.1 (2018-06-16)
 ----------------
 
 - Fix color of lines in SED plots. [#52]

@@ -26,6 +26,6 @@ setup(name='sedfitter',
                     'sedfitter.filter.tests':['data/*.txt'],
                     'sedfitter.utils.tests':['data/*.conf', 'data/*.par']},
       provides=['sedfitter'],
-      requires=['numpy', 'scipy', 'matplotlib', 'astropy'],
+      install_requires=['numpy', 'scipy', 'matplotlib', 'astropy'],
       keywords=['Scientific/Engineering'],
      )

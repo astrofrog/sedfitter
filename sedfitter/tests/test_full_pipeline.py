@@ -33,17 +33,26 @@ def generate_random_models_1(models_dir, aperture_dependent=False):
 
         sed.name = 'model_{0:04d}'.format(i)
         sed.distance = 1 * u.kpc
-        sed.wav = np.logspace(-2., 3., 100) * u.micron
+
+        # Make at least one SED have a different size as a regression test for a
+        # bug that caused the convolution to crash if SEDs did not all have the
+        # same size. Note that technically speaking the monochromatic
+        # 'convolution' will be wrong in this case, but this doesn't matter
+        # since the monochromatic convolution is not really going to be
+        # supported going forward.
+        n_wav = 100 if i < 4 else 105
+
+        sed.wav = np.logspace(-2., 3., n_wav) * u.micron
         sed.nu = sed.wav.to(u.Hz, equivalencies=u.spectral())
 
         if aperture_dependent:
             sed.apertures = np.logspace(1., 6., 10) * u.au
-            sed.flux = np.cumsum(np.random.random((10, 100)), axis=0) * u.mJy
+            sed.flux = np.cumsum(np.random.random((10, n_wav)), axis=0) * u.mJy
         else:
             sed.apertures = None
-            sed.flux = (1 + np.random.random((1, 100))) * u.mJy
+            sed.flux = (1 + np.random.random((1, n_wav))) * u.mJy
 
-        sed.error = sed.flux * np.random.random(100) / 100.
+        sed.error = sed.flux * np.random.random(n_wav) / 100.
 
         sed.write(os.path.join(models_dir, 'seds', sed.name + '_sed.fits'))
 

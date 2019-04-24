@@ -95,7 +95,7 @@ def _convolve_model_dir_1(model_dir, filters, overwrite=False):
         try:
             assert binned_nu is not None
             np.testing.assert_array_almost_equal_nulp(s.nu.value, binned_nu.value, 100)
-        except AssertionError:
+        except (ValueError, AssertionError):
             log.info('Rebinning filters')
             binned_filters = [f.rebin(s.nu) for f in filters]
             binned_nu = s.nu

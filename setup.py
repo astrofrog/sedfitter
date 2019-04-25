@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(name='sedfitter',
-      version='1.3',
+      version='1.4.dev0',
       description='SED Fitter in Python',
       author='Thomas Robitaille',
       author_email='thomas.robitaille@gmail.com',

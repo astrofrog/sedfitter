@@ -56,10 +56,10 @@ def _convolve_model_dir_1(model_dir, filters, overwrite=False):
         os.mkdir(model_dir + '/convolved')
 
     # Find all SED files to convolve
-    sed_files = (glob.glob(model_dir + '/seds/*.fits.gz') +
-                 glob.glob(model_dir + '/seds/*/*.fits.gz') +
-                 glob.glob(model_dir + '/seds/*.fits') +
-                 glob.glob(model_dir + '/seds/*/*.fits'))
+    sed_files = sorted(glob.glob(model_dir + '/seds/*.fits.gz') +
+                       glob.glob(model_dir + '/seds/*/*.fits.gz') +
+                       glob.glob(model_dir + '/seds/*.fits') +
+                       glob.glob(model_dir + '/seds/*/*.fits'))
 
     par_table = load_parameter_table(model_dir)
 
@@ -95,7 +95,7 @@ def _convolve_model_dir_1(model_dir, filters, overwrite=False):
         try:
             assert binned_nu is not None
             np.testing.assert_array_almost_equal_nulp(s.nu.value, binned_nu.value, 100)
-        except AssertionError:
+        except (ValueError, AssertionError):
             log.info('Rebinning filters')
             binned_filters = [f.rebin(s.nu) for f in filters]
             binned_nu = s.nu

@@ -1,7 +1,8 @@
 1.3 (unreleased)
 ----------------
 
-- No changes yet.
+- Fixed an issue that occurred during the convolution if not all
+  SEDs had the same number of wavelengths. [#66]
 
 1.2 (2018-06-16)
 ----------------

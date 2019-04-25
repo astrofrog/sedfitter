@@ -1,4 +1,4 @@
-1.3 (unreleased)
+1.3 (2019-04-25)
 ----------------
 
 - Fixed an issue that occurred during the convolution if not all

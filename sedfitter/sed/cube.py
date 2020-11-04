@@ -1,9 +1,9 @@
 import abc
 import numpy as np
+import six
 
 from astropy import units as u
 from astropy.io import fits
-from astropy.extern import six
 from astropy.table import Table
 
 from ..utils.validator import validate_scalar, validate_array

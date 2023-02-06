@@ -135,7 +135,8 @@ class Models(object):
         return values
 
     @classmethod
-    def read(cls, directory, filters, distance_range=None, remove_resolved=False):
+    def read(cls, directory, filters, distance_range=None,
+             remove_resolved=False, use_memmap=True):
         modpar = parfile.read("%s/models.conf" % directory, 'conf')
         if modpar.get('version', 1) == 1:
             return cls._read_version_1(directory, filters,
@@ -144,7 +145,8 @@ class Models(object):
         else:
             return cls._read_version_2(directory, filters,
                                        distance_range=distance_range,
-                                       remove_resolved=remove_resolved)
+                                       remove_resolved=remove_resolved,
+                                       use_memmap=use_memmap)
 
     @classmethod
     def _read_version_1(cls, directory, filters, distance_range=None, remove_resolved=None):
@@ -232,7 +234,7 @@ class Models(object):
         return m
 
     @classmethod
-    def _read_version_2(cls, directory, filters, distance_range=None, remove_resolved=None):
+    def _read_version_2(cls, directory, filters, distance_range=None, remove_resolved=None, use_memmap=True):
 
         m = cls()
 
@@ -269,16 +271,32 @@ class Models(object):
 
         # Start off by reading in main flux cube
         from .sed.cube import SEDCube
-        cube = SEDCube.read(os.path.join(directory, 'flux.fits'))
+        cube = SEDCube.read(os.path.join(directory, 'flux.fits'), memmap=use_memmap)
+
+        if use_memmap:
+            from tempfile import mkdtemp
+            import os.path as path
+            mffilename = path.join(mkdtemp(), 'model_fluxes.dat')
 
         # Initialize model flux array and array to indicate whether models are
         # extended
         if m.n_distances is None:
-            model_fluxes = np.zeros((cube.n_models, len(filters))) * u.mJy
+            shape = (cube.n_models, len(filters))
+            if use_memmap:
+                model_fluxes = np.memmap(mffilename, dtype='float32', mode='w+', shape=shape) * u.mJy
+            else:
+                model_fluxes = np.zeros(shape) * u.mJy
             extended = None
         else:
-            model_fluxes = np.zeros((cube.n_models, m.n_distances, len(filters))) * u.mJy
-            extended = np.zeros((cube.n_models, m.n_distances, len(filters)), dtype=bool)
+            shape = (cube.n_models, m.n_distances, len(filters))
+            if use_memmap:
+                model_fluxes = np.memmap(mffilename, dtype='float32', mode='w+', shape=shape) * u.mJy
+                extfilename = path.join(mkdtemp(), 'extended.dat')
+                extended = np.memmap(extfilename, shape=shape, dtype=bool, mode='w+')
+            else:
+                model_fluxes = np.zeros(shape) * u.mJy
+                extended = np.zeros(shape, dtype=bool)
+        print(f"Data shape={shape}.  use_memmap={use_memmap}")
 
         # Define empty wavelength array
         m.wavelengths = np.zeros(len(filters)) * u.micron

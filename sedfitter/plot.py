@@ -326,7 +326,6 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
                     lines.append(np.column_stack([_to_value(s.wav), _to_value(flux)[:, j]]))
                     colors.append(color[color_type][j])
             else:
-                print(s.wav, flux)
                 lines.append(np.column_stack([_to_value(s.wav), _to_value(flux)]))
                 colors.append(color[color_type])
 

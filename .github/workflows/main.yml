@@ -10,11 +10,10 @@ jobs:
     with:
       coverage: codecov
       envs: |
-        - linux: py37-test-oldestdeps
-        - macos: py38-test
-        - windows: py39-test
-        - linux: py310-test
-        - macos: py311-test
+        - linux: py38-test-oldestdeps
+        - macos: py39-test
+        - windows: py310-test
+        - linux: py311-test
   publish:
     needs: tests
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1

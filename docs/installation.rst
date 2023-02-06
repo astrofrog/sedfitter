@@ -5,7 +5,7 @@ Installation
 Requirements
 ============
 
-The SED fitter requires Python 3.7 or later, and the following Python packages
+The SED fitter requires Python 3.8 or later, and the following Python packages
 to be installed:
 
 * `Numpy <http://www.numpy.org>`_

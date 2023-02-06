@@ -10,7 +10,7 @@ jobs:
     with:
       coverage: codecov
       envs: |
-        - linux: py37-test
+        - linux: py37-test-oldestdeps
         - macos: py38-test
         - windows: py39-test
         - linux: py310-test

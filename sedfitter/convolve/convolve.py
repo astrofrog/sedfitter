@@ -12,7 +12,6 @@ from astropy.utils.console import ProgressBar
 from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED, SEDCube
 from ..models import load_parameter_table
-from .. import six
 from ..utils import parfile
 
 
@@ -74,7 +73,7 @@ def _convolve_model_dir_1(model_dir, filters, overwrite=False):
     apertures = first_sed.apertures
 
     # Set up convolved fluxes
-    fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='U30' if six.PY3 else 'S30'), apertures=apertures, initialize_arrays=True) for i in range(len(filters))]
+    fluxes = [ConvolvedFluxes(model_names=np.zeros(len(sed_files), dtype='U30'), apertures=apertures, initialize_arrays=True) for i in range(len(filters))]
 
     # Set up list of binned filters
     binned_filters = []

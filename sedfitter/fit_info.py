@@ -5,7 +5,6 @@ try:
 except ImportError:
     import pickle
 
-from . import six
 
 import numpy as np
 
@@ -14,7 +13,7 @@ class FitInfoFile(object):
 
     def __init__(self, fits, mode=None):
 
-        if isinstance(fits, six.string_types):
+        if isinstance(fits, str):
 
             if mode not in 'wr':
                 raise ValueError('mode should be r or w')

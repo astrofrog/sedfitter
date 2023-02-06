@@ -2,7 +2,6 @@ from __future__ import print_function, division
 
 import numpy as np
 
-from .. import six
 
 
 def is_numpy_array(variable):
@@ -59,7 +58,7 @@ class Source(object):
     def name(self, value):
         if value is None:
             self._name = value
-        elif isinstance(value, six.string_types):
+        elif isinstance(value, str):
             self._name = value
         else:
             raise TypeError("name should be a string")

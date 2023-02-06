@@ -6,8 +6,6 @@ import shutil
 
 from astropy.table import Table
 
-from ..six.moves import input
-
 __all__ = ['create_dir', 'delete_dir', 'delete_file', 'read_table']
 
 

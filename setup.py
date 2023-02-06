@@ -1,31 +1,19 @@
 #!/usr/bin/env python
 
+import os
+
 from setuptools import setup
 
-setup(name='sedfitter',
-      version='1.4.dev0',
-      description='SED Fitter in Python',
-      author='Thomas Robitaille',
-      author_email='thomas.robitaille@gmail.com',
-      packages=['sedfitter',
-                'sedfitter.convolve',
-                'sedfitter.convolved_fluxes',
-                'sedfitter.convolved_fluxes.tests',
-                'sedfitter.extinction',
-                'sedfitter.extinction.tests',
-                'sedfitter.filter',
-                'sedfitter.filter.tests',
-                'sedfitter.sed',
-                'sedfitter.sed.tests',
-                'sedfitter.source',
-                'sedfitter.source.tests',
-                'sedfitter.tests',
-                'sedfitter.utils',
-                'sedfitter.utils.tests'],
-      package_data={'sedfitter.sed.tests':['data/*.fits.gz'],
-                    'sedfitter.filter.tests':['data/*.txt'],
-                    'sedfitter.utils.tests':['data/*.conf', 'data/*.par']},
-      provides=['sedfitter'],
-      install_requires=['numpy', 'scipy', 'matplotlib', 'astropy'],
-      keywords=['Scientific/Engineering'],
-     )
+VERSION_TEMPLATE = """
+# Note that we need to fall back to the hard-coded version if either
+# setuptools_scm can't be imported or setuptools_scm can't determine the
+# version, so we catch the generic 'Exception'.
+try:
+    from setuptools_scm import get_version
+    version = get_version(root='..', relative_to=__file__)
+except Exception:
+    version = '{version}'
+""".lstrip()
+
+setup(use_scm_version={'write_to': os.path.join('sedfitter', 'version.py'),
+                       'write_to_template': VERSION_TEMPLATE})

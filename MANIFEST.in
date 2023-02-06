@@ -1,7 +1,5 @@
-include runtests.py
 include LICENSE
 include README.md
-include ez_setup.py
 recursive-include docs *
 recursive-include examples *
 recursive-include sedfitter/sed/tests/data *

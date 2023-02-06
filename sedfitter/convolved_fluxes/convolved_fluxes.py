@@ -278,7 +278,7 @@ class ConvolvedFluxes(object):
             hdu2 = None
 
         hdulist = fits.HDUList([hdu0, hdu1] if hdu2 is None else [hdu0, hdu1, hdu2])
-        hdulist.writeto(filename, clobber=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite)
 
     def interpolate(self, apertures):
         """

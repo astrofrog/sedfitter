@@ -139,9 +139,6 @@ class BasePipelineTest(object):
         self.extinction.wav = np.logspace(-2., 3.) * u.micron
         self.extinction.chi = self.extinction.wav.value ** -2 * u.cm ** 2 / u.g
 
-    def teardown_class(self):
-        shutil.rmtree(self.tmpdir)
-
     def test_broadband(self, tmpdir):
 
         np.random.seed(12345)

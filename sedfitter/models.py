@@ -165,9 +165,8 @@ class Models(object):
 
         if modpar['aperture_dependent']:
 
-            distance_range_kpc = distance_range.to(u.kpc).value
-
-            if distance_range:
+            if distance_range is not None:
+                distance_range_kpc = distance_range.to(u.kpc).value
                 if distance_range_kpc[0] == distance_range_kpc[1]:
                     n_distances = 1
                     m.distances = np.array([distance_range_kpc[0]]) * u.kpc
@@ -250,9 +249,8 @@ class Models(object):
 
         if modpar['aperture_dependent']:
 
-            distance_range_kpc = distance_range.to(u.kpc).value
-
-            if distance_range:
+            if distance_range is not None:
+                distance_range_kpc = distance_range.to(u.kpc).value
                 if distance_range_kpc[0] == distance_range_kpc[1]:
                     n_distances = 1
                     m.distances = np.array([distance_range_kpc[0]]) * u.kpc

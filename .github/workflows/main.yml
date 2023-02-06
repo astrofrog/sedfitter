@@ -15,3 +15,11 @@ jobs:
         - windows: py39-test
         - linux: py310-test
         - macos: py311-test
+  publish:
+    needs: tests
+    uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
+    with:
+      test_extras: test
+      test_command: pytest --pyargs sedfitter
+    secrets:
+      pypi_token: ${{ secrets.pypi_token }}

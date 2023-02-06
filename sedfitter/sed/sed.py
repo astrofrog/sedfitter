@@ -337,7 +337,7 @@ class SED(object):
 
         # Create overall FITS file
         hdulist = fits.HDUList(hdus)
-        hdulist.writeto(filename, clobber=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite)
 
     def interpolate(self, apertures):
         """

@@ -161,6 +161,13 @@ def get_axes(fig):
     return fig.add_axes(rect)
 
 
+def _to_value(x):
+    if isinstance(x, u.Quantity):
+        return x.value
+    else:
+        return x
+
+
 def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
          plot_mode="A", sed_type="interp", show_sed=True, show_convolved=False,
          x_mode='A', y_mode='A', x_range=(1., 1.), y_range=(1., 2.),
@@ -316,10 +323,11 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
 
             if flux.ndim > 1:
                 for j in range(flux.shape[1]):
-                    lines.append(np.column_stack([s.wav, flux[:, j]]))
+                    lines.append(np.column_stack([_to_value(s.wav), _to_value(flux)[:, j]]))
                     colors.append(color[color_type][j])
             else:
-                lines.append(np.column_stack([s.wav, flux]))
+                print(s.wav, flux)
+                lines.append(np.column_stack([_to_value(s.wav), _to_value(flux)]))
                 colors.append(color[color_type])
 
             if show_convolved:

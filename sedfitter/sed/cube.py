@@ -383,7 +383,7 @@ class BaseCube(object):
             hdulist.append(hdu5)
 
         # Write out HDUList
-        hdulist.writeto(filename, clobber=overwrite)
+        hdulist.writeto(filename, overwrite=overwrite)
 
 
 class SEDCube(BaseCube):

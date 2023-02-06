@@ -4,6 +4,8 @@ from . import six
 from .fit_info import FitInfoFile
 from .extinction import Extinction
 
+__all__ = ['filter_output']
+
 
 def filter_output(input_fits=None, output_good='auto', output_bad='auto', chi=None,
                   cpd=None):

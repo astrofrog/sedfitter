@@ -18,6 +18,8 @@ from .utils.validator import validate_array
 from . import six
 from .fit_info import FitInfoFile
 
+__all__ = ['Fitter', 'fit']
+
 
 class Fitter(object):
     """

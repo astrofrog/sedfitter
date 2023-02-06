@@ -172,7 +172,7 @@ class Models(object):
                     n_distances = 1
                     m.distances = np.array([distance_range_kpc[0]]) * u.kpc
                 else:
-                    n_distances = int(1 + (np.log10(distance_range_kpc[1]) - np.log10(distance_range_kpc[0])) / modpar['logd_step'])
+                    n_distances = int(np.ceil(1 + (np.log10(distance_range_kpc[1]) - np.log10(distance_range_kpc[0])) / modpar['logd_step']))
                     m.distances = np.logspace(np.log10(distance_range_kpc[0]), np.log10(distance_range_kpc[1]), n_distances) * u.kpc
                 print("   Number of distances :  %i" % m.n_distances)
             else:
@@ -257,7 +257,7 @@ class Models(object):
                     n_distances = 1
                     m.distances = np.array([distance_range_kpc[0]]) * u.kpc
                 else:
-                    n_distances = int(1 + (np.log10(distance_range_kpc[1]) - np.log10(distance_range_kpc[0])) / modpar['logd_step'])
+                    n_distances = int(np.ceil(1 + (np.log10(distance_range_kpc[1]) - np.log10(distance_range_kpc[0])) / modpar['logd_step']))
                     m.distances = np.logspace(np.log10(distance_range_kpc[0]), np.log10(distance_range_kpc[1]), n_distances) * u.kpc
                 print("   Number of distances :  %i" % m.n_distances)
             else:

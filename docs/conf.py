@@ -29,7 +29,7 @@ extensions = ['sphinx.ext.autosummary',
               'sphinx_automodapi.automodapi',
               'sphinx_automodapi.smart_resolver',
               'numpydoc',
-              'sphinx.ext.pngmath']
+              'sphinx.ext.imgmath']
 
 autosummary_generate = True
 numpydoc_show_class_members = False

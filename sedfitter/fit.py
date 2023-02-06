@@ -60,7 +60,7 @@ class Fitter(object):
 
     def __init__(self, filter_names, apertures, model_dir,
                  extinction_law=None, av_range=None, distance_range=None,
-                 remove_resolved=False):
+                 remove_resolved=False, use_memmap=True):
 
         validate_array('apertures', apertures, domain='positive', ndim=1, physical_type='angle')
         validate_array('distance_range', distance_range, domain='positive', ndim=1, shape=(2,), physical_type='length')
@@ -82,7 +82,10 @@ class Fitter(object):
             self.filters.append(filt)
 
         # Read in models
-        self.models = Models.read(model_dir, self.filters, distance_range=distance_range, remove_resolved=remove_resolved)
+        self.models = Models.read(model_dir, self.filters,
+                                  distance_range=distance_range,
+                                  remove_resolved=remove_resolved,
+                                  use_memmap=use_memmap)
 
         # Add wavelength to filters
         for i, f in enumerate(self.filters):

@@ -12,7 +12,6 @@ from astropy.utils.console import ProgressBar
 from ..convolved_fluxes import ConvolvedFluxes
 from ..sed import SED
 from ..models import load_parameter_table
-from .. import six
 from ..utils import parfile
 
 __all__ = ['convolve_model_dir_monochromatic', ]
@@ -98,7 +97,7 @@ def convolve_model_dir_monochromatic(model_dir, overwrite=False, max_ram=8,
         log.info('Processing wavelengths {0} to {1}'.format(jmin, jmax))
 
         # Set up convolved fluxes
-        fluxes = [ConvolvedFluxes(model_names=np.zeros(n_models, dtype='U30' if six.PY3 else 'S30'), apertures=apertures, initialize_arrays=True) for i in range(chunk_size)]
+        fluxes = [ConvolvedFluxes(model_names=np.zeros(n_models, dtype='U30'), apertures=apertures, initialize_arrays=True) for i in range(chunk_size)]
 
         b = ProgressBar(len(sed_files))
 

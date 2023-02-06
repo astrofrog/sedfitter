@@ -15,8 +15,9 @@ from .models import Models
 from .source import Source
 from .utils import io
 from .utils.validator import validate_array
-from . import six
 from .fit_info import FitInfoFile
+
+__all__ = ['Fitter', 'fit']
 
 
 class Fitter(object):
@@ -72,7 +73,7 @@ class Fitter(object):
         self.filters = []
         for i in range(len(apertures)):
             filt = {'aperture_arcsec': apertures[i].to(u.arcsec).value}
-            if isinstance(filter_names[i], six.string_types):
+            if isinstance(filter_names[i], str):
                 filt['name'] = filter_names[i]
             elif isinstance(filter_names[i], u.Quantity):
                 filt['wav'] = filter_names[i]
@@ -206,7 +207,7 @@ def fit(data, filter_names, apertures, model_dir, output, n_data_min=3,
     print("")
 
     # Open datafile
-    if isinstance(data, six.string_types):
+    if isinstance(data, str):
         data_file = open(data, 'r')
     else:
         data_file = data

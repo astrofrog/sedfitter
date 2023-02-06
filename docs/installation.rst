@@ -5,8 +5,8 @@ Installation
 Requirements
 ============
 
-The SED fitter requires Python 2.6, 2.7, 3.2, or 3.3, and the following Python
-packages to be installed:
+The SED fitter requires Python 3.8 or later, and the following Python packages
+to be installed:
 
 * `Numpy <http://www.numpy.org>`_
 
@@ -14,7 +14,7 @@ packages to be installed:
 
 * `Matplotlib <http://www.matplotlib.org>`_
 
-* `Astropy <http://www.astropy.org>`_ 0.3 or later
+* `Astropy <http://www.astropy.org>`_
 
 First-time Python users may want to consider an all-in-one Python installation
 package, such as the `Anaconda Python Distribution
@@ -32,15 +32,9 @@ You can install the SED fitting package using::
 or you can get the latest tar file from `PyPI
 <https://pypi.python.org/pypi/sedfitter>`_.
 
-If you want to install the latest developer version, you will need to clone
-the git repository::
+If you want to install the latest developer version, you can do:
 
-    git clone http://github.com/astrofrog/sedfitter
-
-You can then install the package with::
-
-    cd sedfitter
-    python setup.py install
+    pip install git+https://github.com/astrofrog/sedfitter
 
 Testing
 =======
@@ -48,6 +42,6 @@ Testing
 If you want to check that all the tests are running correctly with your Python
 configuration, you can also run::
 
-    python setup.py test
+    pytest sedfitter
 
-in the source directory. If there are no errors, you are good to go!    
+in the source directory. If there are no errors, you are good to go!

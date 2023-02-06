@@ -1,8 +1,9 @@
 from __future__ import print_function, division
 
-from . import six
 from .fit_info import FitInfoFile
 from .extinction import Extinction
+
+__all__ = ['filter_output']
 
 
 def filter_output(input_fits=None, output_good='auto', output_bad='auto', chi=None,
@@ -40,7 +41,7 @@ def filter_output(input_fits=None, output_good='auto', output_bad='auto', chi=No
 
     fin = FitInfoFile(input_fits, 'r')
 
-    if not isinstance(input_fits, six.string_types):
+    if not isinstance(input_fits, str):
         if output_good == 'auto':
             raise ValueError('output_good should be set if input_fits is not a filename')
         if output_bad == 'auto':

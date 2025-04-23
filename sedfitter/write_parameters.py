@@ -8,7 +8,7 @@ from .models import load_parameter_table
 __all__ = ['write_parameters']
 
 
-def write_parameters(input_fits, output_file, select_format=("N", 1), additional={}):
+def write_parameters(input_fits, output_file, select_format=("N", 1), additional={}, aperture=None):
     """
     Write out an ASCII file with the paramters for each source.
 
@@ -27,6 +27,11 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
         A dictionary giving additional parameters for each model. This should
         be a dictionary where each key is a parameter, and each value is a
         dictionary mapping the model names to the parameter values.
+    aperture : int, optional
+        The index of values to return for table columns with array values.
+        Defaults to 5, corresponding to an aperture of radius ~1000 AU.
+        Intended for use with the 2024 release of the models:
+        https://zenodo.org/records/10522816
     """
 
     # Open input and output file
@@ -64,6 +69,10 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
     fout.write('-' * (75 + 11 * (len(list(t.columns.keys()) + list(additional.keys())))))
     fout.write('\n')
 
+    #set aperture to ~1000 AU if none is picked
+    if aperture is None:
+        aperture = 5
+
     for info in fin:
 
         # Filter fits
@@ -87,7 +96,12 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
             for par in tsorted.columns:
                 if par == 'MODEL_NAME':
                     continue
-                fout.write('%10.3e ' % (tsorted[par][fit_id]))
+                
+                vals = np.ravel(np.atleast_1d(tsorted[par][fit_id]))
+                if len(vals) > 1:
+                    fout.write('%10.3e ' % (vals[aperture]))
+                else:
+                    fout.write('%10.3e ' % (vals[0]))
 
             fout.write('\n')
 

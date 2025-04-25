@@ -24,7 +24,6 @@ KERNEL /= KERNEL.max()  # normalize so maximum is 1
 
 fp = FontProperties(size='small')
 
-
 def get_axes(fig, label=None, zorder=None):
     vxmin, vxmax = 1.5, 4.5
     vymin, vymax = 1.0, 4.0
@@ -32,8 +31,23 @@ def get_axes(fig, label=None, zorder=None):
     rect = [vxmin / width, vymin / width, (vxmax - vxmin) / width, (vymax - vymin) / height]
     return fig.add_axes(rect, label=label, zorder=zorder)
 
+#this exists for compatibility with the Richardson+ (2024) YSO models;
+#it identifies aperture-dependent parameters with array values and
+#pulls out a single value for a particular aperture 
+def standard_col(table,parameter,aperture):
+    column = deepcopy(table[parameter])
+    ndim = len(column.data.shape)
+    if ndim == 2:
+        if column.data.shape[-1] > 1:
+            column = column[:,aperture]
+        else:
+            column = column[:,0]
+    elif ndim == 3:
+        column = column[:,0,aperture]
+    return column
 
-def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
+def plot_params_2d(input_fits, parameter_x, parameter_y,
+                   aperture=None, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True, bounds=None,
                    label_x=None, label_y=None, additional=None, plot_name=True,
                    format='pdf', dpi=None):
@@ -50,6 +64,11 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         The parameter to plot on the x-axis
     parameter_y : str
         The parameter to plot on the y-axis
+    aperture : int, optional
+        The index of values to return for table columns with array values.
+        Defaults to 5, corresponding to an aperture of radius ~1000 AU.
+        Intended for use with the Richardson+ (2024) YSO SED models:
+        https://zenodo.org/records/10522816 
     output_dir : str, optional
         If specified, plots are written to that directory
     select_format : tuple, optional
@@ -95,11 +114,20 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
-    tpos = deepcopy(t)
+
+    if aperture is None:
+        aperture = 5
+
+    col1 = standard_col(t,parameter_x,aperture)
+    col2 = standard_col(t,parameter_y,aperture)
+
+    tokeep = np.ones(len(t))
     if log_x:
-        tpos = tpos[tpos[parameter_x] > 0.]
+        tokeep = np.logical_and(tokeep,col1 > 0.)
     if log_y:
-        tpos = tpos[tpos[parameter_y] > 0.]
+        tokeep = np.logical_and(tokeep,col2 > 0.)
+    col1 = col1[tokeep]
+    col2 = col2[tokeep]
 
     # Initialize figure
     fig = plt.figure()
@@ -107,30 +135,30 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
 
     # Find range of values
     if bounds is None:
-        xmin, xmax = tpos[parameter_x].min(), tpos[parameter_x].max()
-        ymin, ymax = tpos[parameter_y].min(), tpos[parameter_y].max()
+        xmin, xmax = np.nanmin(col1), np.nanmax(col1)
+        ymin, ymax = np.nanmin(col2), np.nanmax(col2)
     else:
         xmin, xmax, ymin, ymax = bounds
 
     # Compute histogram
     if log_x and log_y:
-        gray_all, ex, ey = np.histogram2d(np.log10(tpos[parameter_x]),
-                                          np.log10(tpos[parameter_y]), bins=npix,
+        gray_all, ex, ey = np.histogram2d(np.log10(col1),
+                                          np.log10(col2), bins=npix,
                                           range=[[np.log10(xmin), np.log10(xmax)],
                                                  [np.log10(ymin), np.log10(ymax)]])
     elif log_x:
-        gray_all, ex, ey = np.histogram2d(np.log10(tpos[parameter_x]),
-                                          tpos[parameter_y], bins=npix,
+        gray_all, ex, ey = np.histogram2d(np.log10(col1),
+                                          col2, bins=npix,
                                           range=[[np.log10(xmin), np.log10(xmax)],
                                                  [ymin, ymax]])
     elif log_y:
-        gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
-                                          np.log10(tpos[parameter_y]), bins=npix,
+        gray_all, ex, ey = np.histogram2d(col1,
+                                          np.log10(col2), bins=npix,
                                           range=[[xmin, xmax],
                                                  [np.log10(ymin), np.log10(ymax)]])
     else:
-        gray_all, ex, ey = np.histogram2d(tpos[parameter_x],
-                                          tpos[parameter_y], bins=npix,
+        gray_all, ex, ey = np.histogram2d(col1,
+                                          col2, bins=npix,
                                           range=[[xmin, xmax],
                                                  [ymin, ymax]])
 
@@ -190,7 +218,10 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t)
 
-        pfits = ax.scatter(tsorted[parameter_x], tsorted[parameter_y], c='black', s=10)
+        col1 = standard_col(tsorted,parameter_x,aperture)
+        col2 = standard_col(tsorted,parameter_y,aperture)
+
+        pfits = ax.scatter(col1, col2, c='black', s=10)
 
         if plot_name:
             source_label = ax.text(0.5, 0.95, tex_friendly(info.source.name),

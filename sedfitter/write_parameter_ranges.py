@@ -9,6 +9,20 @@ __all__ = ['write_parameter_ranges']
 
 NODATA = '-'.center(10)
 
+#this exists for compatibility with the Richardson+ (2024) YSO models;
+#it identifies aperture-dependent parameters with array values and
+#pulls out a single value for a particular aperture
+def standard_col(table,parameter,aperture):
+    column = deepcopy(table[parameter])
+    ndim = len(column.data.shape)
+    if ndim == 2:
+        if column.data.shape[-1] > 1:
+            column = column[:,aperture]
+        else:
+            column = column[:,0]
+    elif ndim == 3:
+        column = column[:,0,aperture]
+    return column
 
 def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}, aperture=None):
     """
@@ -126,18 +140,7 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
             if len(info.chi2) == 0:
                 fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
             else:
-                #some values in R24 tables are arrays and some are masked;
-                #this block of code marshals that data into the single-value
-                #form of the shape parameters
-                col = tsorted[par]
-                ndim = len(col.data.shape)
-                if ndim == 2:
-                    if col.data.shape[-1] > 1:
-                        col = col[:,aperture]
-                    else:
-                        col = col[:,0]
-                elif ndim == 3:
-                    col = col[:,0,aperture]
+                col = standard_col(tsorted,par,aperture)
                 
                 fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(col), col[0], np.nanmax(col)))
 

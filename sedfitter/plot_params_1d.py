@@ -26,8 +26,23 @@ def get_axes(fig):
     rect = [vxmin / width, vymin / width, (vxmax - vxmin) / width, (vymax - vymin) / height]
     return fig.add_axes(rect)
 
+#this exists for compatibility with the Richardson+ (2024) YSO models;
+#it identifies aperture-dependent parameters with array values and
+#pulls out a single value for a particular aperture 
+def standard_col(table,parameter,aperture):
+    column = deepcopy(table[parameter])
+    ndim = len(column.data.shape)
+    if ndim == 2:
+        if column.data.shape[-1] > 1:
+            column = column[:,aperture]
+        else:
+            column = column[:,0]
+    elif ndim == 3:
+        column = column[:,0,aperture]
+    return column
 
-def plot_params_1d(input_fits, parameter, output_dir=None,
+def plot_params_1d(input_fits, parameter,
+                   aperture=None, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
                    label=None, bins=30, hist_range=None, additional={}, plot_name=True,
                    format='pdf', dpi=None):
@@ -42,6 +57,11 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
         :class:`sedfitter.fit_info.FitInfo` instances.
     parameter : str
         The parameter to plot a histogram of
+    aperture : int, optional
+        The index of values to return for table columns with array values.
+        Defaults to 5, corresponding to an aperture of radius ~1000 AU. 
+        Intended for use with the Richardson+ (2024) YSO SED models:
+        https://zenodo.org/records/10522816 
     output_dir : str, optional
         If specified, plots are written to that directory
     select_format : tuple, optional
@@ -84,9 +104,14 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
-    tpos = deepcopy(t)
+
+    if aperture is None:
+        aperture = 5
+
+    col = standard_col(t,parameter,aperture)
+    
     if log_x:
-        tpos = tpos[tpos[parameter] > 0.]
+        col = col[col > 0.]
 
     # Initialize figure
     fig = plt.figure()
@@ -94,17 +119,17 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
 
     # Find range of values
     if hist_range is None:
-        pmin, pmax = tpos[parameter].min(), tpos[parameter].max()
+        pmin, pmax = np.nanmin(col), np.nanmax(col)
     else:
         pmin, pmax = hist_range
 
     # Compute histogram
     if log_x:
-        hist_all, edges = np.histogram(np.log10(tpos[parameter]), bins=bins, range=[np.log10(pmin), np.log10(pmax)])
+        hist_all, edges = np.histogram(np.log10(col), bins=bins, range=[np.log10(pmin), np.log10(pmax)])
         center = (edges[1:] + edges[:-1]) / 2.
         edges, center = 10. ** edges, 10. ** center
     else:
-        hist_all, edges = np.histogram(t[parameter], bins=bins, range=[pmin, pmax])
+        hist_all, edges = np.histogram(col, bins=bins, range=[pmin, pmax])
         center = (edges[1:] + edges[:-1]) / 2.
 
     # Grayscale showing all models
@@ -148,12 +173,14 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
 
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t, additional=additional)
+        #repeat array parameter compensation for sorted table
+        col = standard_col(tsorted,parameter,aperture)
 
         # Compute histogram
         if log_x:
-            hist, _ = np.histogram(np.log10(tsorted[parameter]), bins=bins, range=[np.log10(pmin), np.log10(pmax)])
+            hist, _ = np.histogram(np.log10(col), bins=bins, range=[np.log10(pmin), np.log10(pmax)])
         else:
-            hist, _ = np.histogram(tsorted[parameter], bins=bins, range=[pmin, pmax])
+            hist, _ = np.histogram(col, bins=bins, range=[pmin, pmax])
 
         # Histogram showing values for good-fitting models
         p = []

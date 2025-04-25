@@ -10,7 +10,7 @@ __all__ = ['write_parameter_ranges']
 NODATA = '-'.center(10)
 
 
-def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}):
+def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}, aperture=None):
     """
     Write out an ASCII file with ranges of paramters for each source.
 
@@ -29,6 +29,11 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
         A dictionary giving additional parameters for each model. This should
         be a dictionary where each key is a parameter, and each value is a
         dictionary mapping the model names to the parameter values.
+    aperture : int, optional
+        The index of values to return for table columns with array values.
+        Defaults to 5, corresponding to an aperture of radius ~1000 AU.
+        Intended for use with the Richardson+ (2024) YSO SED models:
+        https://zenodo.org/records/10522816
     """
 
     # Open input and output file
@@ -90,6 +95,10 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
 
     fout.write('\n')
 
+    #set aperture to ~1000 AU if none is picked
+    if aperture is None:
+        aperture = 5
+
     for info in fin:
 
         # Filter fits
@@ -117,7 +126,15 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
             if len(info.chi2) == 0:
                 fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
             else:
-                fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(tsorted[par]), tsorted[par][0], np.nanmax(tsorted[par])))
+                col = tsorted[par]
+                ndim = len(col.data.shape)
+
+                if ndim == 2:
+                    col = col[:,aperture]
+                elif ndim == 3:
+                    col = col[:,0,aperture]
+                
+                fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(col), col[0], np.nanmax(col)))
 
         fout.write('\n')
 

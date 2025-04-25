@@ -30,7 +30,7 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
     aperture : int, optional
         The index of values to return for table columns with array values.
         Defaults to 5, corresponding to an aperture of radius ~1000 AU.
-        Intended for use with the 2024 release of the models:
+        Intended for use with the Richardson+ (2024) YSO SED models:
         https://zenodo.org/records/10522816
     """
 

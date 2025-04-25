@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 import numpy as np
 
+from copy import deepcopy
+
 from .fit_info import FitInfoFile
 from .models import load_parameter_table
 

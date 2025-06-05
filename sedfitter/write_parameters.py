@@ -10,7 +10,7 @@ __all__ = ['write_parameters']
 
 def write_parameters(input_fits, output_file, select_format=("N", 1), additional={}, aperture=None):
     """
-    Write out an ASCII file with the paramters for each source.
+    Write out an ASCII file with the parameters for each source.
 
     Parameters
     ----------
@@ -28,10 +28,10 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
         be a dictionary where each key is a parameter, and each value is a
         dictionary mapping the model names to the parameter values.
     aperture : int, optional
-        The index of values to return for table columns with array values.
+        The index of values to return for table columns with array values. 
         Defaults to 5, corresponding to an aperture of radius ~1000 AU.
-        Intended for use with the Richardson+ (2024) YSO SED models:
-        https://zenodo.org/records/10522816
+        Intended for use with the 'Richardson+ (2024) YSO SED models: 
+        <https://zenodo.org/records/10522816>'
     """
 
     # Open input and output file

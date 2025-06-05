@@ -67,8 +67,8 @@ def plot_params_2d(input_fits, parameter_x, parameter_y,
     aperture : int, optional
         The index of values to return for table columns with array values.
         Defaults to 5, corresponding to an aperture of radius ~1000 AU.
-        Intended for use with the Richardson+ (2024) YSO SED models:
-        https://zenodo.org/records/10522816 
+        Intended for use with the 'Richardson+ (2024) YSO SED models:
+        <https://zenodo.org/records/10522816>'
     output_dir : str, optional
         If specified, plots are written to that directory
     select_format : tuple, optional

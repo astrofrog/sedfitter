@@ -14,7 +14,7 @@ def parse_unit_safe(unit_string):
     if unit_string in UNIT_MAPPING:
         return UNIT_MAPPING[unit_string]
     else:
-        return u.Unit(unit_string, parse_strict=False)
+        return u.Unit(unit_string, parse_strict='silent')
 
 
 def assert_allclose_quantity(q1, q2):

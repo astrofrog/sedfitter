@@ -86,7 +86,7 @@ def plot_source_info(ax, i, info, plot_name, plot_info):
             labels.append("Best fit")
         else:
             labels.append("Fit: %i" % (i + 1))
-        labels.append("$\chi^2$ = %10.3f    A$_{\\rm V}$ = %5.1f    Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
+        labels.append(r"$\chi^2$ = %10.3f    A$_{\rm V}$ = %5.1f    Scale = %5.2f" % (info.chi2[i], info.av[i], info.sc[i]))
 
     pos = 0.95
     for label in labels:
@@ -354,8 +354,8 @@ def plot(input_fits, output_dir=None, select_format=("N", 1), plot_max=None,
                     else:
                         ax = plot_source_info(ax, i, info, plot_name, plot_info)
 
-                    ax.set_xlabel('$\lambda$ ($\mu$m)')
-                    ax.set_ylabel('$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
+                    ax.set_xlabel(r'$\lambda$ ($\mu$m)')
+                    ax.set_ylabel(r'$\lambda$F$_\lambda$ (ergs/cm$^2$/s)')
 
                     ax = set_view_limits(ax, wav, info.source, x_mode, y_mode, x_range, y_range)
 

@@ -14,6 +14,6 @@ def set_rc_params():
 
 def tex_friendly(string):
     if plt.rcParams['text.usetex']:
-        return string.replace('_', '\_').replace('%', '\%')
+        return string.replace('_', r'\_').replace('%', r'\%')
     else:
         return string

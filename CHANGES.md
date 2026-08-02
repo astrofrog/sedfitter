@@ -1,3 +1,12 @@
+## v1.5 - 2026-08-02
+
+### What's Changed
+
+* Bump minimum Python version to 3.9 by @astrofrog in https://github.com/astrofrog/sedfitter/pull/83
+* Modernize infrastructure and fix compatibility with recent versions of dependencies by @astrofrog in https://github.com/astrofrog/sedfitter/pull/85
+
+**Full Changelog**: https://github.com/astrofrog/sedfitter/compare/v1.4...v1.5
+
 ## v1.4 - 2023-02-06
 
 ### What's Changed

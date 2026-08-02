@@ -217,7 +217,7 @@ class FitInfo(object):
         if not "MODEL_NAME" in input_table.dtype.names:
             raise ValueError("Input table should contain a MODEL_NAME column")
 
-        subset = np.in1d(input_table['MODEL_NAME'], self.model_name)
+        subset = np.isin(input_table['MODEL_NAME'], self.model_name)
         table_subset = input_table[subset]
         index = np.argsort(np.argsort(self.model_name))
         table_sorted = table_subset[index]

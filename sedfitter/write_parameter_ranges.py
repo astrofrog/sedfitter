@@ -2,6 +2,8 @@ from __future__ import print_function, division
 
 import numpy as np
 
+from copy import deepcopy
+
 from .fit_info import FitInfoFile
 from .models import load_parameter_table
 
@@ -9,10 +11,24 @@ __all__ = ['write_parameter_ranges']
 
 NODATA = '-'.center(10)
 
+#this exists for compatibility with the Richardson+ (2024) YSO models;
+#it identifies aperture-dependent parameters with array values and
+#pulls out a single value for a particular aperture
+def standard_col(table,parameter,aperture):
+    column = deepcopy(table[parameter])
+    ndim = len(column.data.shape)
+    if ndim == 2:
+        if column.data.shape[-1] > 1:
+            column = column[:,aperture]
+        else:
+            column = column[:,0]
+    elif ndim == 3:
+        column = column[:,0,aperture]
+    return column
 
-def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}):
+def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}, aperture=None):
     """
-    Write out an ASCII file with ranges of paramters for each source.
+    Write out an ASCII file with ranges of parameters for each source.
 
     Parameters
     ----------
@@ -29,6 +45,11 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
         A dictionary giving additional parameters for each model. This should
         be a dictionary where each key is a parameter, and each value is a
         dictionary mapping the model names to the parameter values.
+    aperture : int, optional
+        The index of values to return for table columns with array values.
+        Defaults to 5, corresponding to an aperture of radius ~1000 AU.
+        Intended for use with the 'Richardson+ (2024) YSO SED models:
+        <https://zenodo.org/records/10522816>'
     """
 
     # Open input and output file
@@ -90,6 +111,10 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
 
     fout.write('\n')
 
+    #set aperture to ~1000 AU if none is picked
+    if aperture is None:
+        aperture = 5
+
     for info in fin:
 
         # Filter fits
@@ -117,7 +142,9 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
             if len(info.chi2) == 0:
                 fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
             else:
-                fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(tsorted[par]), tsorted[par][0], np.nanmax(tsorted[par])))
+                col = standard_col(tsorted,par,aperture)
+                
+                fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(col), col[0], np.nanmax(col)))
 
         fout.write('\n')
 

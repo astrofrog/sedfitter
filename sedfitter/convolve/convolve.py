@@ -160,14 +160,14 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False, memmap=True):
     for i_ap in ProgressBar(range(sed_cube.n_ap)):
 
         sed_val = sed_cube.val[:, i_ap, :]
-        sed_unc = sed_cube.val[:, i_ap, :]
+        sed_unc = sed_cube.unc[:, i_ap, :]
 
         for i, f in enumerate(binned_filters):
 
             response = f.response.astype(sed_val.dtype)
 
-            fluxes[i].flux[:, i_ap] = np.sum(sed_val * response, axis=1) * val_factor
-            fluxes[i].error[:, i_ap] = np.sqrt(np.sum((sed_unc * response) ** 2, axis=1)) * unc_factor
+            fluxes[i].flux[:, i_ap] = np.nansum(sed_val * response, axis=1) * val_factor
+            fluxes[i].error[:, i_ap] = np.sqrt(np.nansum((sed_unc * response) ** 2, axis=1)) * unc_factor
 
     for i, f in enumerate(binned_filters):
 

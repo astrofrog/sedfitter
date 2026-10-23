@@ -117,6 +117,11 @@ def generate_random_models_2(models_dir, aperture_dependent=False):
     t['MODEL_NAME'] = np.array(cube.names, dtype='S')
     t['par1'] = np.random.random(5)
     t['par2'] = np.random.random(5)
+    if aperture_dependent:
+        # Vector columns as used in the Richardson et al. (2024) models
+        t['par_ap'] = np.random.random((5, 10))
+        t['par_ap_extra_dim'] = np.random.random((5, 1, 10))
+        t['par_single'] = np.random.random((5, 1))
     t.write(os.path.join(models_dir, 'parameters.fits'))
 
 
@@ -292,6 +297,71 @@ class BasePipelineTest(object):
         from ..filter_output import filter_output
 
         filter_output(output_file, output_good='auto', output_bad='auto', cpd=3.)
+
+        if self.aperture_dependent and self.model_version == 2:
+            self._postprocess_aperture_parameters(output_file, tmpdir)
+
+    def _postprocess_aperture_parameters(self, output_file, tmpdir):
+
+        from ..models import load_parameter_table
+        from ..write_parameters import write_parameters
+        from ..write_parameter_ranges import write_parameter_ranges
+        from ..plot_params_1d import plot_params_1d
+        from ..plot_params_2d import plot_params_2d
+        from ..extract_parameters import extract_parameters
+
+        t = load_parameter_table(self.tmpdir)
+        assert t['par_ap'].shape == (5, 10)
+        assert t['par_ap_extra_dim'].shape == (5, 10)
+        assert t['par_single'].shape == (5,)
+
+        # By default, aperture-dependent parameters get one column per aperture
+        output_ascii_file = tmpdir.join('write_parameters_apertures').strpath
+        write_parameters(output_file, output_ascii_file)
+        lines = open(output_ascii_file).read().splitlines()
+        header = lines[1].split()
+        assert header[-21:] == (['par_ap_{0:.0f}au'.format(ap) for ap in np.logspace(1., 6., 10)]
+                                + ['par_ap_extra_dim_{0:.0f}au'.format(ap) for ap in np.logspace(1., 6., 10)]
+                                + ['par_single'])
+        first_fit = lines[4].split()
+        t.sort('MODEL_NAME')
+        row = t[t['MODEL_NAME'] == first_fit[1]][0]
+        assert len(first_fit) == len(header)
+        np.testing.assert_allclose([float(x) for x in first_fit[-21:-11]], row['par_ap'], rtol=1e-3)
+
+        # With an aperture, they are interpolated and the aperture is recorded
+        for aperture in [3. * u.arcsec, 2000. * u.au]:
+            write_parameters(output_file, output_ascii_file, aperture=aperture)
+            lines = open(output_ascii_file).read().splitlines()
+            header = lines[1].split()
+            assert header[5] == 'aperture_au'
+            assert header[-3:] == ['par_ap', 'par_ap_extra_dim', 'par_single']
+            assert len(lines[4].split()) == len(header)
+            if aperture.unit is u.au:
+                assert float(lines[4].split()[5]) == 2000.
+
+        output_ascii_file = tmpdir.join('write_parameter_ranges_apertures').strpath
+        write_parameter_ranges(output_file, output_ascii_file)
+        write_parameter_ranges(output_file, output_ascii_file, aperture=3. * u.arcsec)
+
+        with pytest.raises(ValueError, match='an aperture needs to be specified'):
+            plot_params_1d(output_file, 'par_ap', format='png',
+                           output_dir=tmpdir.join('plots_aperture_missing').strpath)
+        with pytest.raises(TypeError, match='length$'):
+            plot_params_1d(output_file, 'par_ap', format='png', aperture=3. * u.arcsec,
+                           output_dir=tmpdir.join('plots_aperture_angle').strpath)
+        plot_params_1d(output_file, 'par_ap', format='png', aperture=2000. * u.au,
+                       output_dir=tmpdir.join('plots_aperture_1d').strpath)
+        plot_params_2d(output_file, 'par1', 'par_ap_extra_dim', format='png', aperture=2000. * u.au,
+                       output_dir=tmpdir.join('plots_aperture_2d').strpath)
+
+        output_prefix = tmpdir.join('extract_parameters_aperture').strpath
+        extract_parameters(output_file, output_prefix, parameters=['MODEL_NAME', 'par1', 'par_ap'])
+        header = open(output_prefix + 'source_1').readline().split()
+        assert header == ['CHI2', 'AV', 'SC', 'MODEL_NAME', 'par1'] + ['par_ap_{0:.0f}au'.format(ap) for ap in np.logspace(1., 6., 10)]
+        extract_parameters(output_file, output_prefix, aperture=3. * u.arcsec)
+        header = open(output_prefix + 'source_1').readline().split()
+        assert header[:6] == ['CHI2', 'AV', 'SC', 'MODEL_NAME', 'APERTURE_AU', 'par1']
 
 
 class TestApertureIndependentPipeline1(BasePipelineTest):

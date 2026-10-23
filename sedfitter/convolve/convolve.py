@@ -164,10 +164,22 @@ def _convolve_model_dir_2(model_dir, filters, overwrite=False, memmap=True):
 
         for i, f in enumerate(binned_filters):
 
-            response = f.response.astype(sed_val.dtype)
+            # Only include wavelengths where the filter response is non-zero,
+            # so that NaN values outside the filter are ignored. Models with
+            # NaN values inside the filter get zero flux, which marks them as
+            # invalid when fitting.
+            inside = f.response > 0
+            response = f.response[inside].astype(sed_val.dtype)
 
-            fluxes[i].flux[:, i_ap] = np.nansum(sed_val * response, axis=1) * val_factor
-            fluxes[i].error[:, i_ap] = np.sqrt(np.nansum((sed_unc * response) ** 2, axis=1)) * unc_factor
+            flux = np.sum(sed_val[:, inside] * response, axis=1) * val_factor
+            error = np.sqrt(np.sum((sed_unc[:, inside] * response) ** 2, axis=1)) * unc_factor
+
+            invalid = np.isnan(flux) | np.isnan(error)
+            flux[invalid] = 0.
+            error[invalid] = 0.
+
+            fluxes[i].flux[:, i_ap] = flux
+            fluxes[i].error[:, i_ap] = error
 
     for i, f in enumerate(binned_filters):
 

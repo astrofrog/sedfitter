@@ -120,7 +120,7 @@ def generate_random_models_2(models_dir, aperture_dependent=False):
     if aperture_dependent:
         # Vector columns as used in the Richardson et al. (2024) models
         t['par_ap'] = np.random.random((5, 10))
-        t['par_ap_extra_dim'] = np.random.random((5, 1, 10))
+        t['par ap extra dim'] = np.random.random((5, 1, 10))
         t['par_single'] = np.random.random((5, 1))
     t.write(os.path.join(models_dir, 'parameters.fits'))
 
@@ -312,7 +312,7 @@ class BasePipelineTest(object):
 
         t = load_parameter_table(self.tmpdir)
         assert t['par_ap'].shape == (5, 10)
-        assert t['par_ap_extra_dim'].shape == (5, 10)
+        assert t['par ap extra dim'].shape == (5, 10)
         assert t['par_single'].shape == (5,)
 
         # By default, aperture-dependent parameters get one column per aperture
@@ -323,6 +323,9 @@ class BasePipelineTest(object):
         assert header[-21:] == (['par_ap_{0:.0f}au'.format(ap) for ap in np.logspace(1., 6., 10)]
                                 + ['par_ap_extra_dim_{0:.0f}au'.format(ap) for ap in np.logspace(1., 6., 10)]
                                 + ['par_single'])
+        # Spaces in parameter names are replaced so that header and data
+        # rows split into the same number of fields
+        assert 'par_ap_extra_dim_10au' in header
         first_fit = lines[4].split()
         t.sort('MODEL_NAME')
         row = t[t['MODEL_NAME'] == first_fit[1]][0]
@@ -352,7 +355,7 @@ class BasePipelineTest(object):
                            output_dir=tmpdir.join('plots_aperture_angle').strpath)
         plot_params_1d(output_file, 'par_ap', format='png', aperture=2000. * u.au,
                        output_dir=tmpdir.join('plots_aperture_1d').strpath)
-        plot_params_2d(output_file, 'par1', 'par_ap_extra_dim', format='png', aperture=2000. * u.au,
+        plot_params_2d(output_file, 'par1', 'par ap extra dim', format='png', aperture=2000. * u.au,
                        output_dir=tmpdir.join('plots_aperture_2d').strpath)
 
         output_prefix = tmpdir.join('extract_parameters_aperture').strpath

@@ -57,6 +57,10 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
     names = parameter_names(t, apertures, interpolate=aperture is not None)
     names += list(additional.keys())
 
+    # Replace spaces in parameter names so that the output can be read as a
+    # whitespace-separated table
+    names = [name.replace(' ', '_') for name in names]
+
     # Only write out the aperture column if any parameters depend on it
     write_aperture = aperture is not None and len(aperture_dependent_columns(t, apertures)) > 0
 

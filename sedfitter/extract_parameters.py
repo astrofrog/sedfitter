@@ -41,6 +41,10 @@ def extract_parameters(input=None, output_prefix=None, output_suffix=None,
     apertures = load_model_apertures(fin.meta.model_dir)
     names = parameter_names(t, apertures, interpolate=aperture is not None)
 
+    # Replace spaces in parameter names so that the output can be read as a
+    # whitespace-separated table
+    names = [name.replace(' ', '_') for name in names]
+
     # Only write out the aperture column if any parameters depend on it
     write_aperture = aperture is not None and len(aperture_dependent_columns(t, apertures)) > 0
     if write_aperture:

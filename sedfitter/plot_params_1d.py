@@ -9,7 +9,8 @@ from matplotlib.font_manager import FontProperties
 from matplotlib.patches import Polygon
 
 from .fit_info import FitInfoFile
-from .models import load_parameter_table
+from .models import load_parameter_table, load_model_apertures
+from .parameter_columns import select_parameter, validate_aperture
 from .utils import io
 from .utils.formatter import LogFormatterMathtextAuto
 from .plot_helpers import tex_friendly
@@ -30,7 +31,7 @@ def get_axes(fig):
 def plot_params_1d(input_fits, parameter, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True,
                    label=None, bins=30, hist_range=None, additional={}, plot_name=True,
-                   format='pdf', dpi=None):
+                   format='pdf', dpi=None, aperture=None):
     """
     Make histogram plots of parameters
 
@@ -68,7 +69,14 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
         The file format to use for the plot, if output_dir is specified.
     dpi : int, optional
         The resolution of the figure to save
+    aperture : `~astropy.units.Quantity`, optional
+        The aperture radius (as a length) to interpolate aperture-dependent
+        parameters to, for models that include these (such as the Richardson
+        et al. 2024 YSO models). This is required when plotting an
+        aperture-dependent parameter.
     """
+
+    aperture = validate_aperture(aperture, allow_angle=False)
 
     if output_dir is None:
         raise ValueError("No output directory has been specified")
@@ -84,6 +92,12 @@ def plot_params_1d(input_fits, parameter, output_dir=None,
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
+
+    # Reduce aperture-dependent parameters to one value per model
+    apertures = load_model_apertures(fin.meta.model_dir)
+    if parameter in t.colnames:
+        t.replace_column(parameter, select_parameter(t, parameter, apertures, aperture))
+
     tpos = deepcopy(t)
     if log_x:
         tpos = tpos[tpos[parameter] > 0.]

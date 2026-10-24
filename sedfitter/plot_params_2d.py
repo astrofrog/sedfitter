@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
 from .fit_info import FitInfoFile
-from .models import load_parameter_table
+from .models import load_parameter_table, load_model_apertures
+from .parameter_columns import select_parameter, validate_aperture
 from .utils import io
 from .utils.formatter import LogFormatterMathtextAuto
 from .plot_helpers import tex_friendly
@@ -36,7 +37,7 @@ def get_axes(fig, label=None, zorder=None):
 def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
                    select_format=("N", 1), log_x=False, log_y=True, bounds=None,
                    label_x=None, label_y=None, additional=None, plot_name=True,
-                   format='pdf', dpi=None):
+                   format='pdf', dpi=None, aperture=None):
     """
     Make histogram plots of parameters
 
@@ -74,9 +75,16 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
         The file format to use for the plot, if output_dir is specified.
     dpi : int, optional
         The resolution of the figure to save
+    aperture : `~astropy.units.Quantity`, optional
+        The aperture radius (as a length) to interpolate aperture-dependent
+        parameters to, for models that include these (such as the Richardson
+        et al. 2024 YSO models). This is required when plotting an
+        aperture-dependent parameter.
     """
 
     npix = 1024
+
+    aperture = validate_aperture(aperture, allow_angle=False)
 
     if output_dir is None:
         raise ValueError("No output directory has been specified")
@@ -95,6 +103,14 @@ def plot_params_2d(input_fits, parameter_x, parameter_y, output_dir=None,
     # Sort alphabetically
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
+
+    # Reduce aperture-dependent parameters to one value per model
+    apertures = load_model_apertures(fin.meta.model_dir)
+    if parameter_x in t.colnames:
+        t.replace_column(parameter_x, select_parameter(t, parameter_x, apertures, aperture))
+    if parameter_y in t.colnames:
+        t.replace_column(parameter_y, select_parameter(t, parameter_y, apertures, aperture))
+
     tpos = deepcopy(t)
     if log_x:
         tpos = tpos[tpos[parameter_x] > 0.]

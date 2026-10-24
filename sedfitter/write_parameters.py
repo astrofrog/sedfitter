@@ -3,14 +3,18 @@ from __future__ import print_function, division
 import numpy as np
 
 from .fit_info import FitInfoFile
-from .models import load_parameter_table
+from .models import load_parameter_table, load_model_apertures
+from .parameter_columns import (aperture_dependent_columns, aperture_to_au,
+                                parameter_names, parameter_values,
+                                validate_aperture)
 
 __all__ = ['write_parameters']
 
 
-def write_parameters(input_fits, output_file, select_format=("N", 1), additional={}):
+def write_parameters(input_fits, output_file, select_format=("N", 1), additional={},
+                     aperture=None):
     """
-    Write out an ASCII file with the paramters for each source.
+    Write out an ASCII file with the parameters for each source.
 
     Parameters
     ----------
@@ -27,7 +31,17 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
         A dictionary giving additional parameters for each model. This should
         be a dictionary where each key is a parameter, and each value is a
         dictionary mapping the model names to the parameter values.
+    aperture : `~astropy.units.Quantity`, optional
+        For models with aperture-dependent parameters (such as the Richardson
+        et al. 2024 YSO models), by default these parameters are written out
+        with one column per model aperture. If an aperture radius is
+        specified, the parameters are instead interpolated to that aperture,
+        and an ``aperture_au`` column gives the aperture used for each fit.
+        The aperture can be given as a length or as an angle, in which case
+        it is converted to a length using the distance of each fit.
     """
+
+    aperture = validate_aperture(aperture)
 
     # Open input and output file
     fin = FitInfoFile(input_fits, 'r')
@@ -38,6 +52,17 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
 
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
+
+    apertures = load_model_apertures(fin.meta.model_dir)
+    names = parameter_names(t, apertures, interpolate=aperture is not None)
+    names += list(additional.keys())
+
+    # Replace spaces in parameter names so that the output can be read as a
+    # whitespace-separated table
+    names = [name.replace(' ', '_') for name in names]
+
+    # Only write out the aperture column if any parameters depend on it
+    write_aperture = aperture is not None and len(aperture_dependent_columns(t, apertures)) > 0
 
     # First header line
     fout.write("source_name".center(30) + ' ')
@@ -54,14 +79,15 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
     fout.write('av'.center(10) + ' ')
     fout.write('scale'.center(10) + ' ')
 
-    for par in list(t.columns.keys()) + list(additional.keys()):
-        if par == 'MODEL_NAME':
-            continue
+    if write_aperture:
+        fout.write('aperture_au'.center(10) + ' ')
+
+    for par in names:
         fout.write(par.lower().center(10) + ' ')
 
     fout.write('\n')
 
-    fout.write('-' * (75 + 11 * (len(list(t.columns.keys()) + list(additional.keys())))))
+    fout.write('-' * (75 + 11 * (len(names) + write_aperture + 1)))
     fout.write('\n')
 
     for info in fin:
@@ -71,6 +97,13 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
 
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t, additional=additional)
+
+        if aperture is None:
+            aperture_au = None
+        else:
+            aperture_au = aperture_to_au(aperture, info.sc)
+
+        values = parameter_values(tsorted, apertures, aperture_au=aperture_au)
 
         fout.write("%30s " % info.source.name)
         fout.write("%10i " % info.source.n_data)
@@ -84,10 +117,11 @@ def write_parameters(input_fits, output_file, select_format=("N", 1), additional
             fout.write('%10.3f ' % info.av[fit_id])
             fout.write('%10.3f ' % info.sc[fit_id])
 
-            for par in tsorted.columns:
-                if par == 'MODEL_NAME':
-                    continue
-                fout.write('%10.3e ' % (tsorted[par][fit_id]))
+            if write_aperture:
+                fout.write('%10.3e ' % aperture_au[fit_id].value)
+
+            for column in values:
+                fout.write('%10.3e ' % column[fit_id])
 
             fout.write('\n')
 

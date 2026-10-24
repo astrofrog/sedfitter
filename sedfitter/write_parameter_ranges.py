@@ -3,16 +3,20 @@ from __future__ import print_function, division
 import numpy as np
 
 from .fit_info import FitInfoFile
-from .models import load_parameter_table
+from .models import load_parameter_table, load_model_apertures
+from .parameter_columns import (aperture_dependent_columns, aperture_to_au,
+                                parameter_names, parameter_values,
+                                validate_aperture)
 
 __all__ = ['write_parameter_ranges']
 
 NODATA = '-'.center(10)
 
 
-def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={}):
+def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), additional={},
+                           aperture=None):
     """
-    Write out an ASCII file with ranges of paramters for each source.
+    Write out an ASCII file with ranges of parameters for each source.
 
     Parameters
     ----------
@@ -29,7 +33,18 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
         A dictionary giving additional parameters for each model. This should
         be a dictionary where each key is a parameter, and each value is a
         dictionary mapping the model names to the parameter values.
+    aperture : `~astropy.units.Quantity`, optional
+        For models with aperture-dependent parameters (such as the Richardson
+        et al. 2024 YSO models), by default the ranges of these parameters are
+        written out separately for each model aperture. If an aperture radius
+        is specified, the parameters are instead interpolated to that
+        aperture, and the range of apertures used is given in an
+        ``aperture_au`` column. The aperture can be given as a length or as an
+        angle, in which case it is converted to a length using the distance of
+        each fit.
     """
+
+    aperture = validate_aperture(aperture)
 
     # Open input and output file
     fin = FitInfoFile(input_fits, 'r')
@@ -41,6 +56,19 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
     t['MODEL_NAME'] = np.char.strip(t['MODEL_NAME'])
     t.sort('MODEL_NAME')
 
+    apertures = load_model_apertures(fin.meta.model_dir)
+    names = parameter_names(t, apertures, interpolate=aperture is not None)
+    names += list(additional.keys())
+
+    # Replace spaces in parameter names so that the output can be read as a
+    # whitespace-separated table
+    names = [name.replace(' ', '_') for name in names]
+
+    # Only write out the aperture column if any parameters depend on it
+    write_aperture = aperture is not None and len(aperture_dependent_columns(t, apertures)) > 0
+    if write_aperture:
+        names.insert(0, 'aperture_au')
+
     # First header line
     fout.write("%30s " % "")
 
@@ -51,9 +79,7 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
     fout.write('av'.center(32) + ' ')
     fout.write('scale'.center(32) + ' ')
 
-    for par in list(t.columns.keys()) + list(additional.keys()):
-        if par == 'MODEL_NAME':
-            continue
+    for par in names:
         fout.write(par.lower().center(32) + ' ')
 
     fout.write('\n')
@@ -67,9 +93,7 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
     fout.write("min".center(10) + " " + "best".center(10) + " " + "max".center(10) + " ")
     fout.write("min".center(10) + " " + "best".center(10) + " " + "max".center(10) + " ")
 
-    for par in list(t.columns.keys()) + list(additional.keys()):
-        if par == 'MODEL_NAME':
-            continue
+    for par in names:
         fout.write("min".center(10) + " " + "best".center(10) + " " + "max".center(10) + " ")
 
     fout.write('\n')
@@ -83,9 +107,7 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
     fout.write('-' * 32 + ' ')
     fout.write('-' * 32 + ' ')
 
-    for par in list(t.columns.keys()) + list(additional.keys()):
-        if par == 'MODEL_NAME':
-            continue
+    for par in names:
         fout.write('-' * 32 + ' ')
 
     fout.write('\n')
@@ -97,6 +119,16 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
 
         # Get filtered and sorted table of parameters
         tsorted = info.filter_table(t, additional=additional)
+
+        if aperture is None:
+            aperture_au = None
+        else:
+            aperture_au = aperture_to_au(aperture, info.sc)
+
+        values = parameter_values(tsorted, apertures, aperture_au=aperture_au)
+
+        if write_aperture:
+            values.insert(0, aperture_au.value)
 
         fout.write("%30s " % info.source.name)
         fout.write("%10i " % info.source.n_data)
@@ -111,13 +143,11 @@ def write_parameter_ranges(input_fits, output_file, select_format=("N", 1), addi
             fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.av), info.av[0], np.nanmax(info.av)))
             fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(info.sc), info.sc[0], np.nanmax(info.sc)))
 
-        for par in tsorted.columns:
-            if par == 'MODEL_NAME':
-                continue
+        for column in values:
             if len(info.chi2) == 0:
                 fout.write('%10s %10s %10s ' % (NODATA, NODATA, NODATA))
             else:
-                fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(tsorted[par]), tsorted[par][0], np.nanmax(tsorted[par])))
+                fout.write('%10.3e %10.3e %10.3e ' % (np.nanmin(column), column[0], np.nanmax(column)))
 
         fout.write('\n')
 

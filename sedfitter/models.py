@@ -3,6 +3,7 @@ from __future__ import print_function, division
 import os
 
 import numpy as np
+from astropy.io import fits
 from astropy.table import Table
 from astropy import units as u
 
@@ -12,6 +13,7 @@ from .utils import parfile
 from .utils.validator import validate_array
 from .fit_info import FitInfo
 from .utils.io import read_table
+from .sed.helpers import parse_unit_safe
 
 __all__ = ['Models']
 
@@ -439,4 +441,33 @@ def load_parameter_table(model_dir):
     else:
         raise Exception("Parameter file not found in %s" % model_dir)
 
+    # Drop length-1 trailing dimensions so that for example columns with
+    # shape (n_models, 1, n_apertures) become (n_models, n_apertures)
+    for name in t.colnames:
+        shape = t[name].shape
+        if 1 in shape[1:]:
+            t.replace_column(name, t[name].reshape(shape[:1] + tuple(n for n in shape[1:] if n != 1)))
+
     return t
+
+
+def load_model_apertures(model_dir):
+    """
+    Return the apertures the model fluxes are defined at, or `None` if the
+    models are not aperture-dependent or the apertures cannot be determined.
+
+    This is currently only supported for new-style model directories, which
+    contain a flux.fits file.
+    """
+
+    filename = os.path.join(model_dir, 'flux.fits')
+
+    if not os.path.exists(filename):
+        return None
+
+    with fits.open(filename) as hdulist:
+        try:
+            hdu = hdulist['APERTURES']
+        except KeyError:
+            return None
+        return u.Quantity(hdu.data['APERTURE'], parse_unit_safe(hdu.columns[0].unit))

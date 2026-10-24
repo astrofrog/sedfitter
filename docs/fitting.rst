@@ -146,6 +146,11 @@ customize the format and appearance of the plots. For more information about
 these options, see the :func:`~sedfitter.plot_params_1d` and
 :func:`~sedfitter.plot_params_2d` pages.
 
+Some model grids, such as the Richardson et al. (2024) YSO models, include
+parameters that are defined for each aperture of the model fluxes. To plot one
+of these, specify the aperture radius to interpolate the parameter to using the
+``aperture`` option, for example ``aperture=4500 * u.au``.
+
 Splitting well- and badly-fit sources
 -------------------------------------
 
@@ -191,6 +196,18 @@ output ASCII file name::
     # Write out the min/max ranges corresponding to the above file
     write_parameter_ranges('output.fitinfo', 'parameter_ranges.txt',
                            select_format=('F', 3.))
+
+For model grids with aperture-dependent parameters, these parameters are
+written out with one column per model aperture by default. Alternatively, the
+``aperture`` option can be used to interpolate them to a single aperture,
+given either as a length or as an angle (such as the aperture used for the
+photometry), in which case it is converted to a length using the distance of
+each fit::
+
+    from astropy import units as u
+
+    write_parameters('output.fitinfo', 'parameters.txt',
+                     select_format=('F', 3.), aperture=3 * u.arcsec)
 
 More information about the available options is given in
 :func:`~sedfitter.write_parameters` and
